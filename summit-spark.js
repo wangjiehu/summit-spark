@@ -6,6 +6,9 @@
   const startButton = document.getElementById("startButton");
   const overlay = document.getElementById("overlay");
   const lumenCount = document.getElementById("lumenCount");
+  const roomCount = document.getElementById("roomCount");
+  const runTimeText = document.getElementById("runTime");
+  const deathCountText = document.getElementById("deathCount");
   const debugPanel = document.getElementById("debugPanel");
   const settingsButton = document.getElementById("settingsButton");
   const settingsPanel = document.getElementById("settingsPanel");
@@ -54,6 +57,10 @@
   const LIGHT_TRAIL_WIDTH = 42;
   const LIGHT_TRAIL_HEIGHT = 4;
   const LIGHT_TRAIL_STEP = 16;
+  const DEATH_MARK_LIFE = 4.5;
+  const RELAY_RESET_TIME = 4.2;
+  const RELAY_TRIGGER_SPEED = 390;
+  const BEST_TIME_KEY = "summit-spark-best-time";
 
   const SOLID = new Set(["#"]);
   const HAZARDS = new Set(["^", "v", "<", ">"]);
@@ -102,7 +109,7 @@
       "..............#####...........",
       "..............................",
       ".....####.....................",
-      "..........................R...",
+      "..........A...............R...",
       "......................####....",
       "..P...........................",
       "#####..............###........",
@@ -130,7 +137,64 @@
       "..............................",
       "..........^^^^^^..............",
       ".....####.######.......T......",
-      "..........................H...",
+      "..............................",
+      "##########################...."
+    ],
+    [
+      "..............................",
+      "..............................",
+      ".....................L........",
+      "..................#####.......",
+      "..............................",
+      "......A.......................",
+      ".....####..............R......",
+      "..............................",
+      "..P.........A.................",
+      "#####....#####.........####...",
+      "..............................",
+      ".............^^^^.............",
+      ".............####.......A.....",
+      "....................#####.....",
+      "....####......................",
+      ".........................####.",
+      "#######################......."
+    ],
+    [
+      "..............................",
+      "..............................",
+      ".............L................",
+      "..........#####...............",
+      "..............................",
+      "....................A.........",
+      "...............####...........",
+      "..P...........................",
+      "#####.........................",
+      "........A.............R.......",
+      "......####..........#####.....",
+      "..............................",
+      "............^^^^^.............",
+      "............#####.............",
+      "....####..................A...",
+      "......................####....",
+      "#########........############."
+    ],
+    [
+      "..............................",
+      "..............................",
+      "..............................",
+      "....................L.........",
+      ".................#####........",
+      "..............................",
+      "......A...................R...",
+      ".....####.............####....",
+      "..............................",
+      "..P...........A...............",
+      "#####......#####..............",
+      "..........................A...",
+      "........^^^^...........####...",
+      "........####..................",
+      "....................T.........",
+      ".........................H....",
       "##############################"
     ]
   ];
@@ -180,12 +244,15 @@
   const shards = [];
   const ghosts = [];
   const lightTrails = [];
+  const deathMarks = [];
   let roomIndex = 0;
   let room = null;
   let started = false;
   let won = false;
   let lastTime = performance.now();
   let deathCount = 0;
+  let runTime = 0;
+  let bestTime = readBestTime();
   let collected = new Set();
   let debugVisible = false;
   let hitStopTimer = 0;
@@ -271,6 +338,10 @@
     } else if (won && event.code === "KeyR") {
       hardReset();
     }
+    if (debugVisible && firstPress && event.code.startsWith("Digit")) {
+      const target = Number(event.code.slice(5)) - 1;
+      if (target >= 0 && target < maps.length) jumpToRoom(target);
+    }
   });
 
   window.addEventListener("keyup", (event) => {
@@ -326,6 +397,7 @@
     const entities = {
       lumens: [],
       refills: [],
+      relays: [],
       checkpoints: [],
       springs: [],
       goal: null,
@@ -352,6 +424,10 @@
         }
         if (tile === "R") {
           entities.refills.push({ x: cx, y: cy, ready: true, timer: 0, bob: Math.random() * 6 });
+          tiles[y][x] = ".";
+        }
+        if (tile === "A") {
+          entities.relays.push({ x: cx, y: cy, ready: true, timer: 0, bob: Math.random() * 6, pulse: 0 });
           tiles[y][x] = ".";
         }
         if (tile === "T") {
@@ -421,6 +497,7 @@
   function hardReset() {
     collected = new Set();
     deathCount = 0;
+    runTime = 0;
     won = false;
     hitStopTimer = 0;
     shakeTimer = 0;
@@ -428,9 +505,27 @@
     shakePower = 0;
     ghosts.length = 0;
     lightTrails.length = 0;
+    deathMarks.length = 0;
     overlay.classList.add("hidden");
     resetToStart(0);
     updateHud();
+  }
+
+  function jumpToRoom(index) {
+    collected = new Set();
+    deathCount = 0;
+    runTime = 0;
+    won = false;
+    hitStopTimer = 0;
+    ghosts.length = 0;
+    lightTrails.length = 0;
+    deathMarks.length = 0;
+    overlay.classList.add("hidden");
+    started = true;
+    resetToStart(index);
+    seedHair();
+    updateHud();
+    focusGame();
   }
 
   function frame(now) {
@@ -444,6 +539,7 @@
     } else {
       updateParticles(dt);
       updateGhosts(dt);
+      updateDeathMarks(dt);
     }
 
     render(now / 1000);
@@ -453,6 +549,9 @@
   }
 
   function update(dt) {
+    runTime += dt;
+    updateDeathMarks(dt);
+
     if (hitStopTimer > 0) {
       hitStopTimer = Math.max(0, hitStopTimer - dt);
       updateParticles(dt * 0.3);
@@ -711,6 +810,33 @@
       }
     }
 
+    for (const relay of room.entities.relays) {
+      relay.bob += dt * 4.1;
+      relay.pulse = Math.max(0, relay.pulse - dt);
+      if (!relay.ready) {
+        relay.timer -= dt;
+        if (relay.timer <= 0) relay.ready = true;
+      }
+      const speed = Math.hypot(player.vx, player.vy);
+      const charged = player.dashTimer > 0 || player.sparkHopTimer > 0 || speed >= RELAY_TRIGGER_SPEED;
+      if (relay.ready && charged && distRectPoint(box, relay.x, relay.y) < 26) {
+        relay.ready = false;
+        relay.timer = RELAY_RESET_TIME;
+        relay.pulse = 0.3;
+        player.dashes = 1;
+        player.dashCooldown = 0;
+        player.stamina = MAX_STAMINA;
+        player.sparkHopTimer = Math.max(player.sparkHopTimer, SPARK_HOP_WINDOW * 0.72);
+        player.sparkHopDirX = player.vx === 0 ? player.facing : Math.sign(player.vx);
+        player.sparkHopDirY = Math.sign(player.vy);
+        player.vy = Math.min(player.vy, -140);
+        burst(relay.x, relay.y, "#f8fbff", 12, 220);
+        burst(relay.x, relay.y, palette.cyan, 22, 340);
+      } else if (relay.ready && distRectPoint(box, relay.x, relay.y) < 30) {
+        relay.pulse = Math.max(relay.pulse, 0.08);
+      }
+    }
+
     for (const checkpoint of room.entities.checkpoints) {
       if (distRectPoint(box, checkpoint.x, checkpoint.y) < 26) {
         player.respawnRoom = roomIndex;
@@ -734,7 +860,8 @@
 
     if (room.entities.goal && distRectPoint(box, room.entities.goal.x, room.entities.goal.y) < 28) {
       won = true;
-      overlay.innerHTML = `<h1>登顶</h1><button class="primary" id="restartButton" type="button">再来</button>`;
+      const isBest = completeRun();
+      overlay.innerHTML = `<h1>登顶</h1><p>${formatTime(runTime)}${isBest ? "  BEST" : ""}</p><button class="primary" id="restartButton" type="button">再来</button>`;
       overlay.classList.remove("hidden");
       document.getElementById("restartButton").addEventListener("click", hardReset);
       burst(room.entities.goal.x, room.entities.goal.y, palette.gold, 64, 420);
@@ -742,6 +869,31 @@
 
     if (touchingHazard(box) || player.y > H + 80) {
       die();
+    }
+  }
+
+  function completeRun() {
+    if (bestTime <= 0 || runTime < bestTime) {
+      bestTime = runTime;
+      writeBestTime(bestTime);
+      return true;
+    }
+    return false;
+  }
+
+  function readBestTime() {
+    try {
+      return Number(localStorage.getItem(BEST_TIME_KEY) || 0);
+    } catch {
+      return 0;
+    }
+  }
+
+  function writeBestTime(value) {
+    try {
+      localStorage.setItem(BEST_TIME_KEY, String(value));
+    } catch {
+      // Best time is a bonus; gameplay should keep working without storage.
     }
   }
 
@@ -870,6 +1022,7 @@
   function die() {
     if (player.deadTimer > 0 || won) return;
     deathCount += 1;
+    addDeathMark();
     player.deadTimer = DEATH_RETRY_TIME;
     hitStopTimer = Math.max(hitStopTimer, DEATH_HITSTOP);
     shake(0.2, 6.4);
@@ -907,10 +1060,22 @@
   function quickRetry() {
     if (player.deadTimer > 0) return;
     deathCount += 1;
+    addDeathMark();
     hitStopTimer = 0;
     shake(0.08, 3.4);
     burst(player.x + player.w / 2, player.y + player.h / 2, palette.hot, 18, 240);
     respawn();
+  }
+
+  function addDeathMark() {
+    deathMarks.push({
+      room: roomIndex,
+      x: player.x + player.w / 2,
+      y: player.y + player.h / 2,
+      life: DEATH_MARK_LIFE,
+      max: DEATH_MARK_LIFE
+    });
+    while (deathMarks.length > 12) deathMarks.shift();
   }
 
   function getInput() {
@@ -1185,6 +1350,13 @@
     }
   }
 
+  function updateDeathMarks(dt) {
+    for (let i = deathMarks.length - 1; i >= 0; i--) {
+      deathMarks[i].life -= dt;
+      if (deathMarks[i].life <= 0) deathMarks.splice(i, 1);
+    }
+  }
+
   function burst(x, y, color, count, speed) {
     for (let i = 0; i < count; i++) {
       const angle = Math.random() * Math.PI * 2;
@@ -1233,6 +1405,7 @@
     drawTiles(time);
     drawLightTrails(time);
     drawEntities(time);
+    drawDeathMarks(time);
     drawParticles();
     drawGhosts();
     drawSparkCue(time);
@@ -1428,6 +1601,10 @@
       drawDiamond(refill.x, refill.y + Math.sin(refill.bob) * 4, 14, palette.cyan, time);
     }
 
+    for (const relay of room.entities.relays) {
+      drawRelay(relay, time);
+    }
+
     if (room.entities.goal) {
       const goal = room.entities.goal;
       drawDiamond(goal.x, goal.y + Math.sin(time * 4) * 5, 19, "#fff0a0", time);
@@ -1437,6 +1614,60 @@
       ctx.beginPath();
       ctx.arc(goal.x, goal.y, 44, 0, Math.PI * 2);
       ctx.fill();
+      ctx.restore();
+    }
+  }
+
+  function drawRelay(relay, time) {
+    const y = relay.y + Math.sin(relay.bob) * 3;
+    const active = relay.ready ? 1 : 0.28;
+    const pulse = relay.pulse > 0 ? relay.pulse / 0.3 : 0;
+    ctx.save();
+    ctx.translate(relay.x, y);
+    ctx.globalAlpha = 0.42 + active * 0.44;
+    ctx.shadowColor = palette.cyan;
+    ctx.shadowBlur = relay.ready ? 20 : 7;
+    ctx.strokeStyle = relay.ready ? palette.cyan : "rgba(118, 215, 255, 0.42)";
+    ctx.lineWidth = 3;
+    ctx.rotate(time * 1.2);
+    ctx.beginPath();
+    ctx.arc(0, 0, 14 + pulse * 8, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.rotate(-time * 2.1);
+    ctx.beginPath();
+    ctx.moveTo(0, -10);
+    ctx.lineTo(9, 0);
+    ctx.lineTo(0, 10);
+    ctx.lineTo(-9, 0);
+    ctx.closePath();
+    ctx.stroke();
+    ctx.fillStyle = relay.ready ? "rgba(248,251,255,0.9)" : "rgba(248,251,255,0.24)";
+    ctx.fillRect(-2, -2, 4, 4);
+    ctx.restore();
+  }
+
+  function drawDeathMarks(time) {
+    for (const mark of deathMarks) {
+      if (mark.room !== roomIndex) continue;
+      const t = Math.max(0, mark.life / mark.max);
+      ctx.save();
+      ctx.globalAlpha = t * 0.62;
+      ctx.translate(mark.x, mark.y);
+      ctx.rotate(time * 1.8);
+      ctx.strokeStyle = palette.hot;
+      ctx.lineWidth = 2;
+      ctx.shadowColor = palette.hot;
+      ctx.shadowBlur = 10;
+      ctx.beginPath();
+      ctx.moveTo(-7, -7);
+      ctx.lineTo(7, 7);
+      ctx.moveTo(7, -7);
+      ctx.lineTo(-7, 7);
+      ctx.stroke();
+      ctx.strokeStyle = "rgba(248,251,255,0.72)";
+      ctx.beginPath();
+      ctx.arc(0, 0, 12 + (1 - t) * 7, 0, Math.PI * 2);
+      ctx.stroke();
       ctx.restore();
     }
   }
@@ -1608,9 +1839,21 @@
   function updateHud() {
     const found = collected.size;
     lumenCount.textContent = `${found}/${totalLumens}`;
+    roomCount.textContent = `${roomIndex + 1}/${maps.length}`;
+    runTimeText.textContent = formatTime(runTime);
+    deathCountText.textContent = `D ${deathCount}`;
+    runTimeText.classList.toggle("best", bestTime > 0 && runTime > 0 && runTime <= bestTime);
     dashFill.style.transform = `scaleX(${player.dashes > 0 ? 1 : 0.12})`;
     staminaFill.style.transform = `scaleX(${Math.max(0.08, player.stamina / MAX_STAMINA)})`;
     updateDebug();
+  }
+
+  function formatTime(value) {
+    const totalHundredths = Math.max(0, Math.floor(value * 100));
+    const minutes = Math.floor(totalHundredths / 6000);
+    const seconds = Math.floor((totalHundredths % 6000) / 100);
+    const hundredths = totalHundredths % 100;
+    return `${minutes}:${String(seconds).padStart(2, "0")}.${String(hundredths).padStart(2, "0")}`;
   }
 
   function updateDebug() {
@@ -1625,7 +1868,7 @@
       `spark ${player.sparkHopTimer.toFixed(3)}  lock ${player.wallJumpLock.toFixed(3)}`,
       `stamina ${(player.stamina * 100).toFixed(0)}  deaths ${deathCount}`,
       `hitstop ${hitStopTimer.toFixed(3)}  ghosts ${ghosts.length}`,
-      `trails ${lightTrails.length}  shake ${settings.shake.toFixed(2)}`
+      `trails ${lightTrails.length}  relays ${room.entities.relays.length}  shake ${settings.shake.toFixed(2)}`
     ].join("\n");
   }
 

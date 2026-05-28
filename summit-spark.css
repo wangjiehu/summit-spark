@@ -125,6 +125,17 @@ canvas {
   text-align: center;
 }
 
+.counter.stat {
+  min-width: 62px;
+  color: rgba(248, 251, 255, 0.88);
+}
+
+.counter.best {
+  border-color: rgba(247, 198, 93, 0.42);
+  color: var(--gold);
+  box-shadow: 0 0 14px rgba(247, 198, 93, 0.16);
+}
+
 .debug-panel {
   position: absolute;
   left: 18px;
@@ -261,6 +272,13 @@ canvas {
   text-shadow: 0 10px 35px rgba(0, 0, 0, 0.52);
 }
 
+.overlay p {
+  margin: -8px 0 0;
+  color: rgba(248, 251, 255, 0.84);
+  font-weight: 800;
+  letter-spacing: 0;
+}
+
 .primary {
   min-width: 124px;
   height: 46px;
@@ -349,5 +367,18 @@ canvas {
   .dash-meter,
   .stamina-meter {
     width: 48px;
+  }
+
+  .meters {
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 6px;
+  }
+
+  .counter,
+  .counter.stat {
+    min-width: 48px;
+    padding: 4px 6px;
+    font-size: 12px;
   }
 }
