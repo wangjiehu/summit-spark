@@ -43,14 +43,14 @@
   const DASH_HITSTOP = 0.018;
   const DEATH_HITSTOP = 0.035;
   const SHAKE_INTENSITY = 0;
-  const LIGHT_TRAIL_LIFE = 1.35;
-  const LIGHT_TRAIL_WIDTH = 54;
-  const LIGHT_TRAIL_HEIGHT = 6;
-  const LIGHT_TRAIL_STEP = 20;
+  const LIGHT_TRAIL_LIFE = 0.62;
+  const LIGHT_TRAIL_WIDTH = 42;
+  const LIGHT_TRAIL_HEIGHT = 4;
+  const LIGHT_TRAIL_STEP = 16;
 
   const SOLID = new Set(["#"]);
   const HAZARDS = new Set(["^", "v", "<", ">"]);
-  const JUMP_CODES = new Set(["Space", "ArrowUp", "KeyW"]);
+  const JUMP_CODES = new Set(["Space"]);
   const DASH_CODES = new Set(["KeyX", "KeyE", "ShiftLeft", "ShiftRight"]);
   const BLOCKED_CODES = new Set(["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "Space"]);
 
@@ -456,7 +456,7 @@
     }
 
     if (player.dashTimer > 0) {
-      player.dashTimer -= dt;
+      player.dashTimer = Math.max(0, player.dashTimer - dt);
       player.ghostTimer -= dt;
       if (player.ghostTimer <= 0) {
         addGhost(0.34);
@@ -476,6 +476,7 @@
     const fallSpeed = player.vy;
     moveAxis("x", player.vx * dt);
     moveAxis("y", player.vy * dt);
+    unstuckFromSolids();
     if (!player.wasGrounded && player.onGround && fallSpeed > 420) {
       shake(0.055, Math.min(2.4, fallSpeed / 320));
       burst(player.x + player.w / 2, player.y + player.h, "#e9f7ff", 4, 90);
@@ -657,21 +658,6 @@
         player.y += move;
       }
 
-      if (axis === "y" && step > 0) {
-        const trail = landingLightTrail(getPlayerBox(), player.y - move + player.h);
-        if (trail) {
-          player.y = trail.y - player.h;
-          player.vy = 0;
-          player.onGround = true;
-          player.stamina = MAX_STAMINA;
-          player.dashes = 1;
-          trail.pulse = 0.22;
-          trail.used = true;
-          burst(player.x + player.w / 2, trail.y, palette.cyan, 7, 120);
-          return;
-        }
-      }
-
       if (collidesSolid(getPlayerBox())) {
         if (axis === "x") {
           if (player.dashTimer > 0 && tryDashCornerCorrection()) {
@@ -697,6 +683,37 @@
       }
       remaining -= move;
     }
+  }
+
+  function unstuckFromSolids() {
+    if (!collidesSolid(getPlayerBox())) return;
+
+    const originalX = player.x;
+    const originalY = player.y;
+    for (let radius = 1; radius <= 8; radius++) {
+      const offsets = [
+        [0, -radius],
+        [-radius, 0],
+        [radius, 0],
+        [0, radius],
+        [-radius, -radius],
+        [radius, -radius],
+        [-radius, radius],
+        [radius, radius]
+      ];
+      for (const [ox, oy] of offsets) {
+        player.x = originalX + ox;
+        player.y = originalY + oy;
+        if (!collidesSolid(getPlayerBox())) {
+          player.vx = 0;
+          player.vy = 0;
+          return;
+        }
+      }
+    }
+
+    player.x = originalX;
+    player.y = originalY;
   }
 
   function tryVerticalCornerCorrection() {
@@ -860,43 +877,31 @@
   }
 
   function spawnLightTrail(dx, dy) {
-    const count = settings.calmEffects ? 4 : 6;
+    const count = settings.calmEffects ? 3 : 5;
     const cx = player.x + player.w / 2;
-    const cy = player.y + player.h / 2 + 10;
+    const cy = player.y + player.h / 2 + 7;
     for (let i = 0; i < count; i++) {
       const t = i / Math.max(1, count - 1);
       lightTrails.push({
         x: cx - dx * LIGHT_TRAIL_STEP * i - LIGHT_TRAIL_WIDTH / 2,
-        y: cy - dy * LIGHT_TRAIL_STEP * i + Math.sin(t * Math.PI) * 3,
-        w: LIGHT_TRAIL_WIDTH - i * 3,
+        y: cy - dy * LIGHT_TRAIL_STEP * i + Math.sin(t * Math.PI) * 2,
+        w: LIGHT_TRAIL_WIDTH - i * 4,
         h: LIGHT_TRAIL_HEIGHT,
-        life: LIGHT_TRAIL_LIFE - i * 0.06,
+        life: LIGHT_TRAIL_LIFE - i * 0.055,
         max: LIGHT_TRAIL_LIFE,
-        pulse: 0,
-        used: false
+        pulse: 0.16
       });
     }
-    while (lightTrails.length > 28) lightTrails.shift();
+    while (lightTrails.length > 18) lightTrails.shift();
   }
 
   function updateLightTrails(dt) {
     for (let i = lightTrails.length - 1; i >= 0; i--) {
       const trail = lightTrails[i];
-      trail.life -= dt * (trail.used ? 1.55 : 1);
+      trail.life -= dt;
       trail.pulse = Math.max(0, trail.pulse - dt);
       if (trail.life <= 0) lightTrails.splice(i, 1);
     }
-  }
-
-  function landingLightTrail(box, previousBottom) {
-    for (const trail of lightTrails) {
-      if (trail.life <= 0) continue;
-      const overlapX = box.x + box.w > trail.x + 3 && box.x < trail.x + trail.w - 3;
-      const crossedTop = previousBottom <= trail.y + 3 && box.y + box.h >= trail.y;
-      const closeEnough = box.y + box.h <= trail.y + Math.max(12, Math.abs(player.vy) * 0.03 + 5);
-      if (overlapX && crossedTop && closeEnough) return trail;
-    }
-    return null;
   }
 
   function drawLightTrails(time) {
@@ -904,14 +909,14 @@
       const age = Math.max(0, trail.life / trail.max);
       const pulse = trail.pulse > 0 ? 1 + trail.pulse * 2.6 : 1;
       ctx.save();
-      ctx.globalAlpha = Math.min(0.9, age * 0.88);
+      ctx.globalAlpha = Math.min(0.72, age * 0.7);
       ctx.shadowColor = "#76d7ff";
-      ctx.shadowBlur = settings.calmEffects ? 10 : 18;
-      ctx.fillStyle = trail.used ? "#fff0a0" : "#76d7ff";
+      ctx.shadowBlur = settings.calmEffects ? 6 : 12;
+      ctx.fillStyle = "#76d7ff";
       roundRect(ctx, trail.x, trail.y - trail.h / 2, trail.w * pulse, trail.h, 3);
       ctx.fill();
       ctx.shadowBlur = 0;
-      ctx.fillStyle = "rgba(255,255,255,0.75)";
+      ctx.fillStyle = "rgba(255,255,255,0.56)";
       ctx.fillRect(trail.x + 6, trail.y - 1, Math.max(6, trail.w - 12) * age, 2);
       ctx.restore();
     }
@@ -924,7 +929,7 @@
   }
 
   function jumpHeld() {
-    return keys.has("Space") || keys.has("ArrowUp") || keys.has("KeyW") || touch.jump;
+    return keys.has("Space") || touch.jump;
   }
 
   function currentGravity() {
