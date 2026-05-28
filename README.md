@@ -4,6 +4,12 @@
 
 ## 运行
 
+在线试玩：
+
+```text
+https://wangjiehu.github.io/summit-spark/
+```
+
 ```bash
 npm start
 ```
