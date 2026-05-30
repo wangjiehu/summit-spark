@@ -84,6 +84,7 @@
   const DEATH_REPLAY_LIFE = 5.2;
   const MAX_ROOM_PATH_POINTS = 260;
   const ROOM_BEST_FLASH_TIME = 1.15;
+  const SPLIT_POPUP_TIME = 1.25;
   const SETTINGS_KEY = "summit-spark-settings";
   const ACTION_PULSE_TIME = 0.22;
   const BEST_FLOW_KEY = "summit-spark-best-flow";
@@ -419,6 +420,9 @@
   let bestRelayChain = 0;
   let relayPopupTimer = 0;
   let roomBestFlashTimer = 0;
+  let splitPopupTimer = 0;
+  let splitPopupText = "";
+  let splitPopupAhead = true;
   let flowScore = 0;
   let flowPeak = 0;
   let flowTimer = 0;
@@ -744,6 +748,7 @@
     relayChainTimer = 0;
     relayPopupTimer = 0;
     roomBestFlashTimer = 0;
+    clearSplitPopup();
     resetFlow();
     echoAnchor = null;
     recallCooldown = 0;
@@ -773,6 +778,7 @@
     relayChainTimer = 0;
     relayPopupTimer = 0;
     roomBestFlashTimer = 0;
+    clearSplitPopup();
     resetFlow();
     echoAnchor = null;
     recallCooldown = 0;
@@ -1367,7 +1373,12 @@
   function recordRoomBest(index) {
     if (roomTime <= 0) return false;
     const current = bestRoomTimes[index] || 0;
-    if (current > 0 && roomTime >= current) return false;
+    const target = ROOM_TARGETS[index] || 0;
+    const reference = current || target;
+    const delta = reference > 0 ? roomTime - reference : 0;
+    const isNewBest = current <= 0 || roomTime < current;
+    showSplitPopup(index, roomTime, delta, isNewBest);
+    if (!isNewBest) return false;
     bestRoomTimes[index] = roomTime;
     writeRoomBests();
     saveRoomPath(index);
@@ -1375,6 +1386,19 @@
     addFlow(42, "pb");
     burst(player.x + player.w / 2, player.y + player.h / 2, palette.gold, 14, 210);
     return true;
+  }
+
+  function showSplitPopup(index, time, delta, isNewBest) {
+    const grade = splitGrade(time, ROOM_TARGETS[index]);
+    const label = isNewBest ? "PB" : "SPLIT";
+    splitPopupText = `${label} ${formatDelta(delta)}${grade ? ` ${grade}` : ""}`;
+    splitPopupAhead = delta <= 0 || isNewBest;
+    splitPopupTimer = SPLIT_POPUP_TIME;
+  }
+
+  function clearSplitPopup() {
+    splitPopupTimer = 0;
+    splitPopupText = "";
   }
 
   function readRoomPaths() {
@@ -1555,6 +1579,7 @@
     addDeathMark();
     resetRelayChain();
     breakFlow();
+    clearSplitPopup();
     player.deadTimer = DEATH_RETRY_TIME;
     hitStopTimer = Math.max(hitStopTimer, DEATH_HITSTOP);
     shake(0.2, 6.4);
@@ -1585,6 +1610,7 @@
     player.overdrive = 0;
     player.ghostTimer = 0;
     player.deadTimer = 0;
+    clearSplitPopup();
     roomTime = 0;
     ghosts.length = 0;
     lightTrails.length = 0;
@@ -1650,6 +1676,7 @@
       respawnX: target.x,
       respawnY: target.y
     });
+    clearSplitPopup();
     roomTime = 0;
     hitStopTimer = 0;
     ghosts.length = 0;
@@ -1974,6 +2001,7 @@
     recallCooldown = Math.max(0, recallCooldown - dt);
     recallPulseTimer = Math.max(0, recallPulseTimer - dt);
     roomIntroTimer = Math.max(0, roomIntroTimer - dt);
+    splitPopupTimer = Math.max(0, splitPopupTimer - dt);
     updateFlow(dt);
     for (const key of Object.keys(actionPulse)) {
       actionPulse[key] = Math.max(0, actionPulse[key] - dt);
@@ -2239,6 +2267,7 @@
     if (player.deadTimer <= 0) drawPlayer(time);
     ctx.restore();
     drawRoomIntro(time);
+    drawSplitPopup(time);
     drawVignette();
   }
 
@@ -2525,6 +2554,25 @@
       if (counts[grade] !== undefined) counts[grade] += 1;
     });
     return `S ${counts.S}/${maps.length} / A ${counts.A} / Flow Best ${Math.floor(bestFlow)}`;
+  }
+
+  function drawSplitPopup(time) {
+    if (splitPopupTimer <= 0 || !splitPopupText) return;
+    const t = splitPopupTimer / SPLIT_POPUP_TIME;
+    const y = 132 - (1 - t) * 12;
+    const pulse = 1 + Math.sin(time * 18) * 0.018;
+    ctx.save();
+    ctx.globalAlpha = Math.min(1, t * 1.7);
+    ctx.translate(W / 2, y);
+    ctx.scale(pulse, pulse);
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.font = "800 15px system-ui, sans-serif";
+    ctx.shadowColor = splitPopupAhead ? palette.gold : palette.hot;
+    ctx.shadowBlur = settings.calmEffects ? 6 : 13;
+    ctx.fillStyle = splitPopupAhead ? palette.gold : "#ff99aa";
+    ctx.fillText(splitPopupText, 0, 0);
+    ctx.restore();
   }
 
   function drawFlowCue(time) {
