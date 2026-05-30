@@ -26,6 +26,7 @@ Build an original precision platformer whose identity is not imitation, but mast
 - 2026-05-29: Added wall coyote, fast fall, room target grades, persisted settings, comfort/classic key presets, and close-to-player input echo cues.
 - 2026-05-29: Expanded the route to 10 rooms and added wind updrafts, overdrive prisms, echo anchors, Flow peak scoring, near-miss rewards, gamepad support, and final-run Flow reporting.
 - 2026-05-30: Added room intro panels, dynamic best ghosts, current-route trails, practice-line settings, and summit mastery summary.
+- 2026-05-30: Added split delta HUD, dash-aim preview, room-select practice, and automated map integrity checks.
 
 ## Next Milestones
 
@@ -46,3 +47,10 @@ Build an original precision platformer whose identity is not imitation, but mast
 - A room should be readable before it is difficult.
 - Restart speed matters as much as spectacle.
 - Practice data should help the player improve without adding menu friction.
+
+## Precision Quality Gate
+
+- Every room must pass automated size, tile, target, name, start, and summit-goal validation before publishing.
+- Every practice feature must reduce uncertainty: show intent, show pace, or show route memory.
+- New maps should add pressure gradually: safe intro, readable escalation, optional high-skill line, and a clean recovery path.
+- Online builds must be checked after push so the public URL is never treated as finished just because local checks pass.

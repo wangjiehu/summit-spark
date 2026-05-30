@@ -137,6 +137,17 @@ canvas {
   box-shadow: 0 0 14px rgba(247, 198, 93, 0.16);
 }
 
+.counter.delta {
+  min-width: 58px;
+  color: rgba(143, 227, 155, 0.9);
+}
+
+.counter.delta.behind {
+  border-color: rgba(255, 101, 125, 0.34);
+  color: rgba(255, 153, 170, 0.9);
+  box-shadow: 0 0 12px rgba(255, 101, 125, 0.1);
+}
+
 .debug-panel {
   position: absolute;
   left: 18px;
@@ -256,6 +267,10 @@ canvas {
   width: 18px;
   height: 18px;
   accent-color: var(--cyan);
+}
+
+#roomSelect {
+  width: 164px;
 }
 
 .overlay {

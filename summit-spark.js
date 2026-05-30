@@ -8,6 +8,7 @@
   const lumenCount = document.getElementById("lumenCount");
   const roomCount = document.getElementById("roomCount");
   const splitTimeText = document.getElementById("splitTime");
+  const splitDeltaText = document.getElementById("splitDelta");
   const flowCountText = document.getElementById("flowCount");
   const runTimeText = document.getElementById("runTime");
   const deathCountText = document.getElementById("deathCount");
@@ -20,6 +21,7 @@
   const calmEffectsToggle = document.getElementById("calmEffectsToggle");
   const practiceLinesToggle = document.getElementById("practiceLinesToggle");
   const controlPresetSelect = document.getElementById("controlPreset");
+  const roomSelect = document.getElementById("roomSelect");
   const dashFill = document.querySelector(".dash-meter span");
   const staminaFill = document.querySelector(".stamina-meter span");
 
@@ -92,6 +94,8 @@
   const ECHO_RECALL_COOLDOWN = 0.32;
   const ROOM_INTRO_TIME = 1.2;
   const CURRENT_PATH_DRAW_POINTS = 90;
+  const DASH_AIM_PREVIEW_LENGTH = 58;
+  const DASH_AIM_PREVIEW_MIN_ALPHA = 0.24;
 
   const SOLID = new Set(["#"]);
   const HAZARDS = new Set(["^", "v", "<", ">"]);
@@ -558,6 +562,14 @@
     writeSettings();
     focusGame();
   });
+  roomSelect?.addEventListener("change", () => {
+    const target = Number(roomSelect.value);
+    if (Number.isInteger(target) && target >= 0 && target < maps.length) {
+      jumpToRoom(target);
+      closeSettings();
+    }
+  });
+  populateRoomSelect();
   syncSettingsPanel();
 
   document.querySelectorAll("[data-touch]").forEach((button) => {
@@ -1803,6 +1815,22 @@
     }
   }
 
+  function populateRoomSelect() {
+    if (!roomSelect) return;
+    roomSelect.innerHTML = "";
+    maps.forEach((_, index) => {
+      const option = document.createElement("option");
+      option.value = String(index);
+      option.textContent = `${index + 1}. ${ROOM_NAMES[index] || "Summit"}`;
+      roomSelect.appendChild(option);
+    });
+  }
+
+  function syncRoomSelect() {
+    if (!roomSelect || document.activeElement === roomSelect) return;
+    roomSelect.value = String(roomIndex);
+  }
+
   function focusGame() {
     try {
       canvas.focus({ preventScroll: true });
@@ -1836,6 +1864,7 @@
   }
 
   function syncSettingsPanel() {
+    syncRoomSelect();
     if (shakeSlider) shakeSlider.value = String(settings.shake);
     if (debugToggle) debugToggle.checked = debugVisible;
     if (calmEffectsToggle) calmEffectsToggle.checked = settings.calmEffects;
@@ -2202,6 +2231,7 @@
     drawParticles();
     drawGhosts();
     drawSparkCue(time);
+    drawDashAimPreview(time);
     drawInputCues(time);
     drawFlowCue(time);
     drawRelayChainCue(time);
@@ -2230,6 +2260,56 @@
     ctx.beginPath();
     ctx.arc(cx, cy, 11 + charge * 4, -Math.PI * 0.2, Math.PI * 1.25);
     ctx.stroke();
+    ctx.restore();
+  }
+
+  function drawDashAimPreview(time) {
+    if (player.deadTimer > 0 || player.dashes <= 0 || player.dashCooldown > 0) return;
+    const input = getInput();
+    let dx = input.x;
+    let dy = input.y;
+    if (dx === 0 && dy === 0 && lastAimTimer > 0) {
+      dx = lastAimX;
+      dy = lastAimY;
+    }
+    if (dx === 0 && dy === 0) dx = player.facing || 1;
+    const len = Math.hypot(dx, dy) || 1;
+    dx /= len;
+    dy /= len;
+
+    const cx = player.x + player.w / 2;
+    const cy = player.y + player.h / 2;
+    const reach = DASH_AIM_PREVIEW_LENGTH * (player.overdrive > 0 ? 1.12 : 1);
+    const endX = cx + dx * reach;
+    const endY = cy + dy * reach;
+    const pulse = 0.5 + Math.sin(time * 10) * 0.5;
+    const armed = Math.max(actionPulse.dash, player.dashBuffer) / Math.max(ACTION_PULSE_TIME, DASH_BUFFER_TIME);
+    const alpha = Math.min(0.72, DASH_AIM_PREVIEW_MIN_ALPHA + armed * 0.3 + pulse * 0.08);
+    const angle = Math.atan2(dy, dx);
+
+    ctx.save();
+    ctx.globalAlpha = alpha;
+    ctx.strokeStyle = player.overdrive > 0 ? palette.green : palette.cyan;
+    ctx.fillStyle = player.overdrive > 0 ? palette.green : palette.cyan;
+    ctx.lineWidth = 2;
+    ctx.lineCap = "round";
+    ctx.shadowColor = player.overdrive > 0 ? palette.green : palette.cyan;
+    ctx.shadowBlur = settings.calmEffects ? 5 : 11;
+    ctx.setLineDash([8, 7]);
+    ctx.beginPath();
+    ctx.moveTo(cx + dx * 18, cy + dy * 18);
+    ctx.lineTo(endX, endY);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.translate(endX, endY);
+    ctx.rotate(angle);
+    ctx.beginPath();
+    ctx.moveTo(9, 0);
+    ctx.lineTo(-5, -5);
+    ctx.lineTo(-2, 0);
+    ctx.lineTo(-5, 5);
+    ctx.closePath();
+    ctx.fill();
     ctx.restore();
   }
 
@@ -2434,7 +2514,7 @@
     ctx.fillText(`${roomIndex + 1}. ${ROOM_NAMES[roomIndex] || "Summit"}`, W / 2, 82 - (1 - t) * 10);
     ctx.font = "800 12px system-ui, sans-serif";
     ctx.fillStyle = "rgba(248,251,255,0.68)";
-    ctx.fillText(`target ${formatTime(target)}${best ? ` ? best ${formatTime(best)}` : ""}`, W / 2, 104 - (1 - t) * 10);
+    ctx.fillText(`target ${formatTime(target)}${best ? ` / best ${formatTime(best)}` : ""}`, W / 2, 104 - (1 - t) * 10);
     ctx.restore();
   }
 
@@ -2444,7 +2524,7 @@
       const grade = splitGrade(best, ROOM_TARGETS[index]);
       if (counts[grade] !== undefined) counts[grade] += 1;
     });
-    return `S ${counts.S}/${maps.length} ? A ${counts.A} ? Flow Best ${Math.floor(bestFlow)}`;
+    return `S ${counts.S}/${maps.length} / A ${counts.A} / Flow Best ${Math.floor(bestFlow)}`;
   }
 
   function drawFlowCue(time) {
@@ -3097,14 +3177,23 @@
     lumenCount.textContent = `${found}/${totalLumens}`;
     roomCount.textContent = `${roomIndex + 1}/${maps.length}${grade ? ` ${grade}` : ""}`;
     splitTimeText.textContent = formatTime(roomTime);
+    const splitReference = roomBest || ROOM_TARGETS[roomIndex] || 0;
+    const splitDelta = splitReference > 0 ? roomTime - splitReference : 0;
+    if (splitDeltaText) {
+      splitDeltaText.textContent = splitReference > 0 ? formatDelta(splitDelta) : "--";
+      splitDeltaText.title = roomBest > 0 ? "room PB delta" : "target delta";
+    }
     if (flowCountText) flowCountText.textContent = `F ${Math.floor(flowPeak || flowScore)}`;
     runTimeText.textContent = formatTime(runTime);
     deathCountText.textContent = `D ${deathCount}`;
     splitTimeText.classList.toggle("best", roomBest > 0 && roomTime > 0 && roomTime <= roomBest);
+    splitDeltaText?.classList.toggle("best", splitReference > 0 && splitDelta <= 0);
+    splitDeltaText?.classList.toggle("behind", splitReference > 0 && splitDelta > 0);
     flowCountText?.classList.toggle("best", bestFlow > 0 && Math.floor(flowPeak) >= Math.floor(bestFlow));
     runTimeText.classList.toggle("best", bestTime > 0 && runTime > 0 && runTime <= bestTime);
     dashFill.style.transform = `scaleX(${player.dashes > 0 ? 1 : 0.12})`;
     staminaFill.style.transform = `scaleX(${Math.max(0.08, player.stamina / MAX_STAMINA)})`;
+    syncRoomSelect();
     updateDebug();
   }
 
@@ -3114,6 +3203,14 @@
     const seconds = Math.floor((totalHundredths % 6000) / 100);
     const hundredths = totalHundredths % 100;
     return `${minutes}:${String(seconds).padStart(2, "0")}.${String(hundredths).padStart(2, "0")}`;
+  }
+
+  function formatDelta(value) {
+    const sign = value <= 0 ? "-" : "+";
+    const totalHundredths = Math.floor(Math.abs(value) * 100);
+    const seconds = Math.floor(totalHundredths / 100);
+    const hundredths = totalHundredths % 100;
+    return `${sign}${seconds}.${String(hundredths).padStart(2, "0")}`;
   }
 
   function splitGrade(best, target) {
