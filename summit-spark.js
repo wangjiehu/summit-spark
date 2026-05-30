@@ -98,6 +98,15 @@
   const CRUMBLE_BREAK_TIME = 0.42;
   const DASH_AIM_PREVIEW_LENGTH = 58;
   const DASH_AIM_PREVIEW_MIN_ALPHA = 0.24;
+  const CRUMBLE_DEATH_MEMORY = 1.4;
+  const DEATH_REASON_KEYS = ["spike", "fall", "crumble", "retry", "room"];
+  const DEATH_REASON_LABELS = {
+    spike: "SPIKE",
+    fall: "FALL",
+    crumble: "CRUMBLE",
+    retry: "RETRY",
+    room: "ROOM"
+  };
 
   const SOLID = new Set(["#", "C"]);
   const HAZARDS = new Set(["^", "v", "<", ">"]);
@@ -398,6 +407,9 @@
   let won = false;
   let lastTime = performance.now();
   let deathCount = 0;
+  let deathReasons = createDeathReasons();
+  let lastDeathReason = "none";
+  let crumbleSlipTimer = 0;
   let runTime = 0;
   let roomTime = 0;
   let bestTime = readBestTime();
@@ -735,6 +747,9 @@
   function hardReset() {
     collected = new Set();
     deathCount = 0;
+    deathReasons = createDeathReasons();
+    lastDeathReason = "none";
+    crumbleSlipTimer = 0;
     runTime = 0;
     roomTime = 0;
     won = false;
@@ -768,6 +783,9 @@
   function jumpToRoom(index) {
     collected = new Set();
     deathCount = 0;
+    deathReasons = createDeathReasons();
+    lastDeathReason = "none";
+    crumbleSlipTimer = 0;
     runTime = 0;
     roomTime = 0;
     won = false;
@@ -1255,7 +1273,7 @@
     }
 
     if (hazard || player.y > H + 80) {
-      die();
+      die(hazard ? "spike" : crumbleSlipTimer > 0 ? "crumble" : "fall");
     }
   }
 
@@ -1578,14 +1596,15 @@
     }
   }
 
-  function die() {
+  function die(reason = "fall") {
     if (player.deadTimer > 0 || won) return;
-    deathCount += 1;
-    addDeathMark();
+    const deathReason = registerDeath(reason);
+    addDeathMark(deathReason);
     resetRelayChain();
     breakFlow();
     clearSplitPopup();
     player.deadTimer = DEATH_RETRY_TIME;
+    crumbleSlipTimer = 0;
     hitStopTimer = Math.max(hitStopTimer, DEATH_HITSTOP);
     shake(0.2, 6.4);
     burst(player.x + player.w / 2, player.y + player.h / 2, palette.hot, 34, 360);
@@ -1616,6 +1635,7 @@
     player.ghostTimer = 0;
     player.deadTimer = 0;
     clearSplitPopup();
+    crumbleSlipTimer = 0;
     roomTime = 0;
     ghosts.length = 0;
     lightTrails.length = 0;
@@ -1629,8 +1649,8 @@
 
   function quickRetry() {
     if (player.deadTimer > 0) return;
-    deathCount += 1;
-    addDeathMark();
+    const deathReason = registerDeath("retry");
+    addDeathMark(deathReason);
     resetRelayChain();
     breakFlow();
     hitStopTimer = 0;
@@ -1641,8 +1661,8 @@
 
   function restartCurrentRoom() {
     if (player.deadTimer > 0) return;
-    deathCount += 1;
-    addDeathMark();
+    const deathReason = registerDeath("room");
+    addDeathMark(deathReason);
     resetRelayChain();
     breakFlow();
     room = parseRoom(roomIndex);
@@ -1682,6 +1702,7 @@
       respawnY: target.y
     });
     clearSplitPopup();
+    crumbleSlipTimer = 0;
     roomTime = 0;
     hitStopTimer = 0;
     ghosts.length = 0;
@@ -1693,7 +1714,44 @@
     burst(player.x + player.w / 2, player.y + player.h / 2, "#f8fbff", 12, 210);
   }
 
-  function addDeathMark() {
+  function createDeathReasons() {
+    return DEATH_REASON_KEYS.reduce((counts, key) => {
+      counts[key] = 0;
+      return counts;
+    }, {});
+  }
+
+  function normalizeDeathReason(reason) {
+    return DEATH_REASON_LABELS[reason] ? reason : "fall";
+  }
+
+  function registerDeath(reason) {
+    const normalized = normalizeDeathReason(reason);
+    deathCount += 1;
+    deathReasons[normalized] = (deathReasons[normalized] || 0) + 1;
+    lastDeathReason = normalized;
+    return normalized;
+  }
+
+  function deathReasonLabel(reason) {
+    return DEATH_REASON_LABELS[normalizeDeathReason(reason)] || "FALL";
+  }
+
+  function deathReasonColor(reason) {
+    const normalized = normalizeDeathReason(reason);
+    if (normalized === "crumble") return palette.cyan;
+    if (normalized === "retry" || normalized === "room") return palette.gold;
+    return palette.hot;
+  }
+
+  function deathReasonSummary() {
+    const parts = DEATH_REASON_KEYS
+      .filter((key) => deathReasons[key] > 0)
+      .map((key) => `${deathReasonLabel(key)} ${deathReasons[key]}`);
+    return parts.length ? parts.join(" / ") : "clean";
+  }
+
+  function addDeathMark(reason = lastDeathReason) {
     const points = recentPath
       .filter((point) => point.room === roomIndex)
       .map((point) => ({ ...point }));
@@ -1702,7 +1760,8 @@
         room: roomIndex,
         points,
         life: DEATH_REPLAY_LIFE,
-        max: DEATH_REPLAY_LIFE
+        max: DEATH_REPLAY_LIFE,
+        reason: normalizeDeathReason(reason)
       });
       while (deathReplays.length > 4) deathReplays.shift();
     }
@@ -1711,7 +1770,8 @@
       x: player.x + player.w / 2,
       y: player.y + player.h / 2,
       life: DEATH_MARK_LIFE,
-      max: DEATH_MARK_LIFE
+      max: DEATH_MARK_LIFE,
+      reason: normalizeDeathReason(reason)
     });
     while (deathMarks.length > 12) deathMarks.shift();
     clearRecentPath();
@@ -2007,6 +2067,7 @@
     recallPulseTimer = Math.max(0, recallPulseTimer - dt);
     roomIntroTimer = Math.max(0, roomIntroTimer - dt);
     splitPopupTimer = Math.max(0, splitPopupTimer - dt);
+    crumbleSlipTimer = Math.max(0, crumbleSlipTimer - dt);
     updateFlow(dt);
     updateCrumblePlatforms(dt);
     for (const key of Object.keys(actionPulse)) {
@@ -2057,6 +2118,7 @@
       if (block && room.tiles[block.y]?.[block.x] === "C" && block.timer <= 0) {
         block.timer = CRUMBLE_BREAK_TIME;
         block.warned = true;
+        crumbleSlipTimer = CRUMBLE_DEATH_MEMORY;
         shake(0.035, 1.2);
         burst(block.x * TILE + TILE / 2, block.y * TILE + 6, "#e7f4f7", 5, 95);
       }
@@ -2067,6 +2129,7 @@
       block.timer = Math.max(0, block.timer - dt);
       if (block.timer <= 0) {
         room.tiles[block.y][block.x] = ".";
+        crumbleSlipTimer = CRUMBLE_DEATH_MEMORY;
         burst(block.x * TILE + TILE / 2, block.y * TILE + TILE / 2, palette.cyan, 12, 210);
         addSnow(block.x * TILE + TILE / 2, block.y * TILE + 4, 4);
       }
@@ -2595,7 +2658,8 @@
       const grade = splitGrade(best, ROOM_TARGETS[index]);
       if (counts[grade] !== undefined) counts[grade] += 1;
     });
-    return `S ${counts.S}/${maps.length} / A ${counts.A} / Flow Best ${Math.floor(bestFlow)}`;
+    const mistakes = deathCount > 0 ? ` / Mistakes ${deathReasonSummary()}` : "";
+    return `S ${counts.S}/${maps.length} / A ${counts.A} / Flow Best ${Math.floor(bestFlow)}${mistakes}`;
   }
 
   function drawSplitPopup(time) {
@@ -3068,9 +3132,10 @@
       ctx.globalAlpha = t * 0.62;
       ctx.translate(mark.x, mark.y);
       ctx.rotate(time * 1.8);
-      ctx.strokeStyle = palette.hot;
+      const color = deathReasonColor(mark.reason);
+      ctx.strokeStyle = color;
       ctx.lineWidth = 2;
-      ctx.shadowColor = palette.hot;
+      ctx.shadowColor = color;
       ctx.shadowBlur = 10;
       ctx.beginPath();
       ctx.moveTo(-7, -7);
@@ -3078,6 +3143,16 @@
       ctx.moveTo(7, -7);
       ctx.lineTo(-7, 7);
       ctx.stroke();
+      ctx.save();
+      ctx.rotate(-time * 1.8);
+      ctx.font = "800 9px system-ui, sans-serif";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillStyle = color;
+      ctx.shadowColor = "rgba(0,0,0,0.72)";
+      ctx.shadowBlur = 8;
+      ctx.fillText(deathReasonLabel(mark.reason), 0, -22);
+      ctx.restore();
       ctx.strokeStyle = "rgba(248,251,255,0.72)";
       ctx.beginPath();
       ctx.arc(0, 0, 12 + (1 - t) * 7, 0, Math.PI * 2);
@@ -3094,8 +3169,9 @@
       ctx.lineCap = "round";
       ctx.lineJoin = "round";
       ctx.lineWidth = 3;
-      ctx.strokeStyle = `rgba(255, 92, 108, ${0.2 + fade * 0.38})`;
-      ctx.shadowColor = palette.hot;
+      const color = deathReasonColor(replay.reason);
+      ctx.strokeStyle = color === palette.hot ? `rgba(255, 92, 108, ${0.2 + fade * 0.38})` : `rgba(118, 215, 255, ${0.2 + fade * 0.38})`;
+      ctx.shadowColor = color;
       ctx.shadowBlur = 8;
       ctx.beginPath();
       replay.points.forEach((point, index) => {
@@ -3366,6 +3442,7 @@
       `spark ${player.sparkHopTimer.toFixed(3)}  lock ${player.wallJumpLock.toFixed(3)}  over ${player.overdrive.toFixed(3)}`,
       `relay chain ${relayChain}  best ${bestRelayChain}`,
       `flow ${Math.floor(flowScore)} peak ${Math.floor(flowPeak)} best ${Math.floor(bestFlow)}  deaths ${deathCount}`,
+      `last death ${lastDeathReason === "none" ? "none" : deathReasonLabel(lastDeathReason)}  reasons ${deathReasonSummary()}`,
       `stamina ${(player.stamina * 100).toFixed(0)}  anchor ${echoAnchor && echoAnchor.room === roomIndex ? 1 : 0}`,
       `hitstop ${hitStopTimer.toFixed(3)}  ghosts ${ghosts.length}`,
       `trails ${lightTrails.length}  relays ${room.entities.relays.length}  prisms ${room.entities.prisms.length}  up ${room.entities.updrafts.length}  crumble ${crumble.active}/${crumble.total}`,

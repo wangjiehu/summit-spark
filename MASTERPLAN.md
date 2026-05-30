@@ -56,7 +56,7 @@ Build an original precision platformer that beats the reference by being clearer
 
 ## Practice And Feedback Plan
 
-- Already shipped: split delta, PB/SPLIT result popup, best ghost, current trail, death replay, room select, current room restart.
+- Already shipped: split delta, PB/SPLIT result popup, best ghost, current trail, death replay, death reason diagnostics, room select, current room restart.
 - Next: room drill starts, mistake tags, per-room target medals, optional ghost opacity, and an end-screen route report.
 - Later: challenge variants, expert lines, and a compact level select with mastery status.
 
