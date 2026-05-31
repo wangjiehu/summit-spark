@@ -4,6 +4,8 @@
 
 Build an original precision platformer whose identity is not imitation, but mastery: instant controls, readable rooms, fast retry, and a signature movement language built around dash afterglow, spark hops, wall rhythm, and risky light relays.
 
+Long-term optimization source: `LONG_TERM_OPTIMIZATION_OUTLINE.md`.
+
 ## What We Must Beat
 
 - Feel: every input should be immediate, legible, and recoverable.

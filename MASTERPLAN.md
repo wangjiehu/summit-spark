@@ -4,6 +4,8 @@
 
 Build an original precision platformer that beats the reference by being clearer, faster to practice, and more expressive in its own movement language. We are not copying room layouts, art, story, or exact mechanics. We are studying the product-level strengths: instant feel, readable difficulty, fast retry, optional mastery, and strong training feedback.
 
+The long-term optimization source lives in `LONG_TERM_OPTIMIZATION_OUTLINE.md`; future super-pushes should align with that outline before expanding scope.
+
 ## Reference Lessons To Beat
 
 - Input feel: the player must trust jump, dash, wall contact, buffering, coyote time, and corner correction.

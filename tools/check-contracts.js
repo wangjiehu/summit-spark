@@ -10,6 +10,11 @@ const indexHtml = fs.readFileSync(path.join(root, "index.html"), "utf8");
 const standaloneHtml = fs.readFileSync(path.join(root, "summit-spark.html"), "utf8");
 const workflowPath = path.join(root, ".github", "workflows", "pages.yml");
 const workflow = fs.existsSync(workflowPath) ? fs.readFileSync(workflowPath, "utf8") : "";
+const readme = fs.readFileSync(path.join(root, "README.md"), "utf8");
+const roadmap = fs.readFileSync(path.join(root, "ROADMAP.md"), "utf8");
+const masterplan = fs.readFileSync(path.join(root, "MASTERPLAN.md"), "utf8");
+const longTermPath = path.join(root, "LONG_TERM_OPTIMIZATION_OUTLINE.md");
+const longTermPlan = fs.existsSync(longTermPath) ? fs.readFileSync(longTermPath, "utf8") : "";
 const errors = [];
 
 function extractArray(name) {
@@ -159,6 +164,28 @@ if (!counts.slice(6).some((room) => room.M > 0)) errors.push("late route should 
 if (!counts.slice(7).some((room) => room.B > 0)) errors.push("rooms 8-10 should include prism practice");
 
 if (!workflow.includes("npm run check")) errors.push("GitHub Pages workflow must run npm run check before deploy");
+if (!readme.includes("LONG_TERM_OPTIMIZATION_OUTLINE.md")) errors.push("README must link the long-term optimization outline");
+if (!roadmap.includes("LONG_TERM_OPTIMIZATION_OUTLINE.md")) errors.push("ROADMAP must link the long-term optimization outline");
+if (!masterplan.includes("LONG_TERM_OPTIMIZATION_OUTLINE.md")) errors.push("MASTERPLAN must link the long-term optimization outline");
+const requiredLongTermSections = [
+  "# 山巅微光长期优化总纲",
+  "## 1. 产品北极星",
+  "## 2. 已有基础",
+  "## 3. 长期推进主线",
+  "## 4. 审美与可读性原则",
+  "## 5. 分阶段路线",
+  "## 6. 下一轮推进包",
+  "## 7. 完成标准",
+  "## 8. 风险边界",
+  "不是复刻"
+];
+if (!longTermPlan) {
+  errors.push("Missing LONG_TERM_OPTIMIZATION_OUTLINE.md");
+} else {
+  for (const section of requiredLongTermSections) {
+    if (!longTermPlan.includes(section)) errors.push("long-term outline missing " + section);
+  }
+}
 
 if (errors.length > 0) {
   console.error("Contract check failed:");
