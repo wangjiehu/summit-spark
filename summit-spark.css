@@ -211,12 +211,15 @@ canvas {
   position: absolute;
   top: 64px;
   right: 18px;
-  width: min(320px, calc(100% - 36px));
-  padding: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.18);
-  background: rgba(7, 12, 20, 0.76);
+  width: min(420px, calc(100% - 36px));
+  max-height: calc(100% - 88px);
+  overflow: auto;
+  padding: 13px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(7, 12, 20, 0.9);
   color: #f8fbff;
   box-shadow: 0 18px 48px rgba(0, 0, 0, 0.28);
+  backdrop-filter: blur(8px);
   z-index: 4;
 }
 
@@ -234,7 +237,35 @@ canvas {
 }
 
 .settings-head {
-  margin-bottom: 12px;
+  position: sticky;
+  top: -13px;
+  z-index: 2;
+  margin: -13px -13px 12px;
+  padding: 13px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(7, 12, 20, 0.94);
+  backdrop-filter: blur(8px);
+}
+
+.pause-badge {
+  display: inline-grid;
+  place-items: center;
+  height: 20px;
+  margin-left: 8px;
+  padding: 0 7px;
+  border: 1px solid rgba(143, 227, 155, 0.32);
+  border-radius: 4px;
+  background: rgba(143, 227, 155, 0.12);
+  color: rgba(190, 255, 203, 0.92);
+  font-size: 11px;
+}
+
+.settings-section-title {
+  margin-top: 11px;
+  padding: 7px 0 5px;
+  color: rgba(143, 227, 155, 0.88);
+  font-size: 12px;
+  font-weight: 900;
 }
 
 .settings-head strong,
@@ -250,22 +281,49 @@ canvas {
 }
 
 .coach-row {
+  align-items: flex-start;
   min-height: 42px;
   padding-top: 8px;
   border-top: 1px solid rgba(255, 255, 255, 0.08);
 }
 
+.room-brief {
+  margin-top: 8px;
+  padding: 10px 11px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.055);
+  color: rgba(248, 251, 255, 0.8);
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1.35;
+  white-space: pre-wrap;
+}
+
+.practice-report {
+  margin-top: 8px;
+  padding: 10px 11px;
+  border: 1px solid rgba(247, 198, 93, 0.16);
+  border-radius: 6px;
+  background: rgba(247, 198, 93, 0.07);
+  color: rgba(248, 251, 255, 0.76);
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1.35;
+}
+
 .coach-row span {
+  flex: 1 1 auto;
   min-width: 0;
-  max-width: 186px;
-  overflow: hidden;
+  overflow: visible;
   color: rgba(248, 251, 255, 0.82);
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  line-height: 1.35;
+  white-space: normal;
 }
 
 .coach-actions {
   display: flex;
+  flex: 0 0 auto;
   gap: 6px;
 }
 
@@ -304,6 +362,7 @@ canvas {
 
 .control-row select {
   width: 132px;
+  min-width: 0;
   height: 28px;
   border: 1px solid rgba(255, 255, 255, 0.22);
   border-radius: 4px;
@@ -320,7 +379,9 @@ canvas {
 }
 
 #roomSelect {
-  width: 238px;
+  flex: 1 1 auto;
+  width: auto;
+  max-width: 100%;
 }
 
 .overlay {
@@ -350,10 +411,100 @@ canvas {
 }
 
 .overlay p {
+  max-width: min(760px, calc(100% - 36px));
   margin: -8px 0 0;
   color: rgba(248, 251, 255, 0.84);
   font-weight: 800;
+  line-height: 1.35;
   letter-spacing: 0;
+  text-align: center;
+}
+
+.overlay .finish-line {
+  margin-top: -2px;
+  color: rgba(255, 240, 160, 0.9);
+}
+
+.review-grid {
+  width: min(760px, calc(100% - 32px));
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.review-grid article {
+  min-width: 0;
+  padding: 10px 11px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 6px;
+  background: rgba(7, 12, 20, 0.58);
+  text-align: left;
+}
+
+.review-grid span {
+  display: block;
+  color: rgba(143, 227, 155, 0.86);
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.review-grid strong {
+  display: block;
+  margin-top: 4px;
+  color: #f8fbff;
+  font-size: 13px;
+  line-height: 1.25;
+}
+
+.review-grid p {
+  max-width: none;
+  margin: 5px 0 0;
+  color: rgba(248, 251, 255, 0.72);
+  font-size: 11px;
+  line-height: 1.35;
+  text-align: left;
+}
+
+.overlay .review-advice {
+  max-width: min(760px, calc(100% - 32px));
+  margin-top: 0;
+  color: rgba(248, 251, 255, 0.82);
+  font-size: 12px;
+}
+
+.review-actions {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.review-button {
+  min-width: 116px;
+  height: 34px;
+  padding: 0 13px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(248, 251, 255, 0.86);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.review-button.primary-review {
+  border-color: rgba(247, 198, 93, 0.42);
+  background: rgba(247, 198, 93, 0.14);
+  color: #fff0a0;
+}
+
+.review-button:hover {
+  background: rgba(118, 215, 255, 0.18);
+}
+
+.review-button.primary-review:hover {
+  background: rgba(247, 198, 93, 0.22);
 }
 
 .primary {
@@ -408,7 +559,7 @@ canvas {
   border-color: rgba(255, 255, 255, 0.55);
 }
 
-@media (pointer: coarse), (max-width: 760px) {
+@media (max-width: 760px) {
   .shell {
     padding: 0;
   }
@@ -421,13 +572,12 @@ canvas {
     border: 0;
   }
 
-  .touch {
-    display: flex;
-  }
-
   .settings-panel {
     right: 12px;
+    left: 12px;
     top: 58px;
+    width: auto;
+    max-height: calc(100% - 78px);
   }
 
   .hud {
@@ -457,5 +607,24 @@ canvas {
     min-width: 48px;
     padding: 4px 6px;
     font-size: 12px;
+  }
+
+  #lumenCount,
+  #flowCount {
+    display: none;
+  }
+
+  .review-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .overlay h1 {
+    font-size: clamp(38px, 14vw, 64px);
+  }
+}
+
+@media (pointer: coarse) {
+  .touch {
+    display: flex;
   }
 }

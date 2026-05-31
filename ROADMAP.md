@@ -4,7 +4,7 @@
 
 Build an original precision platformer whose identity is not imitation, but mastery: instant controls, readable rooms, fast retry, and a signature movement language built around dash afterglow, spark hops, wall rhythm, and risky light relays.
 
-Long-term optimization source: `LONG_TERM_OPTIMIZATION_OUTLINE.md`.
+Long-term optimization source: `LONG_TERM_OPTIMIZATION_OUTLINE.md`. Super-push execution source: `SUPER_PUSH_PLAN.md`.
 
 ## What We Must Beat
 
@@ -31,6 +31,10 @@ Long-term optimization source: `LONG_TERM_OPTIMIZATION_OUTLINE.md`.
 - 2026-05-30: Added split delta HUD, dash-aim preview, room-select practice, split result popups, crumble ice late-room pressure, death reason diagnostics, and automated map integrity checks.
 - 2026-05-31: Added room focus profiling so each room records current-run mistakes, persistent fault reasons, clean clears, focus popups, debug details, and practice-directory weak-room markers.
 - 2026-05-31: Added room skill tags, practice coach recommendations, Focus jump/reset controls, time-aware best ghosts, touch up/down input, stronger settings input isolation, Pages quality gates, and a 5/7/8/9/10 map-structure pass.
+- 2026-05-31: Added Drill entry from the practice coach, persistent Drill HUD, Drill start/clear/clean stats, room purpose text, safe/fast/expert route lines, room detail brief, room medal/pace/clean badges in practice surfaces, settings practice report, ghost opacity, and stronger summit review with clean count, split-loss focus, and next drill suggestion.
+- 2026-05-31: Added a design-readability pass: timer arms on first movement intent, settings pauses simulation, practice copy is localized, settings are grouped by task, compact HUD hides noisy counters on narrow screens, and touch controls depend on touch-capable pointers.
+- 2026-06-01: Added an action-visual pass and richer practice review: the player now has readable pulses for jump, dash, Spark, wall jump, relay, prism, spring, recall, spawn, landing, and death; summit review now shows cards for next Drill, largest split loss, and weakest reason with concrete route advice.
+- 2026-06-01: Added late-mechanic readability and low-friction finish practice: crumble ice shows a break meter and warning outline, updrafts expose their field boundary and lift arrows, relay/prism cooldown rings show readiness, echo anchors tether to the player when recall is available, and finish review buttons jump directly into next/slow-room Drill.
 
 ## Next Milestones
 
@@ -51,9 +55,12 @@ Long-term optimization source: `LONG_TERM_OPTIMIZATION_OUTLINE.md`.
 - A room should be readable before it is difficult.
 - Restart speed matters as much as spectacle.
 - Practice data should help the player improve without adding menu friction.
+- Review text should point to a concrete route line, not just a room number.
+- End-of-run recommendations should be actionable without requiring the player to reopen settings.
 - Weak-room markers should point to action: current run mistakes use `!x`; persistent trouble uses `watch` plus the dominant failure reason.
 - Practice recommendations should start with the first unplayed or non-S room, then move to persistent Focus pressure.
 - Settings and practice controls must release held gameplay inputs before they take focus.
+- Timers should reflect play, not menu reading time: idle starts and settings panels must not silently burn split seconds.
 
 ## Precision Quality Gate
 
@@ -76,6 +83,15 @@ Long-term optimization source: `LONG_TERM_OPTIMIZATION_OUTLINE.md`.
 - Then expand practice feedback only where it helps the player understand a mistake or compare pace.
 - Every new late-game mechanic must have code simulation, rendering, map validation, and browser smoke coverage.
 - If a quality gate catches a mistake, fix the content or the rule before adding more rooms.
+
+## 2026-05-31 Immediate Execution Note
+
+The next implementation pass is not a content expansion. It is a demo-quality pass on the existing 10-room slice:
+
+- First: add drill-style practice entry from the coach so the recommended room becomes actionable.
+- Second: expose room medals and clean-clear state in the practice directory and room intro.
+- Third: strengthen summit review with weakest room, largest split loss, clean count, and the next practice target.
+- Fourth: only then tune map/feel details found while testing the slice.
 
 ## Pressure Scoring Weights
 

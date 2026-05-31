@@ -76,16 +76,27 @@ function pressure(counts) {
     + ((counts.M || 0) + (counts.T || 0)) * 2;
 }
 
+function hasCjk(text) {
+  return /[\u3400-\u9fff]/.test(text);
+}
+
+function isTooShortText(text, latinMin, cjkMin) {
+  if (typeof text !== "string") return true;
+  return text.length < (hasCjk(text) ? cjkMin : latinMin);
+}
+
 const maps = extractArray("maps");
 const targets = extractArray("ROOM_TARGETS");
 const names = extractArray("ROOM_NAMES");
 const tiers = extractArray("ROOM_TIERS");
 const skills = extractArray("ROOM_SKILLS");
 const guides = extractArray("ROOM_GUIDES");
+const purposes = extractArray("ROOM_PURPOSES");
+const routeLines = extractArray("ROOM_ROUTE_LINES");
 const deathKeys = extractArray("DEATH_REASON_KEYS");
 const deathLabels = extractObject("DEATH_REASON_LABELS");
 
-for (const [label, array] of [["ROOM_TARGETS", targets], ["ROOM_NAMES", names], ["ROOM_TIERS", tiers], ["ROOM_SKILLS", skills], ["ROOM_GUIDES", guides]]) {
+for (const [label, array] of [["ROOM_TARGETS", targets], ["ROOM_NAMES", names], ["ROOM_TIERS", tiers], ["ROOM_SKILLS", skills], ["ROOM_GUIDES", guides], ["ROOM_PURPOSES", purposes], ["ROOM_ROUTE_LINES", routeLines]]) {
   if (array.length !== maps.length) errors.push(label + " has " + array.length + ", maps has " + maps.length);
 }
 
@@ -101,7 +112,16 @@ skills.forEach((roomSkills, index) => {
 });
 
 guides.forEach((guide, index) => {
-  if (typeof guide !== "string" || guide.length < 18) errors.push("room " + (index + 1) + " guide is too short");
+  if (isTooShortText(guide, 18, 10)) errors.push("room " + (index + 1) + " guide is too short");
+});
+purposes.forEach((purpose, index) => {
+  if (isTooShortText(purpose, 18, 8)) errors.push("room " + (index + 1) + " purpose is too short");
+});
+routeLines.forEach((lines, index) => {
+  if (!Array.isArray(lines) || lines.length !== 3) errors.push("room " + (index + 1) + " needs safe/fast/expert route lines");
+  (Array.isArray(lines) ? lines : []).forEach((line, lineIndex) => {
+    if (isTooShortText(line, 12, 7)) errors.push("room " + (index + 1) + " route line " + (lineIndex + 1) + " is too short");
+  });
 });
 
 deathKeys.forEach((key) => {
@@ -119,7 +139,8 @@ const requiredIds = [
   "game", "startButton", "overlay", "lumenCount", "roomCount", "splitTime", "splitDelta",
   "flowCount", "runTime", "deathCount", "debugPanel", "settingsButton", "settingsPanel",
   "settingsClose", "shakeSlider", "debugToggle", "calmEffectsToggle", "practiceLinesToggle",
-  "controlPreset", "roomSelect", "focusRoomButton", "focusResetButton", "coachSummary"
+  "ghostOpacitySlider", "controlPreset", "roomSelect", "focusRoomButton", "focusResetButton", "coachSummary",
+  "roomBrief", "practiceReport"
 ];
 for (const id of requiredIds) {
   if (!hasId(indexHtml, id)) errors.push("index.html missing #" + id);
@@ -132,8 +153,41 @@ if (!js.includes(" / !${current}")) errors.push("roomSelectFocusLabel must expos
 if (!js.includes(" / watch ")) errors.push("roomSelectFocusLabel must expose persistent watch markers");
 if (!js.includes("roomCoachHint")) errors.push("practice coach hint helper is missing");
 if (!js.includes("recommendedPracticeRoom")) errors.push("recommended practice room helper is missing");
+if (!js.includes("startRoomDrill")) errors.push("room drill entry helper is missing");
+if (!js.includes("drawDrillHud")) errors.push("drill HUD helper is missing");
+if (!js.includes("actionVisual")) errors.push("action visual pulse state is missing");
+if (!js.includes("drawPlayerAura")) errors.push("player action aura helper is missing");
+if (!js.includes("roomPurposeLabel")) errors.push("room purpose helper is missing");
+if (!js.includes("roomRouteLine")) errors.push("room route line helper is missing");
+if (!js.includes("roomTrainingAdvice")) errors.push("room training advice helper is missing");
+if (!js.includes("roomCleanShort")) errors.push("room clean badge helper is missing");
+if (!js.includes("roomDrillText")) errors.push("room drill stats helper is missing");
+if (!js.includes("roomPaceLabel")) errors.push("room pace helper is missing");
+if (!js.includes("summitReview")) errors.push("summit review helper is missing");
+if (!js.includes("summitReviewCardsHtml")) errors.push("summit review card helper is missing");
+if (!js.includes("bindFinishReviewActions")) errors.push("finish review drill buttons are missing");
+if (!js.includes("practiceReportText")) errors.push("practice report helper is missing");
+if (!js.includes("roomBriefText")) errors.push("room brief helper is missing");
+if (!js.includes("trackDrillStart")) errors.push("drill start tracker is missing");
+if (!js.includes("trackDrillClear")) errors.push("drill clear tracker is missing");
+if (!js.includes("drillSummary")) errors.push("drill summary helper is missing");
+if (!js.includes("ghostOpacity")) errors.push("practice ghost opacity setting is missing");
+if (!js.includes("timingArmed")) errors.push("first-input timing gate is missing");
+if (!js.includes("isGamePaused")) errors.push("settings pause helper is missing");
+if (!js.includes("hasTimingIntent")) errors.push("timing intent helper is missing");
 if (!js.includes("resetFocusStats")) errors.push("focus reset helper is missing");
 if (!js.includes("releaseAllInputs")) errors.push("settings input release helper is missing");
+if (!js.includes("drawCooldownRing")) errors.push("mechanic cooldown ring helper is missing");
+if (!indexHtml.includes("pause-badge")) errors.push("settings panel must show pause state");
+if (!indexHtml.includes("settings-section-title")) errors.push("settings panel must group controls");
+if (!indexHtml.includes("settings-panel")) errors.push("settings panel shell is missing");
+if (!standaloneHtml.includes("settings-panel")) errors.push("standalone settings panel shell is missing");
+if (!fs.readFileSync(path.join(root, "summit-spark.css"), "utf8").includes("review-actions")) errors.push("finish review actions styling is missing");
+
+["drills", "drillClears", "drillClean"].forEach((field) => {
+  if (!js.includes(field + ": 0")) errors.push("createRoomFocusEntry must initialize " + field);
+  if (!js.includes("saved." + field)) errors.push("normalizeRoomFocus must preserve " + field);
+});
 
 const counts = maps.map(countTiles);
 const pressures = counts.map(pressure);
@@ -164,9 +218,13 @@ if (!counts.slice(6).some((room) => room.M > 0)) errors.push("late route should 
 if (!counts.slice(7).some((room) => room.B > 0)) errors.push("rooms 8-10 should include prism practice");
 
 if (!workflow.includes("npm run check")) errors.push("GitHub Pages workflow must run npm run check before deploy");
+if (!fs.readFileSync(path.join(root, "package.json"), "utf8").includes("\"check\"")) errors.push("package.json must expose npm run check");
 if (!readme.includes("LONG_TERM_OPTIMIZATION_OUTLINE.md")) errors.push("README must link the long-term optimization outline");
+if (!readme.includes("SUPER_PUSH_PLAN.md")) errors.push("README must link the super-push plan");
 if (!roadmap.includes("LONG_TERM_OPTIMIZATION_OUTLINE.md")) errors.push("ROADMAP must link the long-term optimization outline");
+if (!roadmap.includes("SUPER_PUSH_PLAN.md")) errors.push("ROADMAP must link the super-push plan");
 if (!masterplan.includes("LONG_TERM_OPTIMIZATION_OUTLINE.md")) errors.push("MASTERPLAN must link the long-term optimization outline");
+if (!masterplan.includes("SUPER_PUSH_PLAN.md")) errors.push("MASTERPLAN must link the super-push plan");
 const requiredLongTermSections = [
   "# 山巅微光长期优化总纲",
   "## 1. 产品北极星",

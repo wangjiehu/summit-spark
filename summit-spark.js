@@ -20,11 +20,14 @@
   const debugToggle = document.getElementById("debugToggle");
   const calmEffectsToggle = document.getElementById("calmEffectsToggle");
   const practiceLinesToggle = document.getElementById("practiceLinesToggle");
+  const ghostOpacitySlider = document.getElementById("ghostOpacitySlider");
   const controlPresetSelect = document.getElementById("controlPreset");
   const roomSelect = document.getElementById("roomSelect");
+  const roomBrief = document.getElementById("roomBrief");
   const focusRoomButton = document.getElementById("focusRoomButton");
   const focusResetButton = document.getElementById("focusResetButton");
   const coachSummary = document.getElementById("coachSummary");
+  const practiceReport = document.getElementById("practiceReport");
   const dashFill = document.querySelector(".dash-meter span");
   const staminaFill = document.querySelector(".stamina-meter span");
 
@@ -164,17 +167,59 @@
     ["echo", "overdrive", "crumble", "wind"],
     ["finale", "relay", "overdrive", "crumble"]
   ];
+  const SKILL_LABELS = {
+    jump: "跳跃",
+    dash: "冲刺",
+    landing: "落点",
+    relay: "光继",
+    recover: "恢复",
+    spring: "弹簧",
+    pace: "节奏",
+    chain: "连锁",
+    hazard: "危险线",
+    route: "路线",
+    exit: "出口",
+    wind: "风",
+    crumble: "脆冰",
+    echo: "回声",
+    overdrive: "棱镜",
+    finale: "终点"
+  };
   const ROOM_GUIDES = [
-    "Stabilize landings before asking for speed.",
-    "Touch the relay with dash intent, then recover early.",
-    "Let the spring set height; spend dash after the apex.",
-    "Chain relays only after reading the safe platform line.",
-    "Hold route rhythm and keep one recovery option in reserve.",
-    "Use the spring as tempo reset before the exit push.",
-    "Commit on crumble, then let wind rebuild the climb.",
-    "Enter overdrive cleanly; do not waste it before crumble.",
-    "Use echo as practice anchor, then link wind into overdrive.",
-    "Trust the full kit: relay, overdrive, crumble, final landing."
+    "先把落点站稳，再追求更快。",
+    "带着冲刺意图触发光继点，然后尽早回收节奏。",
+    "让弹簧给高度，过顶后再花冲刺。",
+    "先读安全平台线，再把光继点连起来。",
+    "保持折返节奏，同时留一个恢复选择。",
+    "把弹簧当作出口前的节拍重置。",
+    "踩上脆冰就离开，让风把高度补回来。",
+    "干净进入棱镜加速，不要在脆冰前浪费。",
+    "先用回声做练习锚点，再把风接进棱镜。",
+    "相信完整工具组：光继点、棱镜、脆冰和终点落地。"
+  ];
+  const ROOM_PURPOSES = [
+    "信任跳跃弧线和安全落点",
+    "冲进光继点，并尽早恢复",
+    "先借弹簧高度，再花冲刺",
+    "读清危险线后串联光继点",
+    "练习折返路线和保底恢复",
+    "用弹簧重置出口节奏",
+    "脆冰上果断离开，借风回高度",
+    "用棱镜加速选择脆冰路线",
+    "先设回声锚点，再把风接进棱镜",
+    "在终点压力下组合全部工具"
+  ];
+  const ROOM_ROUTE_LINES = [
+    ["安全线：逐个平台稳定落点", "进阶线：每次落地后提前冲刺", "高手线：用 Spark 越过下方危险"],
+    ["安全线：落稳后再触发光继点", "进阶线：保持冲刺速度触发", "高手线：把连锁带到补给前"],
+    ["安全线：先弹簧，再过顶冲刺", "进阶线：短跳后直接接平台", "高手线：用 Spark 省掉低位等待"],
+    ["安全线：把每个光继点当停顿", "进阶线：落地前连两次光继点", "高手线：带连锁穿过危险线"],
+    ["安全线：折返时保留一次冲刺", "进阶线：用光继点进上层平台", "高手线：不靠中段平台恢复"],
+    ["安全线：弹簧重置出口节奏", "进阶线：弹簧前先穿过光继点", "高手线：一整句动作进入上出口"],
+    ["安全线：脆冰只踩一下就走", "进阶线：用风代替中段落地", "高手线：风中不停顿接光继点"],
+    ["安全线：站稳后再吃棱镜", "进阶线：过载穿过脆冰排", "高手线：落地前先选棱镜路线"],
+    ["安全线：连段前先点亮回声", "进阶线：风接棱镜再接光继点", "高手线：只在保 PB 时召回"],
+    ["安全线：每次重置都明确花掉", "进阶线：棱镜穿中线", "高手线：完整工具组连到终点落地"]
   ];
 
   const maps = [
@@ -485,6 +530,8 @@
   let recallCooldown = 0;
   let recallPulseTimer = 0;
   let roomIntroTimer = ROOM_INTRO_TIME;
+  let activeDrill = null;
+  let timingArmed = false;
   const settings = readSettings();
   const actionPulse = {
     jump: 0,
@@ -492,6 +539,19 @@
     grab: 0,
     fall: 0,
     wall: 0
+  };
+  const actionVisual = {
+    land: 0,
+    jump: 0,
+    dash: 0,
+    spark: 0,
+    wall: 0,
+    relay: 0,
+    prism: 0,
+    spring: 0,
+    recall: 0,
+    spawn: 0,
+    death: 0
   };
   let totalLumens = maps.reduce((total, rows) => {
     return total + rows.join("").split("").filter((tile) => tile === "L").length;
@@ -636,6 +696,10 @@
     settings.practiceLines = practiceLinesToggle.checked;
     writeSettings();
   });
+  ghostOpacitySlider?.addEventListener("input", () => {
+    settings.ghostOpacity = Number(ghostOpacitySlider.value);
+    writeSettings();
+  });
   controlPresetSelect?.addEventListener("change", () => {
     settings.controlsPreset = CONTROL_PRESETS[controlPresetSelect.value] ? controlPresetSelect.value : "comfort";
     keys.clear();
@@ -657,7 +721,7 @@
   focusRoomButton?.addEventListener("click", () => {
     const target = recommendedPracticeRoom();
     if (target >= 0) {
-      jumpToRoom(target);
+      startRoomDrill(target);
       closeSettings();
     }
   });
@@ -808,6 +872,12 @@
     lastAimX = player.facing;
     lastAimY = 0;
     lastAimTimer = 0;
+    resetActionVisuals();
+    triggerActionVisual("spawn", 0.32);
+  }
+
+  function isGamePaused() {
+    return settingsVisible && started && !won;
   }
 
   function seedHair() {
@@ -834,6 +904,7 @@
     clearFocusPopup();
     runTime = 0;
     roomTime = 0;
+    timingArmed = false;
     won = false;
     hitStopTimer = 0;
     shakeTimer = 0;
@@ -856,6 +927,7 @@
     recallCooldown = 0;
     recallPulseTimer = 0;
     nearMissCooldown = 0;
+    activeDrill = null;
     resetActionPulses();
     overlay.classList.add("hidden");
     resetToStart(0);
@@ -863,7 +935,7 @@
     updateHud();
   }
 
-  function jumpToRoom(index) {
+  function jumpToRoom(index, options = {}) {
     collected = new Set();
     deathCount = 0;
     deathReasons = createDeathReasons();
@@ -874,6 +946,7 @@
     clearFocusPopup();
     runTime = 0;
     roomTime = 0;
+    timingArmed = false;
     won = false;
     hitStopTimer = 0;
     ghosts.length = 0;
@@ -893,6 +966,7 @@
     recallCooldown = 0;
     recallPulseTimer = 0;
     nearMissCooldown = 0;
+    if (!options.keepDrill) activeDrill = null;
     resetActionPulses();
     overlay.classList.add("hidden");
     started = true;
@@ -908,7 +982,8 @@
     const dt = Math.min(0.033, (now - lastTime) / 1000);
     lastTime = now;
     fps = fps * 0.9 + (dt > 0 ? (1 / dt) * 0.1 : 0);
-    updateGlobalEffects(dt);
+    const paused = isGamePaused();
+    updateGlobalEffects(paused ? 0 : dt);
     if (!started || won) {
       updateGamepad();
       if (!started && (gamepadPressed.has("jump") || gamepadPressed.has("dash"))) {
@@ -916,13 +991,14 @@
       }
     }
 
-    if (started && !won) {
+    if (started && !won && !paused) {
       update(dt);
     } else {
-      updateParticles(dt);
-      updateGhosts(dt);
-      updateDeathMarks(dt);
-      updateRelayChain(dt);
+      updateParticles(paused ? dt * 0.25 : dt);
+      updateGhosts(paused ? 0 : dt);
+      updateDeathMarks(paused ? 0 : dt);
+      updateRelayChain(paused ? 0 : dt);
+      if (paused) updateHud();
     }
 
     render(now / 1000);
@@ -933,10 +1009,9 @@
   }
 
   function update(dt) {
-    runTime += dt;
-    roomTime += dt;
     updateDeathMarks(dt);
     updateRelayChain(dt);
+    updateActionVisuals(dt);
 
     if (hitStopTimer > 0) {
       hitStopTimer = Math.max(0, hitStopTimer - dt);
@@ -959,6 +1034,11 @@
     }
 
     const input = getInput();
+    if (!timingArmed && hasTimingIntent(input)) timingArmed = true;
+    if (timingArmed) {
+      runTime += dt;
+      roomTime += dt;
+    }
     updateLastAim(input, dt);
     if (input.x !== 0) {
       player.facing = input.x;
@@ -1019,8 +1099,11 @@
     moveAxis("y", player.vy * dt);
     unstuckFromSolids();
     if (!player.wasGrounded && player.onGround && fallSpeed > 420) {
+      triggerActionVisual("land", 0.18);
       shake(0.055, Math.min(2.4, fallSpeed / 320));
       burst(player.x + player.w / 2, player.y + player.h, "#e9f7ff", 4, 90);
+    } else if (!player.wasGrounded && player.onGround && fallSpeed > 180) {
+      triggerActionVisual("land", 0.12);
     }
     resolveRoomTransition();
     updateEntities(dt, input);
@@ -1102,6 +1185,7 @@
       player.jumpBuffer = 0;
       player.coyote = 0;
       addFlow(4, "jump");
+      triggerActionVisual("jump", 0.2);
       shake(0.035, 1.1);
       burst(player.x + player.w / 2, player.y + player.h, "#e9f7ff", 8, 150);
       return;
@@ -1127,6 +1211,8 @@
       player.wallCoyoteDir = 0;
       if (climbJump) player.stamina = Math.max(0, player.stamina - 0.18);
       addFlow(climbJump ? 8 : 6, climbJump ? "climb" : "wall");
+      triggerActionVisual("wall", 0.22);
+      triggerActionVisual("jump", 0.16);
       shake(0.04, 1.35);
       burst(player.x + (wallJumpDir > 0 ? player.w : 0), player.y + player.h * 0.55, climbJump ? palette.green : "#e9f7ff", 9, 190);
     }
@@ -1142,6 +1228,7 @@
     player.sparkHopTimer = 0;
     player.wallJumpLock = WALL_JUMP_LOCK_TIME;
     addFlow(12, "spark");
+    triggerActionVisual("spark", 0.28);
     hitStopTimer = Math.max(hitStopTimer, 0.012);
     burst(player.x + player.w / 2, player.y + player.h / 2, "#f8fbff", 12, 220);
     burst(player.x + player.w / 2, player.y + player.h, palette.cyan, 8, 180);
@@ -1179,6 +1266,7 @@
     player.coyote = 0;
     player.facing = dx === 0 ? player.facing : Math.sign(dx);
     addFlow(player.overdrive > 0 ? 8 : 5, player.overdrive > 0 ? "over" : "dash");
+    triggerActionVisual("dash", 0.24);
     hitStopTimer = Math.max(hitStopTimer, DASH_HITSTOP);
     shake(0.08, 2.4);
     addGhost(0.48);
@@ -1268,6 +1356,7 @@
         player.sparkHopDirY = Math.sign(player.vy);
         player.vy = Math.min(player.vy, -140 - Math.min(90, chain * 18));
         addFlow(22 + chain * 8, chain >= 3 ? "chain" : "relay");
+        triggerActionVisual("relay", chain >= 3 ? 0.34 : 0.24);
         burst(relay.x, relay.y, "#f8fbff", 8 + chain * 2, 220 + chain * 18);
         burst(relay.x, relay.y, chain >= 3 ? palette.gold : palette.cyan, 18 + chain * 3, 330 + chain * 20);
       } else if (relay.ready && distRectPoint(box, relay.x, relay.y) < 30) {
@@ -1300,6 +1389,7 @@
         player.vx += dx * 180;
         player.vy = Math.min(player.vy + dy * 150, -160);
         addFlow(34, "prism");
+        triggerActionVisual("prism", 0.42);
         hitStopTimer = Math.max(hitStopTimer, 0.014);
         burst(prism.x, prism.y, "#f8fbff", 12, 260);
         burst(prism.x, prism.y, palette.gold, 26, 390);
@@ -1327,6 +1417,7 @@
         recallPulseTimer = Math.max(recallPulseTimer, 0.35);
         if (changed) {
           addFlow(10, "echo");
+          triggerActionVisual("recall", 0.2);
           burst(anchor.x, anchor.y, palette.green, 14, 220);
         }
       }
@@ -1340,6 +1431,7 @@
         player.dashes = 1;
         player.stamina = MAX_STAMINA;
         spring.pulse = 0.22;
+        triggerActionVisual("spring", 0.24);
         burst(spring.x + spring.w / 2, spring.y + 6, palette.green, 16, 260);
       }
     }
@@ -1347,9 +1439,10 @@
     if (room.entities.goal && distRectPoint(box, room.entities.goal.x, room.entities.goal.y) < 28) {
       won = true;
       const isBest = completeRun();
-      overlay.innerHTML = `<h1>\u767b\u9876</h1><p>${formatTime(runTime)}${isBest ? "  BEST" : ""} \u00b7 D ${deathCount} \u00b7 Relay ${bestRelayChain} \u00b7 Flow ${Math.floor(flowPeak)}</p><p>${masterySummary()}</p><button class="primary" id="restartButton" type="button">\u518d\u6765</button>`;
+      overlay.innerHTML = `<h1>\u767b\u9876</h1><p class="finish-line">${formatTime(runTime)}${isBest ? "  BEST" : ""} \u00b7 D ${deathCount} \u00b7 Relay ${bestRelayChain} \u00b7 Flow ${Math.floor(flowPeak)}</p><p>${escapeHtml(masterySummary())}</p>${summitReviewCardsHtml()}<button class="primary" id="restartButton" type="button">\u518d\u6765</button>`;
       overlay.classList.remove("hidden");
       document.getElementById("restartButton").addEventListener("click", hardReset);
+      bindFinishReviewActions();
       burst(room.entities.goal.x, room.entities.goal.y, palette.gold, 64, 420);
     }
 
@@ -1366,8 +1459,10 @@
   }
 
   function completeRun() {
+    const clearedClean = roomAttemptClean;
     recordRoomBest(roomIndex);
     markRoomClear(roomIndex);
+    completeDrill(roomIndex, clearedClean);
     addFlow(120, "summit");
     if (bestTime <= 0 || runTime < bestTime) {
       bestTime = runTime;
@@ -1653,14 +1748,17 @@
   function resolveRoomTransition() {
     if (player.x > W + 3 && roomIndex < maps.length - 1) {
       const clearedRoom = roomIndex;
+      const clearedClean = roomAttemptClean;
       recordRoomBest(clearedRoom);
       markRoomClear(clearedRoom);
+      completeDrill(clearedRoom, clearedClean);
       roomIndex += 1;
       roomAttemptClean = true;
       room = parseRoom(roomIndex);
       lightTrails.length = 0;
       player.x = -player.w + 4;
       roomTime = 0;
+      timingArmed = true;
       roomIntroTimer = ROOM_INTRO_TIME;
       player.respawnRoom = roomIndex;
       player.respawnX = 26;
@@ -1678,6 +1776,7 @@
       lightTrails.length = 0;
       player.x = W - 5;
       roomTime = 0;
+      timingArmed = true;
       roomIntroTimer = ROOM_INTRO_TIME;
       player.respawnRoom = roomIndex;
       player.respawnX = player.x;
@@ -1700,6 +1799,7 @@
     player.deadTimer = DEATH_RETRY_TIME;
     crumbleSlipTimer = 0;
     hitStopTimer = Math.max(hitStopTimer, DEATH_HITSTOP);
+    triggerActionVisual("death", 0.28);
     shake(0.2, 6.4);
     burst(player.x + player.w / 2, player.y + player.h / 2, palette.hot, 34, 360);
     player.vx = 0;
@@ -1737,6 +1837,7 @@
     clearSplitPopup();
     crumbleSlipTimer = 0;
     roomTime = 0;
+    timingArmed = false;
     ghosts.length = 0;
     lightTrails.length = 0;
     shards.length = 0;
@@ -1744,6 +1845,8 @@
     clearRoomPath();
     resetRelayChain();
     seedHair();
+    resetActionVisuals();
+    triggerActionVisual("spawn", 0.28);
     burst(player.x + player.w / 2, player.y + player.h / 2, "#f8fbff", 16, 230);
   }
 
@@ -1804,6 +1907,7 @@
     clearSplitPopup();
     crumbleSlipTimer = 0;
     roomTime = 0;
+    timingArmed = false;
     hitStopTimer = 0;
     ghosts.length = 0;
     lightTrails.length = 0;
@@ -1811,6 +1915,8 @@
     clearRecentPath();
     clearRoomPath();
     seedHair();
+    resetActionVisuals();
+    triggerActionVisual("spawn", 0.24);
     burst(player.x + player.w / 2, player.y + player.h / 2, "#f8fbff", 12, 210);
   }
 
@@ -1857,7 +1963,7 @@
   }
 
   function createRoomFocusEntry() {
-    const entry = { faults: 0, clears: 0, clean: 0, last: "none" };
+    const entry = { faults: 0, clears: 0, clean: 0, drills: 0, drillClears: 0, drillClean: 0, last: "none" };
     DEATH_REASON_KEYS.forEach((key) => {
       entry[key] = 0;
     });
@@ -1872,6 +1978,9 @@
       entry.faults = Math.max(0, Number(saved.faults) || 0);
       entry.clears = Math.max(0, Number(saved.clears) || 0);
       entry.clean = Math.max(0, Number(saved.clean) || 0);
+      entry.drills = Math.max(0, Number(saved.drills) || 0);
+      entry.drillClears = Math.max(0, Number(saved.drillClears) || 0);
+      entry.drillClean = Math.max(0, Number(saved.drillClean) || 0);
       entry.last = DEATH_REASON_LABELS[saved.last] ? saved.last : "none";
       DEATH_REASON_KEYS.forEach((key) => {
         entry[key] = Math.max(0, Number(saved[key]) || 0);
@@ -1936,6 +2045,23 @@
     refreshRoomSelectOptions();
   }
 
+  function trackDrillStart(index) {
+    const entry = roomFocus[index] || createRoomFocusEntry();
+    entry.drills += 1;
+    roomFocus[index] = entry;
+    writeRoomFocus();
+    refreshRoomSelectOptions();
+  }
+
+  function trackDrillClear(index, clean) {
+    const entry = roomFocus[index] || createRoomFocusEntry();
+    entry.drillClears += 1;
+    if (clean) entry.drillClean += 1;
+    roomFocus[index] = entry;
+    writeRoomFocus();
+    refreshRoomSelectOptions();
+  }
+
   function showFocusPopup(index, reason) {
     const count = roomMistakes[index] || 0;
     focusPopupText = `FOCUS R${index + 1} ${deathReasonLabel(reason)} !${count}`;
@@ -1958,29 +2084,125 @@
 
   function roomSkillLabel(index) {
     const skills = ROOM_SKILLS[index] || [];
-    return skills.length ? skills.join("+") : "route";
+    return skills.length ? skills.map(skillLabel).join("+") : "路线";
   }
 
   function roomSkillShort(index) {
-    return roomSkillLabel(index).split("+").slice(0, 2).join("+");
+    const skills = ROOM_SKILLS[index] || [];
+    return skills.length ? skills.slice(0, 2).map(skillLabel).join("+") : "路线";
+  }
+
+  function skillLabel(skill) {
+    return SKILL_LABELS[skill] || skill;
+  }
+
+  function roomPurposeLabel(index) {
+    return ROOM_PURPOSES[index] || ROOM_GUIDES[index] || "route practice";
+  }
+
+  function roomRouteLine(index, slot) {
+    const lines = ROOM_ROUTE_LINES[index] || [];
+    return lines[slot] || lines[0] || roomPurposeLabel(index);
+  }
+
+  function roomMedalLabel(index) {
+    const best = bestRoomTimes[index] || 0;
+    const target = ROOM_TARGETS[index] || 0;
+    const grade = splitGrade(best, target);
+    if (!best) return `T ${formatTime(target)}`;
+    return `${grade || "PB"} ${formatTime(best)}`;
+  }
+
+  function roomCleanShort(index) {
+    const entry = roomFocus[index] || createRoomFocusEntry();
+    if (entry.clean > 0) return `净${entry.clean}`;
+    if (entry.clears > 0) return `通${entry.clears}`;
+    return "未通";
+  }
+
+  function roomCleanText(index) {
+    const entry = roomFocus[index] || createRoomFocusEntry();
+    if (entry.clears > 0) return `无失误 ${entry.clean}/${entry.clears}`;
+    return "无失误 0/0";
+  }
+
+  function roomDrillText(index) {
+    const entry = roomFocus[index] || createRoomFocusEntry();
+    if (entry.drills <= 0) return "Drill 0";
+    return `Drill ${entry.drillClean}/${entry.drillClears}/${entry.drills}`;
+  }
+
+  function roomPaceLabel(index) {
+    const best = bestRoomTimes[index] || 0;
+    const target = ROOM_TARGETS[index] || 0;
+    if (!best || !target) return "未游玩";
+    const delta = best - target;
+    if (delta <= 0) return "已达标";
+    return `慢 ${formatDelta(delta)}`;
+  }
+
+  function roomPaceShort(index) {
+    const best = bestRoomTimes[index] || 0;
+    const target = ROOM_TARGETS[index] || 0;
+    if (!best || !target) return "新";
+    const delta = best - target;
+    if (delta <= 0) return "达标";
+    return formatDelta(delta);
   }
 
   function roomTierLabel(index) {
     const tier = ROOM_TIERS[index] || "route";
-    if (tier === "learn") return "learn";
-    if (tier === "combine") return "combo";
-    if (tier === "pressure") return "pressure";
-    if (tier === "finale") return "finale";
+    if (tier === "learn") return "教学";
+    if (tier === "combine") return "组合";
+    if (tier === "pressure") return "压力";
+    if (tier === "finale") return "终盘";
     return tier;
   }
 
   function roomCoachHint(index, reason = "fall") {
     const normalized = normalizeDeathReason(reason);
-    const guide = ROOM_GUIDES[index] || "Rebuild the route one input earlier.";
-    if (normalized === "spike") return `read hazard lane; ${guide}`;
-    if (normalized === "crumble") return `commit after first touch; ${guide}`;
-    if (normalized === "retry" || normalized === "room") return `reset opening rhythm; ${guide}`;
-    return `stabilize landing; ${guide}`;
+    const guide = ROOM_GUIDES[index] || "把路线提前一个输入重建。";
+    if (normalized === "spike") return `先读危险线；${guide}`;
+    if (normalized === "crumble") return `踩上后立刻离开；${guide}`;
+    if (normalized === "retry" || normalized === "room") return `重建开局节奏；${guide}`;
+    return `稳定落点；${guide}`;
+  }
+
+  function roomSplitLoss(index) {
+    const best = bestRoomTimes[index] || 0;
+    const target = ROOM_TARGETS[index] || 0;
+    if (!best || !target) return null;
+    return best - target;
+  }
+
+  function routePracticeLine(index) {
+    const entry = roomFocus[index] || createRoomFocusEntry();
+    const current = roomMistakes[index] || 0;
+    const lead = leadingRoomReason(entry);
+    const loss = roomSplitLoss(index);
+    const grade = splitGrade(bestRoomTimes[index] || 0, ROOM_TARGETS[index]);
+    if (current > 0) return roomCoachHint(index, lead);
+    if (entry.faults >= 3 && entry.faults - entry.clean * 2 > 0) return roomCoachHint(index, lead);
+    if (entry.clean <= 0) return roomRouteLine(index, 0);
+    if (loss !== null && loss > 1.5) return roomRouteLine(index, 1);
+    if (grade === "S") return roomRouteLine(index, 2);
+    return roomRouteLine(index, 1);
+  }
+
+  function roomPracticeReason(index) {
+    const entry = roomFocus[index] || createRoomFocusEntry();
+    const current = roomMistakes[index] || 0;
+    const lead = leadingRoomReason(entry);
+    const loss = roomSplitLoss(index);
+    if (current > 0) return `本轮 !${current}`;
+    if (entry.faults > 0 && entry.faults - entry.clean * 2 > 0) return `${deathReasonLabel(lead)} ${entry[lead] || 0}/${entry.faults}`;
+    if (loss === null) return "未通关";
+    if (loss > 0) return `慢 ${formatDelta(loss)}`;
+    return "冲高手线";
+  }
+
+  function roomTrainingAdvice(index) {
+    return `R${index + 1} ${ROOM_NAMES[index] || "Summit"}：${roomPracticeReason(index)}；${routePracticeLine(index)}`;
   }
 
   function roomFocusScore(index) {
@@ -2006,7 +2228,7 @@
     const run = current > 0 ? `run !${current}` : "run clean";
     const saved = entry.faults > 0 ? `saved ${deathReasonLabel(lead)} ${entry[lead] || 0}/${entry.faults}` : "saved clean";
     const clears = entry.clears > 0 ? `clean ${entry.clean}/${entry.clears}` : "clean 0/0";
-    return `${run} / ${saved} / ${clears} / ${roomTierLabel(index)} / ${roomSkillLabel(index)} / ${ROOM_GUIDES[index] || ""}`;
+    return `${run} / ${saved} / ${clears} / ${roomDrillText(index)} / ${roomPaceLabel(index)} / ${roomTierLabel(index)} / ${roomSkillLabel(index)} / ${roomPurposeLabel(index)} / ${roomRouteLine(index, 0)} / ${roomRouteLine(index, 1)} / ${roomRouteLine(index, 2)} / ${ROOM_GUIDES[index] || ""}`;
   }
 
   function strongestFocusRoom() {
@@ -2050,13 +2272,56 @@
     return candidate;
   }
 
+  function drillObjectiveForRoom(index) {
+    const entry = roomFocus[index] || createRoomFocusEntry();
+    const lead = leadingRoomReason(entry);
+    const grade = splitGrade(bestRoomTimes[index] || 0, ROOM_TARGETS[index]);
+    const current = roomMistakes[index] || 0;
+    const pressure = entry.faults - entry.clean * 2;
+    if (current > 0) return `稳定 ${deathReasonLabel(lead)} 后的恢复`;
+    if (entry.faults >= 3 && pressure > 0) return `减少 ${deathReasonLabel(lead)} 失误`;
+    if (entry.clean <= 0) return roomRouteLine(index, 0);
+    if (grade !== "S") return roomRouteLine(index, 1);
+    return roomRouteLine(index, 2);
+  }
+
+  function startRoomDrill(index) {
+    const objective = drillObjectiveForRoom(index);
+    jumpToRoom(index, { keepDrill: true });
+    activeDrill = { room: index, objective };
+    trackDrillStart(index);
+    focusPopupText = `DRILL R${index + 1}`;
+    focusPopupDetail = objective;
+    focusPopupTimer = FOCUS_POPUP_TIME;
+    updatePracticeCoach();
+  }
+
+  function completeDrill(index, clean) {
+    if (!activeDrill || activeDrill.room !== index) return;
+    trackDrillClear(index, clean);
+    focusPopupText = `${clean ? "DRILL 无失误" : "DRILL 通过"} R${index + 1}`;
+    focusPopupDetail = clean ? "目标完成" : drillObjectiveForRoom(index);
+    focusPopupTimer = FOCUS_POPUP_TIME;
+    activeDrill = null;
+    updatePracticeCoach();
+  }
+
+  function activeDrillText(index) {
+    if (!activeDrill || activeDrill.room !== index) return "";
+    const current = roomMistakes[index] || 0;
+    return `${activeDrill.objective}${current ? ` / !${current}` : ""}`;
+  }
+
   function practiceCoachText() {
+    if (activeDrill && activeDrill.room === roomIndex) {
+      return `DRILL R${activeDrill.room + 1} · ${activeDrill.objective}${roomMistakes[activeDrill.room] ? ` · !${roomMistakes[activeDrill.room]}` : ""}`;
+    }
     const target = recommendedPracticeRoom();
     const entry = roomFocus[target] || createRoomFocusEntry();
     const reason = entry.faults > 0 ? leadingRoomReason(entry) : "fall";
     const score = roomFocusScore(target);
-    const marker = score > 0 ? `focus ${deathReasonLabel(reason)} ${score}` : "build S route";
-    return `R${target + 1} ${ROOM_NAMES[target] || "Summit"} / ${marker} / ${roomSkillLabel(target)}`;
+    const marker = score > 0 ? `复盘 ${deathReasonLabel(reason)} ${score}` : "冲 S 线";
+    return `${marker} / ${roomTrainingAdvice(target)}`;
   }
 
   function updatePracticeCoach() {
@@ -2067,9 +2332,12 @@
     }
     if (focusRoomButton) {
       const target = recommendedPracticeRoom();
-      const label = `R${target + 1} Focus`;
+      const label = `R${target + 1} Drill`;
       if (focusRoomButton.textContent !== label) focusRoomButton.textContent = label;
-      focusRoomButton.title = roomCoachHint(target, leadingRoomReason(roomFocus[target] || createRoomFocusEntry()));
+      focusRoomButton.title = drillObjectiveForRoom(target);
+    }
+    if (practiceReport) {
+      practiceReport.textContent = practiceReportText();
     }
   }
 
@@ -2120,6 +2388,10 @@
       y: down ? 1 : up ? -1 : 0,
       grab
     };
+  }
+
+  function hasTimingIntent(input) {
+    return input.x !== 0 || input.y !== 0 || input.grab || player.jumpBuffer > 0 || player.dashBuffer > 0;
   }
 
   function justPressed(code) {
@@ -2207,6 +2479,7 @@
     player.overdrive = 0;
     recallCooldown = ECHO_RECALL_COOLDOWN;
     recallPulseTimer = 0.42;
+    triggerActionVisual("recall", 0.34);
     hitStopTimer = Math.max(hitStopTimer, 0.012);
     resetRelayChain();
     clearRecentPath();
@@ -2239,12 +2512,29 @@
     }
   }
 
+  function triggerActionVisual(name, duration) {
+    if (actionVisual[name] === undefined) return;
+    actionVisual[name] = Math.max(actionVisual[name], duration);
+  }
+
+  function updateActionVisuals(dt) {
+    for (const key of Object.keys(actionVisual)) {
+      actionVisual[key] = Math.max(0, actionVisual[key] - dt);
+    }
+  }
+
+  function resetActionVisuals() {
+    for (const key of Object.keys(actionVisual)) {
+      actionVisual[key] = 0;
+    }
+  }
+
+  function visualRatio(name, duration) {
+    return Math.max(0, Math.min(1, actionVisual[name] / duration));
+  }
+
   function roomSelectLabel(index) {
-    const best = bestRoomTimes[index] || 0;
-    const target = ROOM_TARGETS[index] || 0;
-    const grade = splitGrade(best, target);
-    const pace = best > 0 ? `${grade || "PB"} ${formatTime(best)}` : `T ${formatTime(target)}`;
-    return `${index + 1}. ${ROOM_NAMES[index] || "Summit"} / ${pace} / ${roomSkillShort(index)}${roomSelectFocusLabel(index)}`;
+    return `${index + 1}. ${ROOM_NAMES[index] || "Summit"} · ${roomMedalLabel(index)} · ${roomPaceShort(index)} · ${roomCleanShort(index)} · ${roomSkillShort(index)}${roomSelectFocusLabel(index)}`;
   }
 
   function refreshRoomSelectOptions() {
@@ -2254,6 +2544,7 @@
       option.textContent = roomSelectLabel(index);
       option.title = roomFocusDetails(index);
     }
+    updateRoomBrief();
   }
 
   function populateRoomSelect() {
@@ -2266,11 +2557,31 @@
       option.title = roomFocusDetails(index);
       roomSelect.appendChild(option);
     });
+    updateRoomBrief();
   }
 
   function syncRoomSelect() {
     if (!roomSelect || document.activeElement === roomSelect) return;
     roomSelect.value = String(roomIndex);
+    updateRoomBrief();
+  }
+
+  function roomBriefText(index) {
+    return [
+      `R${index + 1} ${ROOM_NAMES[index] || "Summit"} / ${roomMedalLabel(index)} / ${roomPaceLabel(index)}`,
+      `${roomCleanText(index)} / ${roomDrillText(index)} / ${roomSkillLabel(index)}`,
+      roomPurposeLabel(index),
+      roomRouteLine(index, 0),
+      roomRouteLine(index, 1),
+      roomRouteLine(index, 2)
+    ].join("\n");
+  }
+
+  function updateRoomBrief() {
+    if (!roomBrief || !roomSelect) return;
+    const index = Number(roomSelect.value);
+    const target = Number.isInteger(index) && index >= 0 && index < maps.length ? index : roomIndex;
+    roomBrief.textContent = roomBriefText(target);
   }
 
   function focusGame() {
@@ -2296,6 +2607,7 @@
     settingsPanel.classList.toggle("hidden", !settingsVisible);
     settingsPanel.setAttribute("aria-hidden", String(!settingsVisible));
     if (settingsVisible) {
+      settingsPanel.scrollTop = 0;
       syncSettingsPanel();
       settingsCloseButton?.focus({ preventScroll: true });
     } else {
@@ -2317,6 +2629,7 @@
     if (debugToggle) debugToggle.checked = debugVisible;
     if (calmEffectsToggle) calmEffectsToggle.checked = settings.calmEffects;
     if (practiceLinesToggle) practiceLinesToggle.checked = settings.practiceLines;
+    if (ghostOpacitySlider) ghostOpacitySlider.value = String(settings.ghostOpacity);
     if (controlPresetSelect) controlPresetSelect.value = settings.controlsPreset;
     updatePracticeCoach();
   }
@@ -2326,16 +2639,19 @@
       shake: SHAKE_INTENSITY,
       calmEffects: true,
       controlsPreset: "comfort",
-      practiceLines: true
+      practiceLines: true,
+      ghostOpacity: 0.75
     };
     try {
       const saved = JSON.parse(localStorage.getItem(SETTINGS_KEY) || "{}");
       const shake = Number(saved.shake);
+      const ghostOpacity = Number(saved.ghostOpacity);
       return {
         shake: Number.isFinite(shake) ? Math.max(0, Math.min(1, shake)) : defaults.shake,
         calmEffects: saved.calmEffects === undefined ? defaults.calmEffects : Boolean(saved.calmEffects),
         controlsPreset: CONTROL_PRESETS[saved.controlsPreset] ? saved.controlsPreset : defaults.controlsPreset,
-        practiceLines: saved.practiceLines === undefined ? defaults.practiceLines : Boolean(saved.practiceLines)
+        practiceLines: saved.practiceLines === undefined ? defaults.practiceLines : Boolean(saved.practiceLines),
+        ghostOpacity: Number.isFinite(ghostOpacity) ? Math.max(0.2, Math.min(1, ghostOpacity)) : defaults.ghostOpacity
       };
     } catch {
       return defaults;
@@ -2418,6 +2734,10 @@
   }
 
   function updateGlobalEffects(dt) {
+    if (dt <= 0) {
+      if (debugVisible) updateDebug();
+      return;
+    }
     roomBestFlashTimer = Math.max(0, roomBestFlashTimer - dt);
     nearMissCooldown = Math.max(0, nearMissCooldown - dt);
     recallCooldown = Math.max(0, recallCooldown - dt);
@@ -2585,7 +2905,7 @@
       if (shard.life <= 0) shards.splice(i, 1);
     }
 
-    if (Math.random() < 0.5) {
+    if (dt > 0.012 && Math.random() < 0.5) {
       particles.push({
         x: Math.random() * W,
         y: -8,
@@ -2728,11 +3048,13 @@
     drawFlowCue(time);
     drawRelayChainCue(time);
     drawRoomBestCue();
+    drawPlayerAura(time);
     if (player.deadTimer <= 0) drawPlayer(time);
     ctx.restore();
     drawRoomIntro(time);
     drawSplitPopup(time);
     drawFocusPopup(time);
+    drawDrillHud(time);
     drawVignette();
   }
 
@@ -2933,8 +3255,9 @@
     if (!settings.practiceLines || roomPath.length < 2 || player.deadTimer > 0) return;
     const points = roomPath.filter((point) => point.room === roomIndex).slice(-CURRENT_PATH_DRAW_POINTS);
     if (points.length < 2) return;
+    const alpha = settings.ghostOpacity;
     ctx.save();
-    ctx.globalAlpha = 0.22;
+    ctx.globalAlpha = 0.22 * alpha;
     ctx.strokeStyle = player.overdrive > 0 ? palette.green : palette.cyan;
     ctx.lineWidth = 2;
     ctx.lineCap = "round";
@@ -2945,7 +3268,7 @@
       else ctx.lineTo(point.x, point.y);
     });
     ctx.stroke();
-    ctx.globalAlpha = 0.28 + Math.sin(time * 8) * 0.05;
+    ctx.globalAlpha = (0.28 + Math.sin(time * 8) * 0.05) * alpha;
     const last = points[points.length - 1];
     ctx.fillStyle = palette.cyan;
     ctx.fillRect(last.x - 3, last.y - 3, 6, 6);
@@ -2961,7 +3284,7 @@
     if (!ghost) return;
     const pulse = 1 + Math.sin(time * 9) * 0.06;
     ctx.save();
-    ctx.globalAlpha = 0.46;
+    ctx.globalAlpha = 0.46 * settings.ghostOpacity;
     ctx.translate(ghost.x, ghost.y);
     ctx.scale(pulse, pulse);
     ctx.shadowColor = palette.gold;
@@ -3010,6 +3333,15 @@
     };
   }
 
+  function fitText(text, maxWidth) {
+    if (ctx.measureText(text).width <= maxWidth) return text;
+    let trimmed = text;
+    while (trimmed.length > 3 && ctx.measureText(`${trimmed}...`).width > maxWidth) {
+      trimmed = trimmed.slice(0, -1);
+    }
+    return `${trimmed}...`;
+  }
+
   function drawRoomIntro(time) {
     if (roomIntroTimer <= 0) return;
     const t = roomIntroTimer / ROOM_INTRO_TIME;
@@ -3028,11 +3360,18 @@
     ctx.fillStyle = "rgba(248,251,255,0.68)";
     ctx.fillText(`target ${formatTime(target)}${best ? ` / best ${formatTime(best)}` : ""}`, W / 2, 104 - (1 - t) * 10);
     ctx.fillStyle = "rgba(248,251,255,0.62)";
-    ctx.fillText(`${roomTierLabel(roomIndex)} / ${roomSkillLabel(roomIndex)}`, W / 2, 124 - (1 - t) * 10);
+    ctx.fillText(`${roomMedalLabel(roomIndex)} / ${roomPaceLabel(roomIndex)} / ${roomCleanText(roomIndex)} / ${roomDrillText(roomIndex)}`, W / 2, 124 - (1 - t) * 10);
+    ctx.fillText(fitText(roomPurposeLabel(roomIndex), 480), W / 2, 144 - (1 - t) * 10);
+    const drill = activeDrillText(roomIndex);
     const focus = roomSelectFocusLabel(roomIndex).replace(" / ", "");
-    if (focus) {
+    if (drill) {
+      ctx.fillStyle = "rgba(143,227,155,0.82)";
+      ctx.fillText(fitText(drill, 520), W / 2, 164 - (1 - t) * 10);
+    } else if (focus) {
       ctx.fillStyle = "rgba(247,198,93,0.78)";
-      ctx.fillText(`focus ${focus}`, W / 2, 144 - (1 - t) * 10);
+      ctx.fillText(`focus ${focus}`, W / 2, 164 - (1 - t) * 10);
+    } else {
+      ctx.fillText(`${roomTierLabel(roomIndex)} / ${roomSkillLabel(roomIndex)}`, W / 2, 164 - (1 - t) * 10);
     }
     ctx.restore();
   }
@@ -3043,8 +3382,97 @@
       const grade = splitGrade(best, ROOM_TARGETS[index]);
       if (counts[grade] !== undefined) counts[grade] += 1;
     });
-    const mistakes = deathCount > 0 ? ` / Mistakes ${deathReasonSummary()}` : "";
-    return `S ${counts.S}/${maps.length} / A ${counts.A} / Flow Best ${Math.floor(bestFlow)}${mistakes}${focusSummary()}`;
+    const cleanRooms = roomFocus.filter((entry) => entry && entry.clean > 0).length;
+    const cleanTotal = roomFocus.reduce((sum, entry) => sum + (entry?.clean || 0), 0);
+    const mistakes = deathCount > 0 ? ` / 失误 ${deathReasonSummary()}` : "";
+    return `S ${counts.S}/${maps.length} / A ${counts.A} / 无失误 ${cleanRooms}/${maps.length} (${cleanTotal}) / ${drillSummary()} / Flow Best ${Math.floor(bestFlow)}${mistakes}${focusSummary()}`;
+  }
+
+  function largestSplitLossRoom() {
+    let best = { index: -1, loss: -Infinity };
+    maps.forEach((_, index) => {
+      const loss = roomSplitLoss(index);
+      if (loss === null) return;
+      if (loss > best.loss) best = { index, loss };
+    });
+    return best.index >= 0 ? best : null;
+  }
+
+  function weakestRoomSummary() {
+    const focus = strongestFocusRoom();
+    if (focus) {
+      return `薄弱 R${focus.index + 1} ${deathReasonLabel(focus.reason)} ${focus.score}`;
+    }
+    const loss = largestSplitLossRoom();
+    if (loss && loss.loss > 0) return `薄弱 R${loss.index + 1} 慢 ${formatDelta(loss.loss)}`;
+    return "薄弱 无";
+  }
+
+  function splitLossSummary() {
+    const loss = largestSplitLossRoom();
+    if (!loss) return "分段损失 无";
+    if (loss.loss <= 0) return "全部达标";
+    return `分段损失 R${loss.index + 1} ${formatDelta(loss.loss)}：${roomPurposeLabel(loss.index)}`;
+  }
+
+  function summitReview() {
+    const next = recommendedPracticeRoom();
+    return `${weakestRoomSummary()} / ${splitLossSummary()} / 下个 Drill ${roomTrainingAdvice(next)}`;
+  }
+
+  function practiceReportText() {
+    const cleanRooms = roomFocus.filter((entry) => entry && entry.clean > 0).length;
+    const next = recommendedPracticeRoom();
+    return `无失误 ${cleanRooms}/${maps.length} / ${drillSummary()} / ${weakestRoomSummary()} / ${splitLossSummary()} / 建议 ${roomTrainingAdvice(next)}`;
+  }
+
+  function drillSummary() {
+    const starts = roomFocus.reduce((sum, entry) => sum + (entry?.drills || 0), 0);
+    const clears = roomFocus.reduce((sum, entry) => sum + (entry?.drillClears || 0), 0);
+    const clean = roomFocus.reduce((sum, entry) => sum + (entry?.drillClean || 0), 0);
+    return starts > 0 ? `Drill ${clean}/${clears}/${starts}` : "Drill 0";
+  }
+
+  function escapeHtml(text) {
+    return String(text)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;");
+  }
+
+  function reviewCardHtml(label, value, detail) {
+    return `<article><span>${escapeHtml(label)}</span><strong>${escapeHtml(value)}</strong><p>${escapeHtml(detail)}</p></article>`;
+  }
+
+  function summitReviewCardsHtml() {
+    const next = recommendedPracticeRoom();
+    const loss = largestSplitLossRoom();
+    const focus = strongestFocusRoom();
+    const splitValue = loss && loss.loss > 0 ? `R${loss.index + 1} ${formatDelta(loss.loss)}` : "全部达标";
+    const splitDetail = loss && loss.loss > 0 ? routePracticeLine(loss.index) : "可以开始追高手线和 clean clear。";
+    const focusValue = focus ? `R${focus.index + 1} ${deathReasonLabel(focus.reason)} ${focus.score}` : "暂无高压点";
+    const focusDetail = focus ? roomCoachHint(focus.index, focus.reason) : "死亡结构稳定后，优先追最慢 split。";
+    const lossButton = loss && loss.loss > 0
+      ? `<button class="review-button" type="button" data-finish-drill="${loss.index}">最慢房 Drill</button>`
+      : "";
+    return `<div class="review-grid">`
+      + reviewCardHtml("下一 Drill", `R${next + 1} ${ROOM_NAMES[next] || "Summit"}`, drillObjectiveForRoom(next))
+      + reviewCardHtml("最大损失", splitValue, splitDetail)
+      + reviewCardHtml("薄弱原因", focusValue, focusDetail)
+      + `</div><p class="review-advice">${escapeHtml(roomTrainingAdvice(next))}</p>`
+      + `<div class="review-actions"><button class="review-button primary-review" type="button" data-finish-drill="${next}">下一 Drill</button>${lossButton}</div>`;
+  }
+
+  function bindFinishReviewActions() {
+    overlay.querySelectorAll("[data-finish-drill]").forEach((button) => {
+      button.addEventListener("click", () => {
+        const target = Number(button.getAttribute("data-finish-drill"));
+        if (Number.isInteger(target) && target >= 0 && target < maps.length) {
+          startRoomDrill(target);
+        }
+      });
+    });
   }
 
   function drawSplitPopup(time) {
@@ -3086,6 +3514,35 @@
       ctx.shadowBlur = settings.calmEffects ? 3 : 7;
       ctx.fillText(focusPopupDetail, W / 2, y + 18);
     }
+    ctx.restore();
+  }
+
+  function drawDrillHud(time) {
+    if (!activeDrill || activeDrill.room !== roomIndex || won) return;
+    const current = roomMistakes[roomIndex] || 0;
+    const text = `DRILL R${roomIndex + 1} · ${activeDrill.objective}${current ? ` · !${current}` : " · 无失误"}`;
+    const y = roomIntroTimer > 0 ? 188 : 84;
+    const pulse = 0.5 + Math.sin(time * 8) * 0.5;
+    ctx.save();
+    ctx.font = "800 15px system-ui, sans-serif";
+    const label = fitText(text, 520);
+    const width = Math.min(590, Math.max(260, ctx.measureText(label).width + 32));
+    const x = W / 2 - width / 2;
+    ctx.globalAlpha = 0.82;
+    ctx.fillStyle = "rgba(7,12,20,0.72)";
+    roundRect(ctx, x, y - 18, width, 36, 6);
+    ctx.fill();
+    ctx.strokeStyle = `rgba(143,227,155,${0.32 + pulse * 0.18})`;
+    ctx.lineWidth = 1.5;
+    roundRect(ctx, x + 0.5, y - 17.5, width - 1, 35, 6);
+    ctx.stroke();
+    ctx.globalAlpha = 1;
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.shadowColor = palette.green;
+    ctx.shadowBlur = settings.calmEffects ? 4 : 9;
+    ctx.fillStyle = current ? "#fff0a0" : palette.green;
+    ctx.fillText(label, W / 2, y);
     ctx.restore();
   }
 
@@ -3207,6 +3664,7 @@
   function drawCrumblePlatform(x, y, gx, gy, time) {
     const block = room.entities.crumble?.get(`${gx}:${gy}`);
     const armed = block ? block.timer / CRUMBLE_BREAK_TIME : 0;
+    const danger = armed > 0 ? 1 - armed : 0;
     const jitter = armed > 0 ? Math.sin(time * 50 + gx) * (1 - armed) * 1.3 : 0;
     ctx.save();
     ctx.translate(jitter, 0);
@@ -3218,6 +3676,12 @@
     ctx.fillRect(x + 1, y + 1, TILE - 2, TILE - 2);
     ctx.fillStyle = `rgba(255,255,255,${0.28 + armed * 0.16})`;
     ctx.fillRect(x + 3, y + 3, TILE - 6, 4);
+    if (armed > 0) {
+      ctx.fillStyle = "rgba(7,12,20,0.52)";
+      ctx.fillRect(x + 4, y + TILE - 7, TILE - 8, 3);
+      ctx.fillStyle = `rgba(255,101,125,${0.62 + danger * 0.24})`;
+      ctx.fillRect(x + 4, y + TILE - 7, (TILE - 8) * danger, 3);
+    }
     ctx.strokeStyle = armed > 0 ? "rgba(255,101,125,0.62)" : "rgba(248,251,255,0.28)";
     ctx.lineWidth = 2;
     ctx.beginPath();
@@ -3227,10 +3691,19 @@
     ctx.moveTo(x + 22, y + 6);
     ctx.lineTo(x + 16 - armed * 4, y + 18);
     ctx.lineTo(x + 25, y + 28);
+    if (armed > 0) {
+      ctx.moveTo(x + 5, y + 22);
+      ctx.lineTo(x + 13 + danger * 7, y + 24);
+      ctx.moveTo(x + 19, y + 10);
+      ctx.lineTo(x + 28, y + 18 + danger * 4);
+    }
     ctx.stroke();
     if (armed > 0) {
       ctx.fillStyle = `rgba(255,101,125,${0.18 + (1 - armed) * 0.28})`;
       ctx.fillRect(x + 1, y + 1, TILE - 2, TILE - 2);
+      ctx.strokeStyle = `rgba(255,240,160,${0.2 + danger * 0.4})`;
+      ctx.lineWidth = 1;
+      ctx.strokeRect(x + 2.5, y + 2.5, TILE - 5, TILE - 5);
     }
     ctx.restore();
   }
@@ -3302,12 +3775,13 @@
     if (!settings.practiceLines) return;
     const path = bestRoomPaths[roomIndex];
     if (!Array.isArray(path) || path.length < 2) return;
+    const alpha = settings.ghostOpacity;
     ctx.save();
     ctx.lineWidth = 2;
     ctx.lineCap = "round";
     ctx.lineJoin = "round";
     ctx.setLineDash([3, 7]);
-    ctx.strokeStyle = "rgba(247, 198, 93, 0.38)";
+    ctx.strokeStyle = `rgba(247, 198, 93, ${0.38 * alpha})`;
     ctx.shadowColor = palette.gold;
     ctx.shadowBlur = settings.calmEffects ? 4 : 9;
     ctx.beginPath();
@@ -3320,7 +3794,7 @@
     for (let i = 0; i < path.length; i += 8) {
       const point = path[i];
       const pulse = 1 + Math.sin(time * 5 + i) * 0.16;
-      ctx.globalAlpha = point.dash || point.spark || point.over ? 0.72 : 0.42;
+      ctx.globalAlpha = alpha * (point.dash || point.spark || point.over ? 0.72 : 0.42);
       ctx.fillStyle = point.over ? palette.green : point.spark ? "#fff0a0" : point.dash ? palette.cyan : palette.gold;
       ctx.fillRect(point.x - 2 * pulse, point.y - 2 * pulse, 4 * pulse, 4 * pulse);
     }
@@ -3426,6 +3900,23 @@
     const top = Math.max(0, updraft.y - TILE * 2.4);
     const bottom = updraft.y + updraft.h * 0.75;
     ctx.save();
+    const field = ctx.createLinearGradient(0, top, 0, bottom);
+    field.addColorStop(0, `rgba(118,215,255,${0.03 + pulse * 0.04})`);
+    field.addColorStop(0.5, `rgba(118,215,255,${0.09 + pulse * 0.08})`);
+    field.addColorStop(1, "rgba(118,215,255,0)");
+    ctx.fillStyle = field;
+    ctx.fillRect(updraft.x - 10, top, updraft.w + 20, bottom - top);
+    ctx.globalAlpha = 0.24 + pulse * 0.2;
+    ctx.strokeStyle = "rgba(248,251,255,0.72)";
+    ctx.lineWidth = 1;
+    ctx.setLineDash([5, 7]);
+    ctx.beginPath();
+    ctx.moveTo(updraft.x - 7, bottom);
+    ctx.lineTo(updraft.x - 7, top + 12);
+    ctx.moveTo(updraft.x + updraft.w + 7, bottom);
+    ctx.lineTo(updraft.x + updraft.w + 7, top + 12);
+    ctx.stroke();
+    ctx.setLineDash([]);
     ctx.globalAlpha = 0.26 + pulse * 0.22;
     ctx.strokeStyle = palette.cyan;
     ctx.lineWidth = 2;
@@ -3437,6 +3928,15 @@
       ctx.beginPath();
       ctx.moveTo(x + i * 8 + wave, bottom);
       ctx.bezierCurveTo(x + i * 11 - wave, bottom - 38, x + i * 5 + wave, top + 44, x + i * 10, top);
+      ctx.stroke();
+    }
+    for (let i = 0; i < 3; i++) {
+      const y = bottom - 30 - i * 42 + Math.sin(time * 3 + i + updraft.bob) * 5;
+      ctx.globalAlpha = 0.22 + pulse * 0.2;
+      ctx.beginPath();
+      ctx.moveTo(x - 10, y + 7);
+      ctx.lineTo(x, y - 4);
+      ctx.lineTo(x + 10, y + 7);
       ctx.stroke();
     }
     ctx.fillStyle = "rgba(248,251,255,0.72)";
@@ -3478,6 +3978,19 @@
     ctx.stroke();
     ctx.fillStyle = relay.ready ? "rgba(248,251,255,0.9)" : "rgba(248,251,255,0.24)";
     ctx.fillRect(-2, -2, 4, 4);
+    if (!relay.ready) {
+      drawCooldownRing(0, 0, 19, 1 - relay.timer / RELAY_RESET_TIME, palette.cyan);
+    } else {
+      ctx.globalAlpha = 0.24 + pulse * 0.3;
+      ctx.strokeStyle = palette.cyan;
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(-22, 0);
+      ctx.lineTo(-13, 0);
+      ctx.moveTo(13, 0);
+      ctx.lineTo(22, 0);
+      ctx.stroke();
+    }
     ctx.restore();
   }
 
@@ -3503,6 +4016,22 @@
     ctx.rotate(time * 2.4);
     ctx.fillStyle = prism.ready ? "rgba(255,240,160,0.7)" : "rgba(255,240,160,0.2)";
     ctx.fillRect(-4, -4, 8, 8);
+    if (!prism.ready) {
+      drawCooldownRing(0, 0, 22, 1 - prism.timer / PRISM_RESET_TIME, palette.gold);
+    } else {
+      ctx.globalAlpha = 0.28 + pulse * 0.24;
+      ctx.strokeStyle = palette.gold;
+      ctx.lineWidth = 2;
+      ctx.lineCap = "round";
+      ctx.beginPath();
+      ctx.moveTo(-22, -8);
+      ctx.lineTo(-14, 0);
+      ctx.lineTo(-22, 8);
+      ctx.moveTo(22, -8);
+      ctx.lineTo(14, 0);
+      ctx.lineTo(22, 8);
+      ctx.stroke();
+    }
     ctx.restore();
   }
 
@@ -3530,6 +4059,35 @@
       ctx.fillStyle = "rgba(143,227,155,0.42)";
       ctx.fillRect(-3, -3, 6, 6);
     }
+    ctx.restore();
+
+    if (active && player.deadTimer <= 0 && recallCooldown <= 0) {
+      ctx.save();
+      ctx.globalAlpha = 0.18 + Math.sin(time * 8) * 0.04;
+      ctx.strokeStyle = palette.green;
+      ctx.lineWidth = 1.5;
+      ctx.setLineDash([4, 7]);
+      ctx.beginPath();
+      ctx.moveTo(anchor.x, anchor.y);
+      ctx.lineTo(player.x + player.w / 2, player.y + player.h / 2);
+      ctx.stroke();
+      ctx.restore();
+    }
+  }
+
+  function drawCooldownRing(x, y, radius, progress, color) {
+    const clamped = Math.max(0, Math.min(1, progress));
+    ctx.save();
+    ctx.globalAlpha = 0.78;
+    ctx.strokeStyle = "rgba(248,251,255,0.16)";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(x, y, radius, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.strokeStyle = color;
+    ctx.beginPath();
+    ctx.arc(x, y, radius, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * clamped);
+    ctx.stroke();
     ctx.restore();
   }
 
@@ -3625,6 +4183,72 @@
     ctx.restore();
   }
 
+  function drawPlayerAura(time) {
+    const cx = player.x + player.w / 2;
+    const cy = player.y + player.h / 2;
+    const dash = visualRatio("dash", 0.24);
+    const spark = visualRatio("spark", 0.28);
+    const relay = visualRatio("relay", 0.34);
+    const prism = visualRatio("prism", 0.42);
+    const spring = visualRatio("spring", 0.24);
+    const recall = visualRatio("recall", 0.34);
+    const spawn = visualRatio("spawn", 0.32);
+    const death = visualRatio("death", 0.28);
+    const land = visualRatio("land", 0.18);
+    const wall = visualRatio("wall", 0.22);
+    const strongest = Math.max(dash, spark, relay, prism, spring, recall, spawn, death, wall);
+
+    if (land > 0) {
+      ctx.save();
+      ctx.globalAlpha = land * 0.5;
+      ctx.fillStyle = "rgba(231,244,247,0.72)";
+      ctx.beginPath();
+      ctx.ellipse(cx, player.y + player.h + 3, 18 + land * 10, 4 + land * 2, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
+
+    if (strongest <= 0) return;
+
+    const color = prism > 0 ? palette.gold
+      : relay > 0 ? palette.cyan
+        : spark > 0 ? "#fff0a0"
+          : spring > 0 || recall > 0 || spawn > 0 ? palette.green
+            : death > 0 ? palette.hot
+              : palette.cyan;
+    const radius = 18 + strongest * 18 + Math.sin(time * 20) * 1.4;
+    ctx.save();
+    ctx.globalAlpha = 0.12 + strongest * 0.32;
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 2;
+    ctx.shadowColor = color;
+    ctx.shadowBlur = settings.calmEffects ? 8 : 18;
+    ctx.beginPath();
+    ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+    ctx.stroke();
+    if (dash > 0) {
+      const dx = player.dashDirX || player.facing;
+      const dy = player.dashDirY || 0;
+      ctx.globalAlpha = 0.18 + dash * 0.4;
+      ctx.lineWidth = 4;
+      ctx.lineCap = "round";
+      ctx.beginPath();
+      ctx.moveTo(cx - dx * 32, cy - dy * 32);
+      ctx.lineTo(cx - dx * 7, cy - dy * 7);
+      ctx.stroke();
+    }
+    if (wall > 0) {
+      const side = player.wallJumpLock > 0 ? -player.facing : player.wallDir || player.wallCoyoteDir || -player.facing;
+      ctx.globalAlpha = 0.18 + wall * 0.38;
+      ctx.beginPath();
+      ctx.moveTo(cx + side * 20, cy - 18);
+      ctx.lineTo(cx + side * 28, cy);
+      ctx.lineTo(cx + side * 20, cy + 18);
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+
   function drawGhosts() {
     for (const ghost of ghosts) {
       const t = Math.max(0, ghost.life / ghost.max);
@@ -3648,22 +4272,47 @@
     const x = player.x;
     const y = player.y;
     const cx = x + player.w / 2;
-    const step = Math.sin(time * 15) * Math.min(1, Math.abs(player.vx) / MOVE_SPEED);
+    const cy = y + player.h / 2;
+    const run = Math.min(1, Math.abs(player.vx) / MOVE_SPEED);
+    const step = Math.sin(time * 16) * run;
     const over = player.overdrive > 0;
+    const airborne = !player.wasGrounded && !player.onGround;
+    const walling = player.wallDir !== 0 && airborne;
+    const dashPulse = Math.max(visualRatio("dash", 0.24), player.dashTimer / DASH_TIME);
+    const sparkPulse = visualRatio("spark", 0.28);
+    const prismPulse = visualRatio("prism", 0.42);
+    const relayPulse = visualRatio("relay", 0.34);
+    const springPulse = visualRatio("spring", 0.24);
+    const recallPulse = visualRatio("recall", 0.34);
+    const spawnPulse = visualRatio("spawn", 0.32);
+    const landPulse = visualRatio("land", 0.18);
+    const wallPulse = Math.max(visualRatio("wall", 0.22), walling ? 0.28 : 0);
+    const charged = dashPulse > 0.05 || sparkPulse > 0.05 || prismPulse > 0.05 || relayPulse > 0.05;
     const coat = over ? "#f7c65d" : player.dashes > 0 ? "#2fc7d6" : "#6f8fa8";
     const coatDark = over ? "#9f6a1b" : player.dashes > 0 ? "#146d86" : "#304d63";
+    const accent = prismPulse > 0 ? palette.gold
+      : relayPulse > 0 ? palette.cyan
+        : sparkPulse > 0 ? "#fff0a0"
+          : over ? palette.green
+            : player.dashes > 0 ? palette.cyan
+              : "#9bb4c6";
     const hairColor = over ? "#8fe39b" : player.dashes > 0 ? "#ff657d" : "#78cfff";
+    const squashX = 1 + landPulse * 0.16 + dashPulse * 0.08 - springPulse * 0.05;
+    const squashY = 1 - landPulse * 0.14 - dashPulse * 0.06 + Math.max(sparkPulse, springPulse) * 0.1;
+    const lean = Math.max(-0.22, Math.min(0.22, player.vx / 980 + dashPulse * player.dashDirX * 0.12 + wallPulse * player.facing * 0.05));
+    const eyeX = x + 11 + player.facing * 2;
 
     ctx.save();
 
-    if (over) {
-      ctx.globalAlpha = 0.22 + Math.sin(time * 18) * 0.06;
-      ctx.strokeStyle = palette.gold;
+    if (over || prismPulse > 0 || recallPulse > 0 || spawnPulse > 0) {
+      const glow = Math.max(prismPulse, recallPulse, spawnPulse, over ? 0.18 : 0);
+      ctx.globalAlpha = 0.12 + glow * 0.28 + Math.sin(time * 18) * 0.03;
+      ctx.strokeStyle = prismPulse > 0 ? palette.gold : recallPulse > 0 || spawnPulse > 0 ? palette.green : palette.gold;
       ctx.lineWidth = 2;
-      ctx.shadowColor = palette.gold;
+      ctx.shadowColor = ctx.strokeStyle;
       ctx.shadowBlur = 10;
       ctx.beginPath();
-      ctx.arc(cx, y + player.h / 2, 19, 0, Math.PI * 2);
+      ctx.arc(cx, cy, 19 + glow * 8, 0, Math.PI * 2);
       ctx.stroke();
       ctx.globalAlpha = 1;
       ctx.shadowBlur = 0;
@@ -3676,7 +4325,9 @@
       const a = player.hair[i - 1];
       const b = player.hair[i];
       const fade = 1 - i / player.hair.length;
-      ctx.strokeStyle = `rgba(255, 190, 87, ${0.24 + fade * 0.38})`;
+      ctx.strokeStyle = charged
+        ? `rgba(255, 240, 160, ${0.25 + fade * 0.48})`
+        : `rgba(255, 190, 87, ${0.2 + fade * 0.36})`;
       ctx.beginPath();
       ctx.moveTo(a.x, a.y + 1);
       ctx.lineTo(b.x, b.y + 1);
@@ -3685,13 +4336,37 @@
 
     ctx.fillStyle = "rgba(0,0,0,0.22)";
     ctx.beginPath();
-    ctx.ellipse(cx, y + player.h + 4, 14, 4.5, 0, 0, Math.PI * 2);
+    ctx.ellipse(cx, y + player.h + 4, 14 + run * 3 + landPulse * 5, 4.5, 0, 0, Math.PI * 2);
     ctx.fill();
 
     ctx.save();
-    ctx.translate(cx, y + player.h / 2);
-    ctx.rotate(Math.max(-0.16, Math.min(0.16, player.vx / 1400)));
-    ctx.translate(-cx, -(y + player.h / 2));
+    ctx.translate(cx, cy);
+    ctx.rotate(lean);
+    ctx.scale(squashX, squashY);
+    ctx.translate(-cx, -cy);
+
+    if (charged) {
+      ctx.globalAlpha = 0.22 + Math.max(dashPulse, sparkPulse, relayPulse, prismPulse) * 0.28;
+      ctx.fillStyle = accent;
+      ctx.beginPath();
+      ctx.ellipse(cx - player.facing * 4, y + 16, 13, 8, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.globalAlpha = 1;
+    }
+
+    ctx.strokeStyle = walling || wallPulse > 0.3 ? palette.green : "#ffc857";
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    const armReach = walling ? player.wallDir * 11 : -player.facing * (7 + dashPulse * 3);
+    ctx.moveTo(cx - player.facing * 1, y + 11);
+    ctx.lineTo(cx + armReach, y + 14 + step * 1.2);
+    ctx.stroke();
+
+    ctx.strokeStyle = dashPulse > 0 ? palette.cyan : "#d8ecff";
+    ctx.beginPath();
+    ctx.moveTo(cx + player.facing * 3, y + 11);
+    ctx.lineTo(cx + player.facing * (7 + dashPulse * 4), y + 15 - step);
+    ctx.stroke();
 
     ctx.fillStyle = "#25364a";
     roundRect(ctx, x + 5 - player.facing, y + 10, 7, 12, 2);
@@ -3703,55 +4378,54 @@
     ctx.fillStyle = coat;
     roundRect(ctx, x + 4, y + 7, 11, 14, 3);
     ctx.fill();
+    ctx.fillStyle = accent;
+    ctx.fillRect(x + 4, y + 12, 11, 2);
     ctx.fillStyle = "#e9f7ff";
     ctx.fillRect(x + 6, y + 9, 7, 2);
     ctx.fillStyle = "rgba(255,255,255,0.24)";
     ctx.fillRect(x + 6, y + 12, 2, 7);
 
-    ctx.strokeStyle = "#ffc857";
-    ctx.lineWidth = 3;
-    ctx.beginPath();
-    ctx.moveTo(cx - player.facing * 1, y + 11);
-    ctx.lineTo(cx - player.facing * 7, y + 14 + step * 1.2);
-    ctx.stroke();
-    ctx.strokeStyle = "#d8ecff";
-    ctx.beginPath();
-    ctx.moveTo(cx + player.facing * 3, y + 11);
-    ctx.lineTo(cx + player.facing * 7, y + 15 - step);
-    ctx.stroke();
-
     ctx.strokeStyle = "#172233";
     ctx.lineWidth = 4;
     ctx.beginPath();
+    const legKick = airborne ? Math.sign(player.vy || 1) * 1.6 : step * 2.4;
     ctx.moveTo(x + 7, y + 21);
-    ctx.lineTo(x + 5 + step * 2, y + 28);
+    ctx.lineTo(x + 5 + legKick, y + 28);
     ctx.moveTo(x + 13, y + 21);
-    ctx.lineTo(x + 15 - step * 2, y + 28);
+    ctx.lineTo(x + 15 - legKick, y + 28);
     ctx.stroke();
     ctx.fillStyle = "#0f1927";
-    ctx.fillRect(x + 2 + step * 2, y + 27, 7, 3);
-    ctx.fillRect(x + 12 - step * 2, y + 27, 7, 3);
+    ctx.fillRect(x + 2 + legKick, y + 27, 7, 3);
+    ctx.fillRect(x + 12 - legKick, y + 27, 7, 3);
 
     ctx.fillStyle = hairColor;
     ctx.beginPath();
-    ctx.moveTo(x + 5, y + 4);
-    ctx.lineTo(x + 15, y + 3);
-    ctx.lineTo(x + 17, y + 10);
+    ctx.moveTo(x + 5 - dashPulse * player.facing * 2, y + 4);
+    ctx.lineTo(x + 15, y + 3 - Math.max(sparkPulse, springPulse) * 2);
+    ctx.lineTo(x + 17 + player.facing, y + 10);
     ctx.lineTo(x + 10, y + 13);
     ctx.lineTo(x + 4, y + 10);
     ctx.closePath();
     ctx.fill();
+    ctx.fillStyle = "rgba(255,255,255,0.4)";
+    ctx.fillRect(x + 7, y + 4, 5, 1);
 
     ctx.fillStyle = "#ffe0bd";
     roundRect(ctx, x + 7 + player.facing, y + 5, 8, 8, 2);
     ctx.fill();
     ctx.fillStyle = "#1b2533";
-    ctx.fillRect(x + 11 + player.facing * 2, y + 8, 2, 2);
+    ctx.fillRect(eyeX, y + 8, 2, 2);
 
     ctx.fillStyle = "#fff0a0";
     ctx.fillRect(cx - player.facing * 2, y + 12, 4, 3);
     ctx.fillStyle = "rgba(255,255,255,0.32)";
     ctx.fillRect(x + 8, y + 7, 3, 1);
+
+    if (walling) {
+      ctx.fillStyle = palette.green;
+      ctx.fillRect(cx + player.wallDir * 12, y + 14, 3, 3);
+      ctx.fillRect(cx + player.wallDir * 10, y + 18, 2, 2);
+    }
 
     ctx.restore();
     ctx.restore();
@@ -3858,7 +4532,7 @@
       `stamina ${(player.stamina * 100).toFixed(0)}  anchor ${echoAnchor && echoAnchor.room === roomIndex ? 1 : 0}`,
       `hitstop ${hitStopTimer.toFixed(3)}  ghosts ${ghosts.length}`,
       `trails ${lightTrails.length}  relays ${room.entities.relays.length}  prisms ${room.entities.prisms.length}  up ${room.entities.updrafts.length}  crumble ${crumble.active}/${crumble.total}`,
-      `paths room ${roomPath.length}  best ${Array.isArray(bestRoomPaths[roomIndex]) ? bestRoomPaths[roomIndex].length : 0}  lines ${settings.practiceLines ? 1 : 0}`,
+      `paths room ${roomPath.length}  best ${Array.isArray(bestRoomPaths[roomIndex]) ? bestRoomPaths[roomIndex].length : 0}  lines ${settings.practiceLines ? 1 : 0}  ghost ${settings.ghostOpacity.toFixed(2)}`,
       `shake ${settings.shake.toFixed(2)}  keys ${settings.controlsPreset}`
     ].join("\n");
   }

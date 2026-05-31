@@ -39,9 +39,10 @@
 
       <section class="settings-panel hidden" id="settingsPanel" aria-label="Options" aria-hidden="true">
         <div class="settings-head">
-          <strong>&#35774;&#32622;</strong>
+          <strong>&#35774;&#32622; <span class="pause-badge">&#26242;&#20572;&#20013;</span></strong>
           <button class="mini-button" id="settingsClose" type="button" aria-label="Close">&times;</button>
         </div>
+        <div class="settings-section-title">&#30011;&#38754;</div>
         <label class="control-row">
           <span>&#38663;&#21160;</span>
           <input id="shakeSlider" type="range" min="0" max="1" step="0.05" value="0">
@@ -59,23 +60,31 @@
           <input id="practiceLinesToggle" type="checkbox" checked>
         </label>
         <label class="control-row">
+          <span>&#24433;&#23376;</span>
+          <input id="ghostOpacitySlider" type="range" min="0.2" max="1" step="0.05" value="0.75">
+        </label>
+        <label class="control-row">
           <span>&#38190;&#20301;</span>
           <select id="controlPreset">
             <option value="comfort">&#33298;&#36866;</option>
             <option value="classic">&#32463;&#20856;</option>
           </select>
         </label>
+        <div class="settings-section-title">&#32451;&#20064;</div>
         <label class="control-row">
           <span>&#25151;&#38388;</span>
           <select id="roomSelect"></select>
         </label>
+        <div class="room-brief" id="roomBrief">R1 房间目标</div>
         <div class="coach-row">
-          <span id="coachSummary">R1 Focus</span>
+          <span id="coachSummary">R1 Drill</span>
           <div class="coach-actions">
-            <button class="focus-button" id="focusRoomButton" type="button">R1 Focus</button>
+            <button class="focus-button" id="focusRoomButton" type="button">R1 Drill</button>
             <button class="focus-button ghost" id="focusResetButton" type="button">Reset</button>
           </div>
         </div>
+        <div class="settings-section-title">&#22797;&#30424;</div>
+        <div class="practice-report" id="practiceReport">无失误 0/10 / 分段损失 无 / 下个 Drill R1</div>
       </section>
 
       <div class="overlay" id="overlay">

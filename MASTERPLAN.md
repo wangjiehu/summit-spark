@@ -4,7 +4,7 @@
 
 Build an original precision platformer that beats the reference by being clearer, faster to practice, and more expressive in its own movement language. We are not copying room layouts, art, story, or exact mechanics. We are studying the product-level strengths: instant feel, readable difficulty, fast retry, optional mastery, and strong training feedback.
 
-The long-term optimization source lives in `LONG_TERM_OPTIMIZATION_OUTLINE.md`; future super-pushes should align with that outline before expanding scope.
+The long-term optimization source lives in `LONG_TERM_OPTIMIZATION_OUTLINE.md`; future super-pushes should align with that outline and `SUPER_PUSH_PLAN.md` before expanding scope.
 
 ## Reference Lessons To Beat
 
@@ -58,8 +58,8 @@ The long-term optimization source lives in `LONG_TERM_OPTIMIZATION_OUTLINE.md`; 
 
 ## Practice And Feedback Plan
 
-- Already shipped: split delta, PB/SPLIT result popup, time-aware best ghost, current trail, death replay, death reason diagnostics, room select, current room restart, Focus profiling, room skill tags, and a practice coach with jump/reset controls.
-- Next: room drill starts, per-room target medals, optional ghost opacity, and an end-screen route report.
+- Already shipped: split delta, PB/SPLIT result popup, time-aware best ghost, current trail, death replay, death reason diagnostics, room select, current room restart, Focus profiling, room skill tags, room purpose text, safe/fast/expert route lines, practice coach drill starts, Drill start/clear/clean stats, persistent Drill HUD, room detail brief, room medal/pace/clean badges, settings practice report, ghost opacity, first-input timer arming, settings pause, localized practice copy, grouped settings, compact narrow HUD, action-state player pulses, late-mechanic readability cues, and an end-screen card review with direct Drill actions.
+- Next: tune the 10-room route against the new review data, then strengthen challenge variants and expert lines.
 - Later: challenge variants, expert lines, and a compact level select with mastery status.
 
 ## Map Production Rules
@@ -77,6 +77,21 @@ The long-term optimization source lives in `LONG_TERM_OPTIMIZATION_OUTLINE.md`; 
 - Rebuild room 5 around foldback route memory and rooms 7-10 around staged route commitment.
 - Strengthen map and contract lint so future edits cannot flatten the curve or silently break practice UI.
 - Verify locally and online before calling the push finished.
+
+## 2026-05-31 Execution Record
+
+To beat the reference, do not chase difficulty for its own sake. The next push should make the 10-room slice clearer to read, faster to practice, and more expressive through Summit Spark's own movement language.
+
+Immediate direction:
+
+- Polish the current 10 rooms before expanding the route count.
+- Treat input trust, restart speed, and readable deaths as higher priority than spectacle.
+- Make practice feedback the signature advantage: drill starts, medals, clean clears, split loss, Focus reasons, and next-room recommendations.
+- Keep visual identity tied to readable state: player status, hazards, relays, wind, prisms, echo, and crumble must be distinct at speed.
+- Ship in complete small pushes with `npm run check` as the non-negotiable gate.
+- Treat UX timing as part of fairness: reading settings or waiting at spawn must not degrade split data.
+- Treat action visuals as gameplay language: each pulse must answer “what state am I in?” before it tries to look flashy.
+- Treat finish screens as practice surfaces: the player should be able to act on a recommendation immediately.
 
 ## One-Hour Work Queue
 
