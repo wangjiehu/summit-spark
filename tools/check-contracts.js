@@ -154,7 +154,7 @@ const requiredIds = [
   "game", "startButton", "overlay", "lumenCount", "roomCount", "splitTime", "splitDelta",
   "flowCount", "runTime", "deathCount", "debugPanel", "settingsButton", "settingsPanel",
   "settingsClose", "shakeSlider", "debugToggle", "calmEffectsToggle", "practiceLinesToggle",
-  "ghostOpacitySlider", "controlPreset", "roomSelect", "focusRoomButton", "focusResetButton", "coachSummary",
+  "ghostOpacitySlider", "controlPreset", "roomSelect", "practicePriority", "focusRoomButton", "focusResetButton", "coachSummary",
   "roomBrief", "practiceReport", "practiceQueue", "practiceLedger", "drillCleanButton", "drillPaceButton", "drillStyleButton", "drillExpertButton"
 ];
 for (const id of requiredIds) {

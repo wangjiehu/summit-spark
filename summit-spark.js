@@ -24,6 +24,7 @@
   const controlPresetSelect = document.getElementById("controlPreset");
   const roomSelect = document.getElementById("roomSelect");
   const roomBrief = document.getElementById("roomBrief");
+  const practicePriority = document.getElementById("practicePriority");
   const focusRoomButton = document.getElementById("focusRoomButton");
   const focusResetButton = document.getElementById("focusResetButton");
   const coachSummary = document.getElementById("coachSummary");
@@ -101,6 +102,7 @@
   const ROOM_BEST_FLASH_TIME = 1.15;
   const SPLIT_POPUP_TIME = 1.25;
   const FOCUS_POPUP_TIME = 1.35;
+  const DEATH_COACH_TIME = 2.35;
   const SETTINGS_KEY = "summit-spark-settings";
   const ACTION_PULSE_TIME = 0.22;
   const BEST_FLOW_KEY = "summit-spark-best-flow";
@@ -574,6 +576,10 @@
   let focusPopupTimer = 0;
   let focusPopupText = "";
   let focusPopupDetail = "";
+  let deathCoachTimer = 0;
+  let deathCoachText = "";
+  let deathCoachDetail = "";
+  let deathCoachReason = "fall";
   let lastCoachSummary = "";
   let lastPracticeQueueHtml = "";
   let lastPracticeLedgerHtml = "";
@@ -782,6 +788,14 @@
     if (target >= 0) {
       closeSettings();
       startRoomDrill(target);
+    }
+  });
+  practicePriority?.addEventListener("click", () => {
+    const target = recommendedPracticeRoom();
+    const mode = resolveDrillMode(target);
+    if (target >= 0) {
+      closeSettings();
+      startRoomDrill(target, mode);
     }
   });
   drillCleanButton?.addEventListener("click", () => {
@@ -1029,6 +1043,7 @@
     recallCooldown = 0;
     recallPulseTimer = 0;
     nearMissCooldown = 0;
+    clearDeathCoach();
     activeDrill = null;
     resetActionPulses();
     overlay.classList.add("hidden");
@@ -1069,6 +1084,7 @@
     recallCooldown = 0;
     recallPulseTimer = 0;
     nearMissCooldown = 0;
+    clearDeathCoach();
     if (!options.keepDrill) activeDrill = null;
     resetActionPulses();
     overlay.classList.add("hidden");
@@ -1913,6 +1929,7 @@
     if (player.deadTimer > 0 || won) return;
     const deathReason = registerDeath(reason);
     addDeathMark(deathReason);
+    showDeathCoach(deathReason);
     resetRelayChain();
     breakFlow();
     clearSplitPopup();
@@ -1976,6 +1993,7 @@
     if (player.deadTimer > 0) return;
     const deathReason = registerDeath("retry");
     addDeathMark(deathReason);
+    showDeathCoach(deathReason, "手动重开");
     resetRelayChain();
     breakFlow();
     hitStopTimer = 0;
@@ -1988,6 +2006,7 @@
     if (player.deadTimer > 0) return;
     const deathReason = registerDeath("room");
     addDeathMark(deathReason);
+    showDeathCoach(deathReason, "房间重开");
     resetRelayChain();
     breakFlow();
     room = parseRoom(roomIndex);
@@ -2080,6 +2099,22 @@
       .filter((key) => deathReasons[key] > 0)
       .map((key) => `${deathReasonLabel(key)} ${deathReasons[key]}`);
     return parts.length ? parts.join(" / ") : "clean";
+  }
+
+  function showDeathCoach(reason, title = "") {
+    const normalized = normalizeDeathReason(reason);
+    deathCoachReason = normalized;
+    deathCoachText = title || deathReasonLabel(normalized);
+    deathCoachDetail = roomCoachHint(roomIndex, normalized);
+    deathCoachTimer = DEATH_COACH_TIME;
+    clearFocusPopup();
+  }
+
+  function clearDeathCoach() {
+    deathCoachTimer = 0;
+    deathCoachText = "";
+    deathCoachDetail = "";
+    deathCoachReason = "fall";
   }
 
   function createRoomCounters() {
@@ -2725,12 +2760,31 @@
       if (focusRoomButton.textContent !== label) focusRoomButton.textContent = label;
       focusRoomButton.title = `${drillTargetText(target, mode)} / ${drillObjectiveForRoom(target, mode)}`;
     }
+    updatePracticePriority();
     updateDrillVariantButtons();
     if (practiceReport) {
       practiceReport.textContent = practiceReportText();
     }
     updatePracticeQueue();
     updatePracticeLedger();
+  }
+
+  function updatePracticePriority() {
+    if (!practicePriority || !settingsVisible) return;
+    const target = recommendedPracticeRoom();
+    const mode = resolveDrillMode(target);
+    const stats = drillContractStats(target, mode);
+    const progress = drillContractProgress(stats);
+    const title = `R${target + 1} ${ROOM_NAMES[target] || "Summit"} · ${drillModeLabel(mode)}`;
+    const detail = `${drillTargetText(target, mode)} / ${drillObjectiveForRoom(target, mode)}`;
+    practicePriority.classList.remove("clean", "pace", "style", "expert");
+    practicePriority.classList.add(mode);
+    practicePriority.style.setProperty("--priority-progress", `${progress}%`);
+    practicePriority.title = detail;
+    practicePriority.innerHTML = `<span>下一步 · ${escapeHtml(drillContractStatus(stats))}</span>`
+      + `<strong>${escapeHtml(title)}</strong>`
+      + `<em>${escapeHtml(detail)}</em>`
+      + `<i class="priority-meter" aria-hidden="true"></i>`;
   }
 
   function updateDrillVariantButtons() {
@@ -3390,6 +3444,7 @@
     roomIntroTimer = Math.max(0, roomIntroTimer - dt);
     splitPopupTimer = Math.max(0, splitPopupTimer - dt);
     focusPopupTimer = Math.max(0, focusPopupTimer - dt);
+    deathCoachTimer = Math.max(0, deathCoachTimer - dt);
     crumbleSlipTimer = Math.max(0, crumbleSlipTimer - dt);
     updateFlow(dt);
     updateCrumblePlatforms(dt);
@@ -3704,6 +3759,7 @@
     drawRoomIntro(time);
     drawSplitPopup(time);
     drawFocusPopup(time);
+    drawDeathCoach(time);
     drawDrillHud(time);
     drawPaceRibbon(time);
     drawVignette();
@@ -4221,6 +4277,41 @@
       ctx.shadowBlur = settings.calmEffects ? 3 : 7;
       ctx.fillText(focusPopupDetail, W / 2, y + 18);
     }
+    ctx.restore();
+  }
+
+  function drawDeathCoach(time) {
+    if (deathCoachTimer <= 0 || !deathCoachDetail || roomIntroTimer > 0.35) return;
+    const t = deathCoachTimer / DEATH_COACH_TIME;
+    const compact = isCompactCanvas();
+    const color = deathReasonColor(deathCoachReason);
+    const width = compact ? 520 : 430;
+    const height = compact ? 58 : 52;
+    const x = compact ? W / 2 - width / 2 : 20;
+    const y = compact ? 78 : 70;
+    const alpha = Math.min(1, t * 1.65);
+
+    ctx.save();
+    ctx.globalAlpha = alpha * 0.88;
+    ctx.fillStyle = "rgba(7,12,20,0.74)";
+    roundRect(ctx, x, y, width, height, 8);
+    ctx.fill();
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 1.5;
+    ctx.shadowColor = color;
+    ctx.shadowBlur = settings.calmEffects ? 4 : 10;
+    roundRect(ctx, x + 0.75, y + 0.75, width - 1.5, height - 1.5, 8);
+    ctx.stroke();
+    ctx.globalAlpha = alpha;
+    ctx.textAlign = "left";
+    ctx.textBaseline = "middle";
+    ctx.font = `800 ${compact ? 13 : 12}px system-ui, sans-serif`;
+    ctx.fillStyle = color;
+    ctx.fillText(`${deathReasonLabel(deathCoachReason)} · ${deathCoachText}`, x + 14, y + 17);
+    ctx.font = `800 ${compact ? 12 : 11}px system-ui, sans-serif`;
+    ctx.fillStyle = "rgba(248,251,255,0.78)";
+    ctx.shadowBlur = settings.calmEffects ? 2 : 6;
+    ctx.fillText(fitText(deathCoachDetail, width - 28), x + 14, y + 38);
     ctx.restore();
   }
 

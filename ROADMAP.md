@@ -44,6 +44,7 @@ Long-term optimization source: `LONG_TERM_OPTIMIZATION_OUTLINE.md`. Super-push e
 - 2026-06-01: Added Style Drill contracts for difficulty-type variety: every room now has a bespoke challenge flavor such as precision, recovery, timing, chain, route choice, terrain risk, overdrive risk, echo reading, or finale endurance.
 - 2026-06-01: Surfaced difficulty types during play: room intro cards now show Style objectives, active Drill HUDs show contract progress/time pressure, and summit review includes a direct Style challenge action.
 - 2026-06-01: Added active requirement beacons: Style and Expert drills now highlight unfinished target actions in the room, making difficulty-type goals visible without opening settings.
+- 2026-06-01: Tightened small-screen UX and practice guidance: compact HUD now prioritizes room, pace, death, and state bars; room intros are more readable under the HUD; settings now starts with a next-practice action card; death/retry feedback is consolidated into a single coach hint.
 
 ## Next Milestones
 
