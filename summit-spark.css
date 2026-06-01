@@ -56,15 +56,42 @@ canvas {
   width: 100%;
   height: 100%;
   image-rendering: pixelated;
+  transition: filter 160ms ease;
 }
 
 canvas:focus {
   outline: none;
 }
 
+.stage.settings-open canvas {
+  filter: saturate(0.78) brightness(0.82);
+}
+
+.stage.settings-open::after {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  background:
+    linear-gradient(90deg, rgba(7, 12, 20, 0.12), transparent 34%),
+    radial-gradient(circle at 78% 18%, rgba(247, 198, 93, 0.1), transparent 24%);
+  content: "";
+}
+
+.sr-status {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
 .hud {
   position: absolute;
   inset: 18px 18px auto 18px;
+  z-index: 3;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -193,6 +220,7 @@ canvas:focus {
   position: absolute;
   left: 18px;
   top: 64px;
+  z-index: 5;
   min-width: 208px;
   max-width: min(320px, calc(100% - 36px));
   margin: 0;
@@ -248,6 +276,23 @@ canvas:focus {
   background: rgba(118, 215, 255, 0.22);
 }
 
+.icon-button[aria-expanded="true"] {
+  border-color: rgba(247, 198, 93, 0.42);
+  background: rgba(247, 198, 93, 0.16);
+  color: #fff0a0;
+}
+
+.icon-button:focus-visible,
+.mini-button:focus-visible,
+.focus-button:focus-visible,
+.variant-button:focus-visible,
+.queue-card:focus-visible,
+.ledger-row:focus-visible,
+.review-button:focus-visible {
+  outline: 3px solid rgba(118, 215, 255, 0.9);
+  outline-offset: 3px;
+}
+
 .settings-panel {
   position: absolute;
   top: 64px;
@@ -261,7 +306,7 @@ canvas:focus {
   color: #f8fbff;
   box-shadow: 0 18px 48px rgba(0, 0, 0, 0.28);
   backdrop-filter: blur(8px);
-  z-index: 4;
+  z-index: 6;
 }
 
 .settings-panel.hidden {
@@ -452,8 +497,10 @@ canvas:focus {
 }
 
 .queue-card {
+  position: relative;
   min-width: 0;
-  padding: 9px 10px;
+  padding: 9px 58px 10px 10px;
+  overflow: hidden;
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 6px;
   background: rgba(255, 255, 255, 0.055);
@@ -468,17 +515,40 @@ canvas:focus {
   background: rgba(118, 215, 255, 0.12);
 }
 
-.queue-card span,
 .queue-card strong,
 .queue-card em,
 .queue-card small {
   display: block;
 }
 
-.queue-card span {
+.queue-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-width: 0;
+}
+
+.queue-meta b,
+.queue-meta i {
+  display: block;
+  min-width: 0;
+  font-style: normal;
+}
+
+.queue-meta b {
   color: rgba(143, 227, 155, 0.86);
   font-size: 11px;
   font-weight: 900;
+}
+
+.queue-meta i {
+  overflow: hidden;
+  color: rgba(248, 251, 255, 0.56);
+  font-size: 10px;
+  font-weight: 900;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .queue-card strong {
@@ -523,16 +593,40 @@ canvas:focus {
   line-height: 1.25;
 }
 
-.queue-card.pace span {
+.queue-card.pace .queue-meta b {
   color: rgba(118, 215, 255, 0.9);
 }
 
-.queue-card.style span {
+.queue-card.style .queue-meta b {
   color: rgba(143, 227, 155, 0.9);
 }
 
-.queue-card.expert span {
+.queue-card.expert .queue-meta b {
   color: rgba(247, 198, 93, 0.92);
+}
+
+.queue-cta {
+  position: absolute;
+  top: 50%;
+  right: 9px;
+  display: grid;
+  place-items: center;
+  min-width: 38px;
+  height: 28px;
+  padding: 0 7px;
+  border: 1px solid rgba(118, 215, 255, 0.22);
+  border-radius: 4px;
+  background: rgba(118, 215, 255, 0.08);
+  color: rgba(248, 251, 255, 0.84);
+  font-size: 10px;
+  font-weight: 900;
+  transform: translateY(-50%);
+}
+
+.queue-card:hover .queue-cta {
+  border-color: rgba(247, 198, 93, 0.36);
+  background: rgba(247, 198, 93, 0.12);
+  color: #fff0a0;
 }
 
 .practice-ledger {
@@ -761,6 +855,12 @@ canvas:focus {
   border-color: rgba(255, 255, 255, 0.2);
   background: rgba(255, 255, 255, 0.08);
   color: rgba(248, 251, 255, 0.76);
+}
+
+.focus-button.armed {
+  border-color: rgba(255, 122, 156, 0.5);
+  background: rgba(255, 92, 108, 0.18);
+  color: #ffd8df;
 }
 
 .focus-button:hover {
@@ -999,6 +1099,7 @@ canvas:focus {
     top: 58px;
     width: auto;
     max-height: calc(100% - 78px);
+    padding: 11px;
   }
 
   .hud {
@@ -1068,6 +1169,64 @@ canvas:focus {
     height: 34px;
   }
 
+  .practice-priority {
+    min-height: 80px;
+    padding: 10px 11px 14px;
+  }
+
+  .practice-priority strong {
+    font-size: 14px;
+  }
+
+  .drill-variants {
+    gap: 5px;
+  }
+
+  .variant-button,
+  .focus-button {
+    font-size: 11px;
+  }
+
+  .coach-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 8px;
+  }
+
+  .coach-actions {
+    display: grid;
+    grid-template-columns: 1fr 70px;
+  }
+
+  .queue-card {
+    min-height: 74px;
+    padding: 8px 50px 9px 9px;
+  }
+
+  .queue-cta {
+    right: 8px;
+    min-width: 34px;
+  }
+
+  .ledger-head em {
+    display: none;
+  }
+
+  .ledger-row {
+    grid-template-columns: 28px minmax(0, 1fr) 66px;
+    min-height: 52px;
+    padding: 7px 8px 10px;
+  }
+
+  .ledger-stats {
+    display: none;
+  }
+
+  .ledger-action {
+    padding: 5px 6px;
+    font-size: 9px;
+  }
+
   .review-grid {
     grid-template-columns: 1fr;
   }
@@ -1080,5 +1239,25 @@ canvas:focus {
 @media (pointer: coarse) {
   .touch {
     display: flex;
+  }
+}
+
+@media (max-width: 760px) and (orientation: portrait) {
+  .shell {
+    align-content: start;
+    place-items: start center;
+  }
+
+  .stage.settings-open {
+    overflow: visible;
+  }
+
+  .stage.settings-open::after {
+    bottom: auto;
+    height: 100%;
+  }
+
+  .settings-panel {
+    max-height: calc(100vh - 70px);
   }
 }

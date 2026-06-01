@@ -155,7 +155,7 @@ const requiredIds = [
   "flowCount", "runTime", "deathCount", "debugPanel", "settingsButton", "settingsPanel",
   "settingsClose", "shakeSlider", "debugToggle", "calmEffectsToggle", "practiceLinesToggle",
   "ghostOpacitySlider", "controlPreset", "roomSelect", "practicePriority", "focusRoomButton", "focusResetButton", "coachSummary",
-  "roomBrief", "practiceReport", "practiceQueue", "practiceLedger", "drillCleanButton", "drillPaceButton", "drillStyleButton", "drillExpertButton"
+  "roomBrief", "practiceReport", "practiceQueue", "practiceLedger", "drillCleanButton", "drillPaceButton", "drillStyleButton", "drillExpertButton", "gameStatus"
 ];
 for (const id of requiredIds) {
   if (!hasId(indexHtml, id)) errors.push("index.html missing #" + id);
@@ -217,17 +217,34 @@ if (!js.includes("isGamePaused")) errors.push("settings pause helper is missing"
 if (!js.includes("hasTimingIntent")) errors.push("timing intent helper is missing");
 if (!js.includes("resetFocusStats")) errors.push("focus reset helper is missing");
 if (!js.includes("releaseAllInputs")) errors.push("settings input release helper is missing");
+if (!js.includes("syncSettingsVisibility")) errors.push("settings open state must sync aria-expanded and panel visibility");
+if (!js.includes("drawTimingGateCue")) errors.push("first-input timing gate needs a visible cue");
+if (!js.includes("confirmFocusReset")) errors.push("focus reset should require confirmation");
+if (!js.includes("scheduleFocusResetExpiry")) errors.push("focus reset confirmation should expire visibly");
 if (!js.includes("drawCooldownRing")) errors.push("mechanic cooldown ring helper is missing");
 if (!indexHtml.includes("pause-badge")) errors.push("settings panel must show pause state");
+if (indexHtml.includes('<div class="hud" aria-hidden="true">')) errors.push("settings button must not be hidden by hud aria-hidden");
+if (indexHtml.includes('<div class="meters" aria-hidden="true">')) errors.push("HUD counters should remain available to assistive tech");
+if (!indexHtml.includes('class="dash-meter" title="冲刺" aria-hidden="true"')) errors.push("decorative dash meter should be hidden from assistive tech");
+if (!indexHtml.includes('id="runTime" aria-label="总时间"')) errors.push("HUD counters need accessible labels");
+if (!indexHtml.includes('aria-controls="settingsPanel"')) errors.push("settings button must reference settings panel");
+if (!indexHtml.includes('aria-expanded="false"')) errors.push("settings button must expose collapsed state");
+if (!indexHtml.includes('aria-label="设置"')) errors.push("settings button should have a localized accessible label");
+if (!indexHtml.includes('aria-live="polite"')) errors.push("game should expose live status text");
 if (!indexHtml.includes("settings-section-title")) errors.push("settings panel must group controls");
 if (!indexHtml.includes("settings-panel")) errors.push("settings panel shell is missing");
 if (!standaloneHtml.includes("settings-panel")) errors.push("standalone settings panel shell is missing");
-if (!fs.readFileSync(path.join(root, "summit-spark.css"), "utf8").includes("review-actions")) errors.push("finish review actions styling is missing");
+const css = fs.readFileSync(path.join(root, "summit-spark.css"), "utf8");
+if (!css.includes("review-actions")) errors.push("finish review actions styling is missing");
 if (!indexHtml.includes("drill-variants")) errors.push("settings panel must expose drill variants");
-if (!fs.readFileSync(path.join(root, "summit-spark.css"), "utf8").includes("variant-button")) errors.push("drill variant styling is missing");
-if (!fs.readFileSync(path.join(root, "summit-spark.css"), "utf8").includes("queue-meter")) errors.push("practice queue progress styling is missing");
-if (!fs.readFileSync(path.join(root, "summit-spark.css"), "utf8").includes("ledger-meter")) errors.push("practice ledger progress styling is missing");
-if (!fs.readFileSync(path.join(root, "summit-spark.css"), "utf8").includes("overflow-y: auto")) errors.push("finish review overlay should be scroll-safe");
+if (!css.includes("variant-button")) errors.push("drill variant styling is missing");
+if (!css.includes("queue-meter")) errors.push("practice queue progress styling is missing");
+if (!css.includes("queue-cta")) errors.push("practice queue cards need a clear action affordance");
+if (!css.includes("ledger-meter")) errors.push("practice ledger progress styling is missing");
+if (!css.includes("settings-open")) errors.push("settings pause should visually dim the playfield");
+if (!css.includes("focus-button.armed")) errors.push("focus reset confirmation state styling is missing");
+if (!css.includes("orientation: portrait")) errors.push("portrait mobile settings should not be trapped in the landscape stage");
+if (!css.includes("overflow-y: auto")) errors.push("finish review overlay should be scroll-safe");
 
 ["drills", "drillClears", "drillClean", "cleanDrills", "cleanWins", "paceDrills", "paceWins", "styleDrills", "styleWins", "expertDrills", "expertWins"].forEach((field) => {
   if (!js.includes(field + ": 0")) errors.push("createRoomFocusEntry must initialize " + field);

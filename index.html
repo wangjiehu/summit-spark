@@ -12,38 +12,38 @@
     <section class="stage">
       <canvas id="game" width="960" height="544" aria-label="山巅微光"></canvas>
 
-      <div class="hud" aria-hidden="true">
-        <div class="brand">
+      <div class="hud">
+        <div class="brand" aria-hidden="true">
           <span class="mark"></span>
           <span>山巅微光</span>
         </div>
         <div class="meters">
-          <div class="dash-meter" title="冲刺">
+          <div class="dash-meter" title="冲刺" aria-hidden="true">
             <span></span>
           </div>
-          <div class="stamina-meter" title="体力">
+          <div class="stamina-meter" title="体力" aria-hidden="true">
             <span></span>
           </div>
-          <div class="pace-meter" title="房间目标节奏">
+          <div class="pace-meter" title="房间目标节奏" aria-hidden="true">
             <span></span>
           </div>
-          <div class="counter" id="lumenCount">0/0</div>
-          <div class="counter stat" id="roomCount">1/1</div>
-          <div class="counter stat" id="splitTime">0:00.00</div>
-          <div class="counter stat delta" id="splitDelta">+0.00</div>
-          <div class="counter stat" id="flowCount">F 0</div>
-          <div class="counter stat" id="runTime">0:00.00</div>
-          <div class="counter stat" id="deathCount">D 0</div>
+          <div class="counter" id="lumenCount" aria-label="微光数量">0/0</div>
+          <div class="counter stat" id="roomCount" aria-label="当前房间">1/1</div>
+          <div class="counter stat" id="splitTime" aria-label="当前分段时间">0:00.00</div>
+          <div class="counter stat delta" id="splitDelta" aria-label="分段差值">+0.00</div>
+          <div class="counter stat" id="flowCount" aria-label="Flow 值">F 0</div>
+          <div class="counter stat" id="runTime" aria-label="总时间">0:00.00</div>
+          <div class="counter stat" id="deathCount" aria-label="死亡次数">D 0</div>
         </div>
-        <button class="icon-button" id="settingsButton" type="button" aria-label="Options">&#9881;</button>
+        <button class="icon-button" id="settingsButton" type="button" aria-label="设置" aria-controls="settingsPanel" aria-expanded="false">&#9881;</button>
       </div>
 
       <pre class="debug-panel hidden" id="debugPanel" aria-hidden="true"></pre>
 
-      <section class="settings-panel hidden" id="settingsPanel" aria-label="Options" aria-hidden="true">
+      <section class="settings-panel hidden" id="settingsPanel" role="dialog" aria-label="Options" aria-hidden="true">
         <div class="settings-head">
           <strong>&#35774;&#32622; <span class="pause-badge">&#26242;&#20572;&#20013;</span></strong>
-          <button class="mini-button" id="settingsClose" type="button" aria-label="Close">&times;</button>
+          <button class="mini-button" id="settingsClose" type="button" aria-label="关闭设置">&times;</button>
         </div>
         <button class="practice-priority" id="practicePriority" type="button">
           <span>下一步</span>
@@ -108,6 +108,8 @@
         <h1>山巅微光</h1>
         <button class="primary" id="startButton" type="button">开始</button>
       </div>
+
+      <div class="sr-status" id="gameStatus" aria-live="polite" aria-atomic="true"></div>
 
       <div class="touch" aria-label="触控">
         <div class="touch-cluster">

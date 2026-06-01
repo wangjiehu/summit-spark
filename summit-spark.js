@@ -3,6 +3,7 @@
 
   const canvas = document.getElementById("game");
   const ctx = canvas.getContext("2d");
+  const stage = canvas.closest(".stage");
   const startButton = document.getElementById("startButton");
   const overlay = document.getElementById("overlay");
   const lumenCount = document.getElementById("lumenCount");
@@ -35,6 +36,7 @@
   const drillPaceButton = document.getElementById("drillPaceButton");
   const drillStyleButton = document.getElementById("drillStyleButton");
   const drillExpertButton = document.getElementById("drillExpertButton");
+  const gameStatus = document.getElementById("gameStatus");
   const dashFill = document.querySelector(".dash-meter span");
   const staminaFill = document.querySelector(".stamina-meter span");
   const paceMeter = document.querySelector(".pace-meter");
@@ -103,6 +105,7 @@
   const SPLIT_POPUP_TIME = 1.25;
   const FOCUS_POPUP_TIME = 1.35;
   const DEATH_COACH_TIME = 2.35;
+  const FOCUS_RESET_CONFIRM_MS = 2200;
   const SETTINGS_KEY = "summit-spark-settings";
   const ACTION_PULSE_TIME = 0.22;
   const BEST_FLOW_KEY = "summit-spark-best-flow";
@@ -580,6 +583,9 @@
   let deathCoachText = "";
   let deathCoachDetail = "";
   let deathCoachReason = "fall";
+  let focusResetConfirmUntil = 0;
+  let focusResetExpiryTimer = 0;
+  let lastGameStatus = "";
   let lastCoachSummary = "";
   let lastPracticeQueueHtml = "";
   let lastPracticeLedgerHtml = "";
@@ -819,7 +825,9 @@
     startRoomDrill(target, "expert");
   });
   focusResetButton?.addEventListener("click", () => {
+    if (!confirmFocusReset()) return;
     resetFocusStats();
+    setGameStatus("Focus 统计已清空");
     focusGame();
   });
   practiceQueue?.addEventListener("click", (event) => {
@@ -1005,6 +1013,7 @@
   function begin() {
     started = true;
     overlay.classList.add("hidden");
+    setGameStatus("游戏开始，首次输入后开始计时");
     focusGame();
   }
 
@@ -1155,7 +1164,10 @@
     const input = getInput();
     const timingIntent = hasTimingIntent(input);
     if (!timingIntent) timingInputReady = true;
-    if (!timingArmed && timingIntent && timingInputReady) timingArmed = true;
+    if (!timingArmed && timingIntent && timingInputReady) {
+      timingArmed = true;
+      setGameStatus(`R${roomIndex + 1} 计时开始`);
+    }
     if (timingArmed) {
       runTime += dt;
       roomTime += dt;
@@ -2107,6 +2119,7 @@
     deathCoachText = title || deathReasonLabel(normalized);
     deathCoachDetail = roomCoachHint(roomIndex, normalized);
     deathCoachTimer = DEATH_COACH_TIME;
+    setGameStatus(`${deathReasonLabel(normalized)}：${deathCoachDetail}`);
     clearFocusPopup();
   }
 
@@ -2656,6 +2669,7 @@
     focusPopupText = `${drillModeLabel(resolvedMode)} DRILL R${index + 1}`;
     focusPopupDetail = `${drillTargetText(index, resolvedMode)} / ${objective}`;
     focusPopupTimer = FOCUS_POPUP_TIME;
+    setGameStatus(`${drillModeLabel(resolvedMode)} Drill R${index + 1}：${objective}`);
     updatePracticeCoach();
   }
 
@@ -2668,6 +2682,7 @@
       focusPopupDetail = "目标完成";
       focusPopupTimer = FOCUS_POPUP_TIME;
       activeDrill = null;
+      setGameStatus(`Drill R${index + 1} 完成`);
       updatePracticeCoach();
       return true;
     }
@@ -2682,6 +2697,7 @@
     focusPopupText = `${drillModeLabel(drill.mode)} 重练 R${drill.room + 1}`;
     focusPopupDetail = reason;
     focusPopupTimer = FOCUS_POPUP_TIME;
+    setGameStatus(`${drillModeLabel(drill.mode)} Drill 重练：${reason}`);
     updatePracticeCoach();
   }
 
@@ -2762,6 +2778,7 @@
     }
     updatePracticePriority();
     updateDrillVariantButtons();
+    updateFocusResetButton();
     if (practiceReport) {
       practiceReport.textContent = practiceReportText();
     }
@@ -2914,12 +2931,14 @@
       const title = `R${item.index + 1} ${ROOM_NAMES[item.index] || "Summit"}`;
       const objective = drillObjectiveForRoom(item.index, item.mode);
       const progress = drillContractProgress(item.stats);
-      return `<button class="queue-card ${item.mode}" type="button" data-queue-room="${item.index}" data-queue-mode="${item.mode}">`
-        + `<span>${escapeHtml(item.label)} · ${escapeHtml(drillContractStatus(item.stats))}</span>`
+      const status = drillContractStatus(item.stats);
+      return `<button class="queue-card ${item.mode}" type="button" data-queue-room="${item.index}" data-queue-mode="${item.mode}" aria-label="${escapeHtml(item.label)} ${escapeHtml(title)} ${escapeHtml(objective)}">`
+        + `<span class="queue-meta"><b>${escapeHtml(item.label)}</b><i>${escapeHtml(status)}</i></span>`
         + `<strong>${escapeHtml(title)}</strong>`
         + `<em>${escapeHtml(item.reason)} · ${escapeHtml(item.detail)}</em>`
         + `<i class="queue-meter" style="--queue-progress: ${progress}%" aria-hidden="true"></i>`
         + `<small>${escapeHtml(objective)}</small>`
+        + `<span class="queue-cta" aria-hidden="true">开练</span>`
         + `</button>`;
     }).join("");
     if (html === lastPracticeQueueHtml) return;
@@ -3032,6 +3051,7 @@
     roomMistakes = createRoomCounters();
     roomFocus = normalizeRoomFocus([]);
     roomAttemptClean = true;
+    clearFocusResetConfirm();
     clearFocusPopup();
     writeRoomFocus();
     refreshRoomSelectOptions();
@@ -3295,13 +3315,15 @@
   function toggleSettings() {
     settingsVisible = !settingsVisible;
     releaseAllInputs();
-    settingsPanel.classList.toggle("hidden", !settingsVisible);
-    settingsPanel.setAttribute("aria-hidden", String(!settingsVisible));
+    syncSettingsVisibility();
     if (settingsVisible) {
       settingsPanel.scrollTop = 0;
       syncSettingsPanel();
+      setGameStatus("设置已打开，游戏暂停");
       settingsCloseButton?.focus({ preventScroll: true });
     } else {
+      clearFocusResetConfirm();
+      setGameStatus("设置已关闭");
       focusGame();
     }
   }
@@ -3309,12 +3331,21 @@
   function closeSettings() {
     settingsVisible = false;
     releaseAllInputs();
-    settingsPanel.classList.add("hidden");
-    settingsPanel.setAttribute("aria-hidden", "true");
+    clearFocusResetConfirm();
+    syncSettingsVisibility();
+    setGameStatus("设置已关闭");
     focusGame();
   }
 
+  function syncSettingsVisibility() {
+    stage?.classList.toggle("settings-open", settingsVisible);
+    settingsPanel?.classList.toggle("hidden", !settingsVisible);
+    settingsPanel?.setAttribute("aria-hidden", String(!settingsVisible));
+    settingsButton?.setAttribute("aria-expanded", String(settingsVisible));
+  }
+
   function syncSettingsPanel() {
+    syncSettingsVisibility();
     syncRoomSelect();
     if (shakeSlider) shakeSlider.value = String(settings.shake);
     if (debugToggle) debugToggle.checked = debugVisible;
@@ -3323,6 +3354,53 @@
     if (ghostOpacitySlider) ghostOpacitySlider.value = String(settings.ghostOpacity);
     if (controlPresetSelect) controlPresetSelect.value = settings.controlsPreset;
     updatePracticeCoach();
+  }
+
+  function setGameStatus(text) {
+    if (!gameStatus || !text || text === lastGameStatus) return;
+    lastGameStatus = text;
+    gameStatus.textContent = text;
+  }
+
+  function focusResetArmed() {
+    return performance.now() < focusResetConfirmUntil;
+  }
+
+  function updateFocusResetButton() {
+    if (!focusResetButton) return;
+    const armed = focusResetArmed();
+    focusResetButton.textContent = armed ? "Confirm" : "Reset";
+    focusResetButton.classList.toggle("armed", armed);
+    focusResetButton.title = armed ? "再点一次清空所有 Focus/Drill 统计" : "清空 Focus 统计，需要二次确认";
+  }
+
+  function clearFocusResetConfirm() {
+    focusResetConfirmUntil = 0;
+    if (focusResetExpiryTimer) {
+      window.clearTimeout(focusResetExpiryTimer);
+      focusResetExpiryTimer = 0;
+    }
+    updateFocusResetButton();
+  }
+
+  function scheduleFocusResetExpiry() {
+    if (focusResetExpiryTimer) window.clearTimeout(focusResetExpiryTimer);
+    focusResetExpiryTimer = window.setTimeout(() => {
+      focusResetExpiryTimer = 0;
+      if (!focusResetArmed()) updateFocusResetButton();
+    }, FOCUS_RESET_CONFIRM_MS + 32);
+  }
+
+  function confirmFocusReset() {
+    if (focusResetArmed()) {
+      clearFocusResetConfirm();
+      return true;
+    }
+    focusResetConfirmUntil = performance.now() + FOCUS_RESET_CONFIRM_MS;
+    scheduleFocusResetExpiry();
+    updateFocusResetButton();
+    setGameStatus("再点一次 Reset 清空 Focus 统计");
+    return false;
   }
 
   function readSettings() {
@@ -3756,6 +3834,7 @@
     if (player.deadTimer <= 0) drawPlayer(time);
     ctx.restore();
     drawFlowAtmosphere(time);
+    drawTimingGateCue(time);
     drawRoomIntro(time);
     drawSplitPopup(time);
     drawFocusPopup(time);
@@ -4474,6 +4553,39 @@
       const label = active ? `${drillModeLabel(activeDrill.mode)} ${formatDelta(delta)}` : `PACE ${formatDelta(delta)}`;
       ctx.fillText(label, W / 2, y - 4);
     }
+    ctx.restore();
+  }
+
+  function drawTimingGateCue(time) {
+    if (!started || won || timingArmed || player.deadTimer > 0 || roomIntroTimer > 0.22) return;
+    const compact = isCompactCanvas();
+    const text = timingInputReady ? "首次输入开始计时" : "松开按键后待命";
+    const detail = timingInputReady ? "移动 / 跳跃 / 冲刺" : "防止重开残留输入污染 split";
+    const width = compact ? 330 : 300;
+    const x = W / 2 - width / 2;
+    const y = compact ? H - 74 : H - 64;
+    const pulse = 0.5 + Math.sin(time * 4.8) * 0.5;
+
+    ctx.save();
+    ctx.globalAlpha = 0.74 + pulse * 0.12;
+    ctx.fillStyle = "rgba(7,12,20,0.68)";
+    roundRect(ctx, x, y, width, 42, 8);
+    ctx.fill();
+    ctx.strokeStyle = `rgba(118,215,255,${0.24 + pulse * 0.22})`;
+    ctx.lineWidth = 1.2;
+    roundRect(ctx, x + 0.6, y + 0.6, width - 1.2, 40.8, 8);
+    ctx.stroke();
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.shadowColor = palette.cyan;
+    ctx.shadowBlur = settings.calmEffects ? 4 : 10;
+    ctx.fillStyle = timingInputReady ? palette.cyan : "rgba(255,240,160,0.92)";
+    ctx.font = `800 ${compact ? 13 : 12}px system-ui, sans-serif`;
+    ctx.fillText(text, W / 2, y + 15);
+    ctx.shadowBlur = settings.calmEffects ? 2 : 5;
+    ctx.fillStyle = "rgba(248,251,255,0.7)";
+    ctx.font = `800 ${compact ? 11 : 10}px system-ui, sans-serif`;
+    ctx.fillText(detail, W / 2, y + 31);
     ctx.restore();
   }
 

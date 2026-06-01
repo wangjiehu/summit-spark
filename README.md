@@ -38,7 +38,7 @@ http://127.0.0.1:4173/
 - 设置面板：右上角按钮 / O
 - 练习辅助：设置里可开关练习线，并调节最佳路线/ghost 透明度
 - 练习目录：房间下拉框显示 target/PB、相对 target 损失、评级、clean、Drill、技能标签和房间失误标记（`!x` / `watch`），更容易找薄弱房间。
-- 练习教练：设置面板会推荐当前最该练的房间，Drill 按钮可直接进入目标练习，Reset 可清空 Focus 统计。
+- 练习教练：设置面板会推荐当前最该练的房间，Drill 按钮可直接进入目标练习，Reset 需要二次确认后才会清空 Focus/Drill 统计。
 - Drill 状态：练习中会显示当前房间目标和本轮错误数；主 Drill 会自动解析为 Clean/Pace/Style/Expert 合同；四种变体可分别练无失误、target、房间难度类型和高手线；Expert 还会检查本房标志性动作是否真的做到了；失败会直接重开同一 Drill；Drill start/clear/clean 会写入每房统计。
 - 房间详情：设置面板会展示当前房间目的、safe/fast/expert 路线、pace、clean 和 Drill 信息。
 - 练习报告：设置面板会汇总 clean 进度、Drill 完成情况、Clean/Pace/Style/Expert 合约进度、训练航线、薄弱房、最大 split 损失和下一 Drill。
@@ -83,3 +83,4 @@ http://127.0.0.1:4173/
 - 类型反馈：房间入场会显示 Style 目标；Style/Expert/Pace Drill HUD 会显示动作进度或剩余时间；登顶复盘会单独推荐一个类型挑战并可一键进入。
 - 目标信标：Style/Expert Drill 会在关卡里高亮还没完成的关键动作目标，例如光继、弹簧、风、棱镜、回声、召回、脆冰或 Spark。
 - 计时保护：出生/重开后必须先出现一次空输入，再由真实操作启动计时，降低手柄漂移或残留按键污染 split 的风险。
+- UX 审查补强：设置按钮和 HUD 统计不再被可访问性隐藏；设置打开时会视觉暂停画面；出生后的计时待命提示、训练卡“开练” affordance、窄屏掌握表和 live status 都已补强。

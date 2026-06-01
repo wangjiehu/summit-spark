@@ -45,6 +45,7 @@ Long-term optimization source: `LONG_TERM_OPTIMIZATION_OUTLINE.md`. Super-push e
 - 2026-06-01: Surfaced difficulty types during play: room intro cards now show Style objectives, active Drill HUDs show contract progress/time pressure, and summit review includes a direct Style challenge action.
 - 2026-06-01: Added active requirement beacons: Style and Expert drills now highlight unfinished target actions in the room, making difficulty-type goals visible without opening settings.
 - 2026-06-01: Tightened small-screen UX and practice guidance: compact HUD now prioritizes room, pace, death, and state bars; room intros are more readable under the HUD; settings now starts with a next-practice action card; death/retry feedback is consolidated into a single coach hint.
+- 2026-06-02: Closed a strict UX audit pass: settings and real HUD counters are now reachable to assistive tech, the paused settings state dims the playfield, Focus reset requires expiring confirmation, first-input timing shows an on-canvas standby cue, and mobile practice lists are less crowded.
 
 ## Next Milestones
 
@@ -80,6 +81,8 @@ Long-term optimization source: `LONG_TERM_OPTIMIZATION_OUTLINE.md`. Super-push e
 - Practice recommendations should start with the first unplayed or non-S room, then move to persistent Focus pressure.
 - Settings and practice controls must release held gameplay inputs before they take focus.
 - Timers should reflect play, not menu reading time: idle starts and settings panels must not silently burn split seconds.
+- Destructive practice actions need an undo-minded guard: data resets require confirmation and must announce the result.
+- HUD decoration may be hidden from assistive tech, but real controls and counters inside the HUD must remain reachable and expose state.
 
 ## Precision Quality Gate
 
