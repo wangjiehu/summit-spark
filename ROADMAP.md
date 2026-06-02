@@ -48,6 +48,7 @@ Long-term optimization source: `LONG_TERM_OPTIMIZATION_OUTLINE.md`. Super-push e
 - 2026-06-02: Closed a strict UX audit pass: settings and real HUD counters are now reachable to assistive tech, the paused settings state dims the playfield, Focus reset requires expiring confirmation, first-input timing shows an on-canvas standby cue, and mobile practice lists are less crowded.
 - 2026-06-02: Added a training-plan pass: settings now builds a three-step Drill ladder, death feedback prescribes the next action plus a concrete Drill, Drill failures explain the missing contract in action language, and active Drill HUDs show Clean/Pace/Style/Expert ladder status.
 - 2026-06-02: Added a feel-trust pass: apex gravity shaping makes jump tops easier to steer, and successful buffer/coyote/wall-grace/Spark/aim-memory windows now produce short player-adjacent cues plus debug readouts.
+- 2026-06-02: Added a route-clarity and mastery pass: room intros, in-run route cards, and a near-player compass now surface the current SAFE/FAST/EXPERT line, while room clears and Drill wins show immediate mastery progress.
 
 ## Next Milestones
 

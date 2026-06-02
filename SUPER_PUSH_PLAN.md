@@ -146,3 +146,13 @@
 - 命中 coyote、jump buffer、wall grace、Spark 压线或冲刺方向记忆时，会在角色旁给出短反馈。
 - 输入提示新增 apex 稳定线，调试面板显示 feel cue、apex 和 aim memory 状态，便于后续继续调手感。
 - 质量门补充 feel cue、apex gravity 和调试可见性，防止手感反馈被后续改动冲掉。
+
+## 2026-06-02 路线清晰度超大步
+
+目标是让玩家少猜“下一步该怎么走”，并在完成后立刻知道自己是不是更强了。
+
+- 房间入场卡显示当前 SAFE/FAST/EXPERT 推荐线、路线动作和 mastery 分数。
+- 奔跑中加入低打扰路线卡，短时间显示本房推荐路线、pace 状态和掌握阶段。
+- 角色附近加入路线指南针，指向下一个关键实体或出口，Drill 中常驻，普通跑动中短暂出现。
+- 清房和 Drill 成功后弹出 mastery 反馈，显示分数增量、clean/PB/合同完成和当前评级。
+- Debug 和质量门补上 route cue、route compass 与 mastery popup，防止路线可读性被后续迭代冲掉。

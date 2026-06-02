@@ -225,6 +225,14 @@ if (!js.includes("APEX_GRAVITY_MULT")) errors.push("apex gravity shaping is miss
 if (!js.includes("showFeelCue")) errors.push("feel window feedback helper is missing");
 if (!js.includes("drawFeelCue")) errors.push("feel cue renderer is missing");
 if (!js.includes("actionPulse.apex")) errors.push("apex input cue should be visible");
+if (!js.includes("ROUTE_CUE_TIME")) errors.push("route cue timing constant is missing");
+if (!js.includes("routeSlotForMode")) errors.push("route cue should map drill modes to safe/fast/expert slots");
+if (!js.includes("routeFocusData")) errors.push("route focus data helper is missing");
+if (!js.includes("routeCompassTarget")) errors.push("route compass target helper is missing");
+if (!js.includes("drawRouteCompass")) errors.push("in-room route compass renderer is missing");
+if (!js.includes("drawRouteFocusCue")) errors.push("route focus cue renderer is missing");
+if (!js.includes("showMasteryPopup")) errors.push("room mastery completion popup helper is missing");
+if (!js.includes("drawMasteryPopup")) errors.push("room mastery popup renderer is missing");
 if (!js.includes("deathPrescription")) errors.push("death coach should prescribe next action");
 if (!js.includes("deathCoachPlanText")) errors.push("death coach should point to a drill plan");
 if (!js.includes("drawContractStrip")) errors.push("Drill HUD should show contract ladder status");

@@ -110,6 +110,8 @@
   const DEATH_COACH_TIME = 2.35;
   const FOCUS_RESET_CONFIRM_MS = 2200;
   const FEEL_CUE_TIME = 0.72;
+  const ROUTE_CUE_TIME = 5.4;
+  const MASTERY_POPUP_TIME = 1.8;
   const SETTINGS_KEY = "summit-spark-settings";
   const ACTION_PULSE_TIME = 0.22;
   const BEST_FLOW_KEY = "summit-spark-best-flow";
@@ -585,6 +587,13 @@
   let feelCueText = "";
   let feelCueDetail = "";
   let feelCueColor = palette.cyan;
+  let routeCueTimer = ROUTE_CUE_TIME;
+  let routeCueSlot = 0;
+  let routeCueReason = "入场";
+  let masteryPopupTimer = 0;
+  let masteryPopupText = "";
+  let masteryPopupDetail = "";
+  let masteryPopupColor = palette.gold;
   let focusPopupTimer = 0;
   let focusPopupText = "";
   let focusPopupDetail = "";
@@ -1020,6 +1029,7 @@
     timingInputReady = false;
     resetActionVisuals();
     triggerActionVisual("spawn", 0.32);
+    armRouteCue("入场", null, ROUTE_CUE_TIME);
   }
 
   function isGamePaused() {
@@ -1049,6 +1059,7 @@
     lastDeathReason = "none";
     crumbleSlipTimer = 0;
     clearFocusPopup();
+    clearMasteryPopup();
     runTime = 0;
     roomTime = 0;
     timingArmed = false;
@@ -1093,6 +1104,7 @@
     lastDeathReason = "none";
     crumbleSlipTimer = 0;
     clearFocusPopup();
+    clearMasteryPopup();
     runTime = 0;
     roomTime = 0;
     timingArmed = false;
@@ -1635,10 +1647,13 @@
 
   function completeRun() {
     const clearedClean = roomAttemptClean;
-    recordRoomBest(roomIndex);
+    const masteryBefore = roomMasteryScore(roomIndex);
+    const isNewRoomBest = recordRoomBest(roomIndex);
     markRoomClear(roomIndex);
+    const drillMode = activeDrill && activeDrill.room === roomIndex ? activeDrill.mode : "";
     const drillResult = completeDrill(roomIndex, clearedClean);
     if (drillResult === false) return { isBest: false, drillResult };
+    showMasteryPopup(roomIndex, masteryBefore, clearedClean, drillResult === true ? drillMode : "", isNewRoomBest);
     addFlow(120, "summit");
     if (bestTime <= 0 || runTime < bestTime) {
       bestTime = runTime;
@@ -1925,10 +1940,13 @@
     if (player.x > W + 3 && roomIndex < maps.length - 1) {
       const clearedRoom = roomIndex;
       const clearedClean = roomAttemptClean;
-      recordRoomBest(clearedRoom);
+      const masteryBefore = roomMasteryScore(clearedRoom);
+      const isNewRoomBest = recordRoomBest(clearedRoom);
       markRoomClear(clearedRoom);
+      const drillMode = activeDrill && activeDrill.room === clearedRoom ? activeDrill.mode : "";
       const drillResult = completeDrill(clearedRoom, clearedClean);
       if (drillResult === false) return;
+      showMasteryPopup(clearedRoom, masteryBefore, clearedClean, drillResult === true ? drillMode : "", isNewRoomBest);
       roomIndex += 1;
       roomAttemptClean = true;
       room = parseRoom(roomIndex);
@@ -1939,6 +1957,7 @@
       timingArmed = true;
       timingInputReady = true;
       roomIntroTimer = ROOM_INTRO_TIME;
+      armRouteCue("下一房", null, ROUTE_CUE_TIME);
       player.respawnRoom = roomIndex;
       player.respawnX = 26;
       player.respawnY = Math.min(player.y, H - TILE * 3);
@@ -1959,6 +1978,7 @@
       timingArmed = true;
       timingInputReady = true;
       roomIntroTimer = ROOM_INTRO_TIME;
+      armRouteCue("回看", null, ROUTE_CUE_TIME);
       player.respawnRoom = roomIndex;
       player.respawnX = player.x;
       player.respawnY = Math.min(player.y, H - TILE * 3);
@@ -2018,6 +2038,7 @@
     player.ghostTimer = 0;
     player.deadTimer = 0;
     clearSplitPopup();
+    clearMasteryPopup();
     crumbleSlipTimer = 0;
     roomTime = 0;
     timingArmed = false;
@@ -2031,6 +2052,7 @@
     seedHair();
     resetActionVisuals();
     triggerActionVisual("spawn", 0.28);
+    armRouteCue("重试", null, ROUTE_CUE_TIME);
     burst(player.x + player.w / 2, player.y + player.h / 2, "#f8fbff", 16, 230);
   }
 
@@ -2092,6 +2114,7 @@
       respawnY: target.y
     });
     clearSplitPopup();
+    clearMasteryPopup();
     crumbleSlipTimer = 0;
     roomTime = 0;
     timingArmed = false;
@@ -2105,6 +2128,7 @@
     seedHair();
     resetActionVisuals();
     triggerActionVisual("spawn", 0.24);
+    armRouteCue("重开", null, ROUTE_CUE_TIME);
     burst(player.x + player.w / 2, player.y + player.h / 2, "#f8fbff", 12, 210);
   }
 
@@ -2424,6 +2448,129 @@
     return roomRouteLine(index, slot).replace(/^(安全线|进阶线|高手线)：/, "");
   }
 
+  function routeSlotForMode(mode) {
+    if (mode === "clean") return 0;
+    if (mode === "expert") return 2;
+    return 1;
+  }
+
+  function routeSlotLabel(slot) {
+    if (slot === 0) return "安全线";
+    if (slot === 2) return "高手线";
+    return "进阶线";
+  }
+
+  function routeSlotShort(slot) {
+    if (slot === 0) return "SAFE";
+    if (slot === 2) return "EXPERT";
+    return "FAST";
+  }
+
+  function routeSlotColor(slot) {
+    if (slot === 0) return palette.green;
+    if (slot === 2) return palette.cyan;
+    return palette.gold;
+  }
+
+  function recommendedRouteSlot(index) {
+    if (activeDrill && activeDrill.room === index) return routeSlotForMode(activeDrill.mode);
+    const entry = roomFocus[index] || createRoomFocusEntry();
+    const grade = splitGrade(bestRoomTimes[index] || 0, ROOM_TARGETS[index]);
+    if (entry.clean <= 0) return 0;
+    if (grade !== "S") return 1;
+    return 2;
+  }
+
+  function routeFocusReason(index, slot) {
+    if (activeDrill && activeDrill.room === index) return `${drillModeLabel(activeDrill.mode)} 合同`;
+    const score = roomMasteryScore(index);
+    if (slot === 0) return "先稳 clean";
+    if (slot === 1) return "追 target";
+    return score >= 86 ? "冲 PB 线" : "补高手线";
+  }
+
+  function routeFocusData(index = roomIndex) {
+    const active = activeDrill && activeDrill.room === index;
+    const slot = active ? routeSlotForMode(activeDrill.mode) : routeCueTimer > 0 ? routeCueSlot : recommendedRouteSlot(index);
+    const score = roomMasteryScore(index);
+    const mode = active ? activeDrill.mode : resolveDrillMode(index);
+    return {
+      slot,
+      color: routeSlotColor(slot),
+      title: `R${index + 1} ${routeSlotLabel(slot)}`,
+      line: roomRouteLine(index, slot),
+      core: routeLineCore(index, slot),
+      reason: routeCueReason || "路线",
+      detail: `${routeFocusReason(index, slot)} / ${roomMasteryLevel(score)} ${score} / ${roomPaceLabel(index)}`,
+      objective: active ? activeDrill.objective : drillObjectiveForRoom(index, mode)
+    };
+  }
+
+  function routeCueActive() {
+    return routeCueTimer > 0 || Boolean(activeDrill && activeDrill.room === roomIndex);
+  }
+
+  function armRouteCue(reason = "路线", slot = null, duration = ROUTE_CUE_TIME) {
+    const resolved = Number.isInteger(slot) ? Math.max(0, Math.min(2, slot)) : recommendedRouteSlot(roomIndex);
+    routeCueSlot = resolved;
+    routeCueReason = reason;
+    routeCueTimer = Math.max(routeCueTimer, duration);
+  }
+
+  function routeCompassTarget() {
+    const cx = player.x + player.w / 2;
+    const cy = player.y + player.h / 2;
+    const points = [];
+    const add = (x, y, label, weight = 0) => {
+      if (Number.isFinite(x) && Number.isFinite(y)) points.push({ x, y, label, weight });
+    };
+    room.entities.relays.forEach((relay, index) => {
+      if (relay.ready) add(relay.x, relay.y, `光继 ${index + 1}`, 8);
+    });
+    room.entities.prisms.forEach((prism) => {
+      if (prism.ready) add(prism.x, prism.y, "棱镜", 7);
+    });
+    room.entities.refills.forEach((refill) => {
+      if (refill.ready) add(refill.x, refill.y, "补给", 6);
+    });
+    room.entities.springs.forEach((spring) => add(spring.x + spring.w / 2, spring.y, "弹簧", 5));
+    room.entities.anchors.forEach((anchor) => add(anchor.x, anchor.y, "回声", 4));
+    room.entities.updrafts.forEach((updraft) => add(updraft.x + updraft.w / 2, updraft.y + updraft.h * 0.2, "风", 3));
+    if (room.entities.goal) add(room.entities.goal.x, room.entities.goal.y, "终点", 2);
+    else add(W + 18, cy, "出口", 1);
+    const ahead = points.filter((point) => point.x > cx + 12);
+    const pool = ahead.length ? ahead : points;
+    return pool.sort((a, b) => {
+      const da = Math.hypot(a.x - cx, a.y - cy) - a.weight * 10;
+      const db = Math.hypot(b.x - cx, b.y - cy) - b.weight * 10;
+      return da - db;
+    })[0] || null;
+  }
+
+  function showMasteryPopup(index, beforeScore, clean, drillMode = "", isNewBest = false) {
+    const afterScore = roomMasteryScore(index);
+    const delta = Math.max(0, afterScore - beforeScore);
+    const level = roomMasteryLevel(afterScore);
+    const grade = splitGrade(bestRoomTimes[index] || 0, ROOM_TARGETS[index]);
+    const wins = [];
+    if (isNewBest) wins.push("PB");
+    if (clean) wins.push("CLEAN");
+    if (drillMode) wins.push(`${drillModeLabel(drillMode)} Drill`);
+    if (!wins.length) wins.push("CLEAR");
+    masteryPopupText = delta > 0 ? `R${index + 1} 掌握 +${delta}` : `R${index + 1} ${level} ${afterScore}`;
+    masteryPopupDetail = `${level} ${afterScore}/100 · ${wins.join(" · ")}${grade ? ` · ${grade}` : ""}`;
+    masteryPopupColor = delta > 0 ? palette.gold : clean ? palette.green : palette.cyan;
+    masteryPopupTimer = MASTERY_POPUP_TIME;
+    setGameStatus(`${masteryPopupText}：${masteryPopupDetail}`);
+  }
+
+  function clearMasteryPopup() {
+    masteryPopupTimer = 0;
+    masteryPopupText = "";
+    masteryPopupDetail = "";
+    masteryPopupColor = palette.gold;
+  }
+
   function roomMedalLabel(index) {
     const best = bestRoomTimes[index] || 0;
     const target = ROOM_TARGETS[index] || 0;
@@ -2717,6 +2864,7 @@
     const objective = drillObjectiveForRoom(index, resolvedMode);
     jumpToRoom(index, { keepDrill: true });
     activeDrill = { room: index, mode: resolvedMode, objective, target: ROOM_TARGETS[index] || 0 };
+    armRouteCue("Drill", routeSlotForMode(resolvedMode), ROUTE_CUE_TIME + 1.2);
     trackDrillStart(index, resolvedMode);
     focusPopupText = `${drillModeLabel(resolvedMode)} DRILL R${index + 1}`;
     focusPopupDetail = `${drillTargetText(index, resolvedMode)} / ${objective}`;
@@ -2729,10 +2877,13 @@
     if (!activeDrill || activeDrill.room !== index) return null;
     const success = drillSucceeded(activeDrill, clean, roomTime);
     if (success) {
-      trackDrillClear(index, clean, activeDrill.mode);
+      const mode = activeDrill.mode;
+      trackDrillClear(index, clean, mode);
+      const stats = drillContractStats(index, mode);
       focusPopupText = `${clean ? "DRILL 无失误" : "DRILL 通过"} R${index + 1}`;
-      focusPopupDetail = "目标完成";
+      focusPopupDetail = `${drillContractStatus(stats)} / ${roomMasteryLevel(roomMasteryScore(index))} ${roomMasteryScore(index)}`;
       focusPopupTimer = FOCUS_POPUP_TIME;
+      armRouteCue("完成", routeSlotForMode(mode), ROUTE_CUE_TIME * 0.72);
       activeDrill = null;
       setGameStatus(`Drill R${index + 1} 完成`);
       updatePracticeCoach();
@@ -3684,6 +3835,8 @@
     roomIntroTimer = Math.max(0, roomIntroTimer - dt);
     splitPopupTimer = Math.max(0, splitPopupTimer - dt);
     feelCueTimer = Math.max(0, feelCueTimer - dt);
+    routeCueTimer = Math.max(0, routeCueTimer - dt);
+    masteryPopupTimer = Math.max(0, masteryPopupTimer - dt);
     focusPopupTimer = Math.max(0, focusPopupTimer - dt);
     deathCoachTimer = Math.max(0, deathCoachTimer - dt);
     crumbleSlipTimer = Math.max(0, crumbleSlipTimer - dt);
@@ -3983,6 +4136,7 @@
     drawLightTrails(time);
     drawEntities(time);
     drawRequirementBeacons(time);
+    drawRouteCompass(time);
     drawDeathReplays();
     drawDeathMarks(time);
     drawParticles();
@@ -4000,6 +4154,8 @@
     drawFlowAtmosphere(time);
     drawTimingGateCue(time);
     drawRoomIntro(time);
+    drawRouteFocusCue(time);
+    drawMasteryPopup(time);
     drawSplitPopup(time);
     drawFocusPopup(time);
     drawDeathCoach(time);
@@ -4255,6 +4411,170 @@
     ctx.restore();
   }
 
+  function drawRouteCompass(time) {
+    if (!started || won || player.deadTimer > 0 || !routeCueActive()) return;
+    const target = routeCompassTarget();
+    if (!target) return;
+    const cx = player.x + player.w / 2;
+    const cy = player.y + player.h / 2;
+    let dx = target.x - cx;
+    let dy = target.y - cy;
+    const dist = Math.hypot(dx, dy);
+    if (dist < 28) return;
+    dx /= dist;
+    dy /= dist;
+    const data = routeFocusData(roomIndex);
+    const active = activeDrill && activeDrill.room === roomIndex;
+    const fade = active ? 0.72 : Math.min(1, routeCueTimer / ROUTE_CUE_TIME);
+    const length = Math.min(96, Math.max(48, dist * 0.26));
+    const sx = cx + dx * 24;
+    const sy = cy + dy * 20;
+    const ex = sx + dx * length;
+    const ey = sy + dy * length;
+    const pulse = 0.5 + Math.sin(time * 5.6) * 0.5;
+
+    ctx.save();
+    ctx.globalAlpha = (settings.calmEffects ? 0.28 : 0.38) * Math.min(1, fade * 1.4);
+    ctx.strokeStyle = data.color;
+    ctx.lineWidth = 2.5;
+    ctx.lineCap = "round";
+    ctx.setLineDash([8, 8]);
+    ctx.shadowColor = data.color;
+    ctx.shadowBlur = settings.calmEffects ? 5 : 12;
+    ctx.beginPath();
+    ctx.moveTo(sx, sy);
+    ctx.lineTo(ex, ey);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.globalAlpha = (0.5 + pulse * 0.24) * Math.min(1, fade * 1.6);
+    ctx.translate(ex, ey);
+    ctx.rotate(Math.atan2(dy, dx));
+    ctx.fillStyle = data.color;
+    ctx.beginPath();
+    ctx.moveTo(13, 0);
+    ctx.lineTo(-7, -7);
+    ctx.lineTo(-3, 0);
+    ctx.lineTo(-7, 7);
+    ctx.closePath();
+    ctx.fill();
+    ctx.rotate(-Math.atan2(dy, dx));
+    ctx.font = "800 9px system-ui, sans-serif";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    const label = fitText(target.label || routeSlotShort(data.slot), 64);
+    const labelWidth = Math.min(76, Math.max(34, ctx.measureText(label).width + 12));
+    ctx.globalAlpha = 0.7 * Math.min(1, fade * 1.5);
+    ctx.fillStyle = "rgba(7,12,20,0.68)";
+    roundRect(ctx, -labelWidth / 2, -30, labelWidth, 18, 5);
+    ctx.fill();
+    ctx.fillStyle = data.color;
+    ctx.fillText(label, 0, -21);
+    ctx.restore();
+  }
+
+  function drawRouteFocusCue(time) {
+    if (!started || won || player.deadTimer > 0 || !routeCueActive()) return;
+    const active = activeDrill && activeDrill.room === roomIndex;
+    if (!active && roomIntroTimer > 0.18) return;
+    const data = routeFocusData(roomIndex);
+    const compact = isCompactCanvas();
+    const fade = active ? 0.78 : Math.min(1, routeCueTimer / ROUTE_CUE_TIME);
+    const alpha = Math.min(1, fade * 1.45);
+    if (alpha <= 0) return;
+    const width = compact ? 680 : 372;
+    const height = compact ? 78 : 76;
+    const x = compact ? W / 2 - width / 2 : W - width - 18;
+    const y = compact || (active && roomIntroTimer > 0) ? H - 124 : active ? 128 : 86;
+    const pulse = 0.5 + Math.sin(time * 4.2) * 0.5;
+
+    ctx.save();
+    ctx.globalAlpha = alpha * 0.84;
+    ctx.fillStyle = "rgba(7,12,20,0.72)";
+    roundRect(ctx, x, y, width, height, 8);
+    ctx.fill();
+    ctx.strokeStyle = data.color;
+    ctx.lineWidth = 1.4;
+    ctx.shadowColor = data.color;
+    ctx.shadowBlur = settings.calmEffects ? 4 : 10;
+    roundRect(ctx, x + 0.7, y + 0.7, width - 1.4, height - 1.4, 8);
+    ctx.stroke();
+    ctx.globalAlpha = alpha;
+    ctx.textAlign = "left";
+    ctx.textBaseline = "middle";
+    ctx.font = "800 11px system-ui, sans-serif";
+    ctx.fillStyle = data.color;
+    ctx.fillText(`${data.reason} · ${data.title}`, x + 14, y + 17);
+    ctx.font = `800 ${compact ? 13 : 12}px system-ui, sans-serif`;
+    ctx.fillStyle = "rgba(248,251,255,0.86)";
+    ctx.shadowBlur = settings.calmEffects ? 2 : 6;
+    ctx.fillText(fitText(data.core, width - 28), x + 14, y + 38);
+    ctx.font = "800 10px system-ui, sans-serif";
+    ctx.fillStyle = `rgba(255,240,160,${0.68 + pulse * 0.12})`;
+    ctx.fillText(fitText(data.detail, width - 28), x + 14, y + 57);
+    drawRouteSegmentStrip(x + width - 156, y + 11, 138, 10, data.slot);
+    ctx.restore();
+  }
+
+  function drawRouteSegmentStrip(x, y, width, height, activeSlot) {
+    const labels = ["S", "F", "X"];
+    const gap = 4;
+    const segment = (width - gap * 2) / 3;
+    ctx.save();
+    ctx.font = "800 8px system-ui, sans-serif";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    labels.forEach((label, index) => {
+      const sx = x + index * (segment + gap);
+      const active = index === activeSlot;
+      const color = routeSlotColor(index);
+      ctx.fillStyle = active ? `${color}33` : "rgba(255,255,255,0.08)";
+      ctx.strokeStyle = active ? color : "rgba(255,255,255,0.16)";
+      ctx.lineWidth = active ? 1.3 : 1;
+      roundRect(ctx, sx, y, segment, height, 3);
+      ctx.fill();
+      ctx.stroke();
+      ctx.fillStyle = active ? color : "rgba(248,251,255,0.52)";
+      ctx.fillText(label, sx + segment / 2, y + height / 2 + 0.5);
+    });
+    ctx.restore();
+  }
+
+  function drawMasteryPopup(time) {
+    if (masteryPopupTimer <= 0 || !masteryPopupText) return;
+    const t = masteryPopupTimer / MASTERY_POPUP_TIME;
+    const compact = isCompactCanvas();
+    const width = compact ? 440 : 292;
+    const height = masteryPopupDetail ? 56 : 38;
+    const x = compact ? W / 2 - width / 2 : 18;
+    const y = compact ? 28 : 24;
+    const rise = (1 - t) * 8;
+    const pulse = 0.5 + Math.sin(time * 8) * 0.5;
+    ctx.save();
+    ctx.globalAlpha = Math.min(1, t * 1.6) * 0.9;
+    ctx.fillStyle = "rgba(7,12,20,0.72)";
+    roundRect(ctx, x, y - rise, width, height, 8);
+    ctx.fill();
+    ctx.strokeStyle = masteryPopupColor;
+    ctx.lineWidth = 1.4;
+    ctx.shadowColor = masteryPopupColor;
+    ctx.shadowBlur = settings.calmEffects ? 4 : 11;
+    roundRect(ctx, x + 0.7, y + 0.7 - rise, width - 1.4, height - 1.4, 8);
+    ctx.stroke();
+    ctx.globalAlpha = Math.min(1, t * 1.7);
+    ctx.textAlign = "left";
+    ctx.textBaseline = "middle";
+    ctx.fillStyle = masteryPopupColor;
+    ctx.font = `800 ${compact ? 14 : 13}px system-ui, sans-serif`;
+    ctx.fillText(fitText(masteryPopupText, width - 28), x + 14, y + (masteryPopupDetail ? 18 : height / 2) - rise);
+    if (masteryPopupDetail) {
+      ctx.font = "800 10px system-ui, sans-serif";
+      ctx.shadowBlur = settings.calmEffects ? 2 : 5;
+      ctx.fillStyle = `rgba(248,251,255,${0.72 + pulse * 0.08})`;
+      ctx.fillText(fitText(masteryPopupDetail, width - 28), x + 14, y + 39 - rise);
+    }
+    ctx.restore();
+  }
+
   function drawCurrentRoomPath(time) {
     if (!settings.practiceLines || roomPath.length < 2 || player.deadTimer > 0) return;
     const points = roomPath.filter((point) => point.room === roomIndex).slice(-CURRENT_PATH_DRAW_POINTS);
@@ -4355,6 +4675,8 @@
     const t = roomIntroTimer / ROOM_INTRO_TIME;
     const best = bestRoomTimes[roomIndex] || 0;
     const target = ROOM_TARGETS[roomIndex] || 0;
+    const route = routeFocusData(roomIndex);
+    const masteryScore = roomMasteryScore(roomIndex);
     const compact = isCompactCanvas();
     const baseY = compact ? 118 : 82;
     const lift = (1 - t) * 10;
@@ -4367,7 +4689,7 @@
     const titleGap = compact ? 32 : 24;
     const lineGap = compact ? 24 : 21;
     const panelWidth = compact ? 700 : 680;
-    const panelHeight = compact ? hasSecondDetail ? 158 : 132 : hasSecondDetail ? 132 : 112;
+    const panelHeight = compact ? hasSecondDetail ? 170 : 152 : hasSecondDetail ? 146 : 130;
     const panelY = baseY - 24 - lift;
     const alpha = Math.min(1, t * 1.4);
     ctx.save();
@@ -4393,18 +4715,23 @@
     ctx.fillStyle = compact ? "rgba(248,251,255,0.72)" : "rgba(248,251,255,0.62)";
     ctx.fillText(`${roomMedalLabel(roomIndex)} / ${roomPaceLabel(roomIndex)} / ${roomCleanText(roomIndex)} / ${roomDrillText(roomIndex)}`, W / 2, baseY + titleGap + lineGap - lift);
     ctx.fillText(fitText(roomPurposeLabel(roomIndex), compact ? 620 : 560), W / 2, baseY + titleGap + lineGap * 2 - lift);
+    drawRouteSegmentStrip(W / 2 + panelWidth / 2 - 158, panelY + 13, 132, 10, route.slot);
     ctx.font = `800 ${fineFont}px system-ui, sans-serif`;
     if (drill) {
       ctx.fillStyle = compact ? "rgba(171,255,183,0.9)" : "rgba(143,227,155,0.82)";
       ctx.fillText(fitText(drill, compact ? 650 : 620), W / 2, baseY + titleGap + lineGap * 3.15 - lift);
+      ctx.fillStyle = compact ? "rgba(255,240,160,0.88)" : "rgba(247,198,93,0.74)";
+      ctx.fillText(fitText(`${routeSlotShort(route.slot)} ${route.core}`, compact ? 660 : 620), W / 2, baseY + titleGap + lineGap * 4.05 - lift);
     } else if (focus) {
       ctx.fillStyle = compact ? "rgba(255,220,130,0.9)" : "rgba(247,198,93,0.78)";
       ctx.fillText(`focus ${focus}`, W / 2, baseY + titleGap + lineGap * 3.15 - lift);
+      ctx.fillStyle = compact ? "rgba(171,255,183,0.84)" : "rgba(143,227,155,0.7)";
+      ctx.fillText(fitText(`${routeSlotShort(route.slot)} ${route.core}`, compact ? 660 : 620), W / 2, baseY + titleGap + lineGap * 4.05 - lift);
     } else {
       ctx.fillStyle = compact ? "rgba(171,255,183,0.88)" : "rgba(143,227,155,0.78)";
       ctx.fillText(fitText(styleTrialObjective(roomIndex), compact ? 660 : 660), W / 2, baseY + titleGap + lineGap * 3.15 - lift);
       ctx.fillStyle = compact ? "rgba(248,251,255,0.66)" : "rgba(248,251,255,0.58)";
-      ctx.fillText(`${roomTierLabel(roomIndex)} / ${roomSkillLabel(roomIndex)}`, W / 2, baseY + titleGap + lineGap * 4.05 - lift);
+      ctx.fillText(fitText(`${routeSlotShort(route.slot)} ${route.core} / ${roomMasteryLevel(masteryScore)} ${masteryScore} / ${roomTierLabel(roomIndex)}`, compact ? 660 : 620), W / 2, baseY + titleGap + lineGap * 4.05 - lift);
     }
     ctx.restore();
   }
@@ -6044,6 +6371,7 @@
       `dash ${player.dashes}  dbuf ${player.dashBuffer.toFixed(3)}  dt ${player.dashTimer.toFixed(3)}`,
       `spark ${player.sparkHopTimer.toFixed(3)}  lock ${player.wallJumpLock.toFixed(3)}  over ${player.overdrive.toFixed(3)}`,
       `feel ${feelCueText || "none"}  apex ${actionPulse.apex.toFixed(3)}  aim ${lastAimTimer.toFixed(3)}`,
+      `route ${routeSlotShort(routeFocusData(roomIndex).slot)} ${routeCueReason || "none"} ${routeCueTimer.toFixed(2)}  mastery ${masteryPopupText || roomMasteryLevel(roomMasteryScore(roomIndex))}`,
       `relay chain ${relayChain}  best ${bestRelayChain}`,
       `flow ${Math.floor(flowScore)} peak ${Math.floor(flowPeak)} best ${Math.floor(bestFlow)}  deaths ${deathCount}`,
       `last death ${lastDeathReason === "none" ? "none" : deathReasonLabel(lastDeathReason)}  reasons ${deathReasonSummary()}`,
