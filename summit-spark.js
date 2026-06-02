@@ -2552,13 +2552,14 @@
     const delta = Math.max(0, afterScore - beforeScore);
     const level = roomMasteryLevel(afterScore);
     const grade = splitGrade(bestRoomTimes[index] || 0, ROOM_TARGETS[index]);
+    const nextStep = nextMasteryStepText(index);
     const wins = [];
     if (isNewBest) wins.push("PB");
     if (clean) wins.push("CLEAN");
     if (drillMode) wins.push(`${drillModeLabel(drillMode)} Drill`);
     if (!wins.length) wins.push("CLEAR");
     masteryPopupText = delta > 0 ? `R${index + 1} 掌握 +${delta}` : `R${index + 1} ${level} ${afterScore}`;
-    masteryPopupDetail = `${level} ${afterScore}/100 · ${wins.join(" · ")}${grade ? ` · ${grade}` : ""}`;
+    masteryPopupDetail = `${level} ${afterScore}/100 · ${wins.join(" · ")}${grade ? ` · ${grade}` : ""} · ${nextStep}`;
     masteryPopupColor = delta > 0 ? palette.gold : clean ? palette.green : palette.cyan;
     masteryPopupTimer = MASTERY_POPUP_TIME;
     setGameStatus(`${masteryPopupText}：${masteryPopupDetail}`);
@@ -2881,7 +2882,7 @@
       trackDrillClear(index, clean, mode);
       const stats = drillContractStats(index, mode);
       focusPopupText = `${clean ? "DRILL 无失误" : "DRILL 通过"} R${index + 1}`;
-      focusPopupDetail = `${drillContractStatus(stats)} / ${roomMasteryLevel(roomMasteryScore(index))} ${roomMasteryScore(index)}`;
+      focusPopupDetail = `${drillContractStatus(stats)} / ${roomMasteryLevel(roomMasteryScore(index))} ${roomMasteryScore(index)} / ${nextMasteryStepText(index)}`;
       focusPopupTimer = FOCUS_POPUP_TIME;
       armRouteCue("完成", routeSlotForMode(mode), ROUTE_CUE_TIME * 0.72);
       activeDrill = null;
@@ -3179,6 +3180,41 @@
     return Math.round(Math.max(0, Math.min(1, stats.wins / stats.starts)) * 100);
   }
 
+  function contractModeShort(mode) {
+    if (mode === "clean") return "C";
+    if (mode === "pace") return "P";
+    if (mode === "style") return "S";
+    if (mode === "expert") return "X";
+    return "?";
+  }
+
+  function contractModeLabel(mode) {
+    return mode === "expert" ? "Expert" : drillModeLabel(mode);
+  }
+
+  function contractGapText(index, mode) {
+    const stats = drillContractStats(index, mode);
+    if (stats.wins > 0) return `${contractModeLabel(mode)} 已完成`;
+    if (stats.starts > 0) return `${contractModeLabel(mode)} 重试 ${stats.wins}/${stats.starts}`;
+    return `${contractModeLabel(mode)} 未开练`;
+  }
+
+  function nextMasteryStepText(index) {
+    const mode = roomReviewMode(index);
+    const stats = drillContractStats(index, mode);
+    if (roomMasteryScore(index) >= 86 && stats.wins > 0) return "维护 PB / Flow";
+    return `下一 ${contractModeLabel(mode)} Drill`;
+  }
+
+  function masteryContractPillsHtml(index, activeMode = roomReviewMode(index)) {
+    const modes = ["clean", "pace", "style", "expert"];
+    return `<span class="contract-pills" aria-hidden="true">` + modes.map((mode) => {
+      const stats = drillContractStats(index, mode);
+      const state = stats.wins > 0 ? "done" : mode === activeMode ? "active" : stats.starts > 0 ? "tried" : "todo";
+      return `<i class="contract-pill ${state} ${escapeHtml(mode)}">${escapeHtml(contractModeShort(mode))}</i>`;
+    }).join("") + `</span>`;
+  }
+
   function cleanPracticeRoom() {
     const index = maps.findIndex((_, roomId) => {
       const entry = roomFocus[roomId] || createRoomFocusEntry();
@@ -3307,6 +3343,22 @@
     }).sort((a, b) => b.priority - a.priority);
   }
 
+  function masteryRoadmapRows(limit = 4) {
+    return practiceLedgerRows().slice(0, limit).map((row) => ({
+      ...row,
+      title: `R${row.index + 1} ${ROOM_NAMES[row.index] || "Summit"}`,
+      objective: drillObjectiveForRoom(row.index, row.mode),
+      gap: contractGapText(row.index, row.mode),
+      next: nextMasteryStepText(row.index)
+    }));
+  }
+
+  function masteryRoadmapSummary() {
+    return masteryRoadmapRows(3)
+      .map((row) => `R${row.index + 1} ${contractModeShort(row.mode)}`)
+      .join(" → ");
+  }
+
   function practiceLedgerSummary() {
     return practiceLedgerRows()
       .slice(0, 3)
@@ -3329,7 +3381,7 @@
         return `<button class="ledger-row ${className}" type="button" data-ledger-room="${row.index}" data-ledger-mode="${row.mode}" title="${escapeHtml(row.action)}">`
           + `<span class="ledger-rank">#${rank + 1}</span>`
           + `<span class="ledger-main"><strong>${escapeHtml(title)}</strong><em>${escapeHtml(reason)}</em></span>`
-          + `<span class="ledger-stats"><strong>${escapeHtml(row.level)} ${row.score}</strong><em>${escapeHtml(stats)}${escapeHtml(focus)}</em><small>${escapeHtml(contract)}</small></span>`
+          + `<span class="ledger-stats"><strong>${escapeHtml(row.level)} ${row.score}</strong><em>${escapeHtml(stats)}${escapeHtml(focus)}</em>${masteryContractPillsHtml(row.index, row.mode)}<small>${escapeHtml(contract)}</small></span>`
           + `<span class="ledger-meter" style="--ledger-score: ${row.score}%" aria-hidden="true"></span>`
           + `<span class="ledger-action">${escapeHtml(row.action)}</span>`
           + `</button>`;
@@ -4783,7 +4835,7 @@
   function practiceReportText() {
     const cleanRooms = roomFocus.filter((entry) => entry && entry.clean > 0).length;
     const next = recommendedPracticeRoom();
-    return `无失误 ${cleanRooms}/${maps.length} / ${drillSummary()} / ${contractSummary()} / ${practiceRouteSummary()} / 优先 ${practiceLedgerSummary()} / ${weakestRoomSummary()} / ${splitLossSummary()} / 建议 ${roomTrainingAdvice(next)}`;
+    return `无失误 ${cleanRooms}/${maps.length} / ${drillSummary()} / ${contractSummary()} / 路线图 ${masteryRoadmapSummary()} / ${practiceRouteSummary()} / 优先 ${practiceLedgerSummary()} / ${weakestRoomSummary()} / ${splitLossSummary()} / 建议 ${roomTrainingAdvice(next)}`;
   }
 
   function drillSummary() {
@@ -4826,6 +4878,19 @@
     return `<article><span>${escapeHtml(label)}</span><strong>${escapeHtml(value)}</strong><p>${escapeHtml(detail)}</p></article>`;
   }
 
+  function reviewRoadmapHtml() {
+    const rows = masteryRoadmapRows(4);
+    return `<div class="review-roadmap">`
+      + `<div class="roadmap-head"><span>掌握路线图</span><em>按缺口排序 · 点一行开练</em></div>`
+      + rows.map((row, rank) => `<button class="roadmap-row ${escapeHtml(row.mode)}" type="button" data-finish-drill="${row.index}" data-finish-mode="${escapeHtml(row.mode)}" aria-label="${escapeHtml(row.next)} ${escapeHtml(row.title)}">`
+        + `<span class="roadmap-rank">${String(rank + 1).padStart(2, "0")}</span>`
+        + `<span class="roadmap-main"><strong>${escapeHtml(row.title)}</strong><em>${escapeHtml(row.objective)}</em></span>`
+        + `<span class="roadmap-state"><b>${escapeHtml(row.level)} ${row.score}</b><em>${escapeHtml(row.gap)}</em>${masteryContractPillsHtml(row.index, row.mode)}</span>`
+        + `<span class="roadmap-action">${escapeHtml(row.next)}</span>`
+        + `</button>`).join("")
+      + `</div>`;
+  }
+
   function summitReviewCardsHtml() {
     const next = recommendedPracticeRoom();
     const nextMode = resolveDrillMode(next);
@@ -4846,7 +4911,7 @@
       + reviewCardHtml("最大损失", splitValue, splitDetail)
       + reviewCardHtml("薄弱原因", focusValue, focusDetail)
       + reviewCardHtml("训练航线", practiceRouteSummary(), "先稳 clean，再追 target，最后冲高手线。")
-      + `</div><p class="review-advice">${escapeHtml(roomTrainingAdvice(next))}</p>`
+      + `</div>${reviewRoadmapHtml()}<p class="review-advice">${escapeHtml(roomTrainingAdvice(next))}</p>`
       + `<div class="review-actions"><button class="review-button primary-review" type="button" data-finish-drill="${next}" data-finish-mode="${nextMode}">下一 ${drillModeLabel(nextMode)}</button>${styleButton}${lossButton}</div>`;
   }
 

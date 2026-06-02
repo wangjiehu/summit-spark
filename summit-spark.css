@@ -289,6 +289,7 @@ canvas:focus {
 .plan-step:focus-visible,
 .queue-card:focus-visible,
 .ledger-row:focus-visible,
+.roadmap-row:focus-visible,
 .review-button:focus-visible {
   outline: 3px solid rgba(118, 215, 255, 0.9);
   outline-offset: 3px;
@@ -893,6 +894,44 @@ canvas:focus {
   white-space: nowrap;
 }
 
+.contract-pills {
+  display: flex;
+  gap: 3px;
+  margin-top: 3px;
+}
+
+.contract-pill {
+  display: inline-grid;
+  width: 16px;
+  height: 14px;
+  place-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.055);
+  color: rgba(248, 251, 255, 0.54);
+  font-size: 8px;
+  font-style: normal;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.contract-pill.tried {
+  border-color: rgba(247, 198, 93, 0.26);
+  color: rgba(255, 240, 160, 0.82);
+}
+
+.contract-pill.active {
+  border-color: rgba(118, 215, 255, 0.48);
+  background: rgba(118, 215, 255, 0.13);
+  color: #d9f5ff;
+}
+
+.contract-pill.done {
+  border-color: rgba(143, 227, 155, 0.5);
+  background: rgba(143, 227, 155, 0.16);
+  color: #baffc9;
+}
+
 .ledger-action {
   justify-self: end;
   min-width: 0;
@@ -1125,6 +1164,137 @@ canvas:focus {
   font-size: 11px;
   line-height: 1.35;
   text-align: left;
+}
+
+.review-roadmap {
+  display: grid;
+  width: min(840px, calc(100% - 32px));
+  grid-template-columns: 1fr;
+  gap: 6px;
+}
+
+.roadmap-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 0 2px;
+}
+
+.roadmap-head span {
+  color: rgba(248, 251, 255, 0.9);
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.roadmap-head em {
+  color: rgba(183, 201, 216, 0.68);
+  font-size: 10px;
+  font-style: normal;
+  font-weight: 800;
+  text-align: right;
+}
+
+.roadmap-row {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr) minmax(136px, 0.45fr) 118px;
+  gap: 8px;
+  align-items: center;
+  min-height: 52px;
+  padding: 8px 10px;
+  border: 1px solid rgba(255, 255, 255, 0.13);
+  border-radius: 6px;
+  background: rgba(7, 12, 20, 0.54);
+  color: rgba(248, 251, 255, 0.86);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.roadmap-row:hover {
+  border-color: rgba(118, 215, 255, 0.36);
+  background: rgba(118, 215, 255, 0.11);
+}
+
+.roadmap-row.clean {
+  border-color: rgba(143, 227, 155, 0.22);
+}
+
+.roadmap-row.pace {
+  border-color: rgba(247, 198, 93, 0.22);
+}
+
+.roadmap-row.style {
+  border-color: rgba(255, 240, 160, 0.22);
+}
+
+.roadmap-row.expert {
+  border-color: rgba(118, 215, 255, 0.24);
+}
+
+.roadmap-rank {
+  color: rgba(247, 198, 93, 0.9);
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.roadmap-main,
+.roadmap-state {
+  min-width: 0;
+}
+
+.roadmap-main strong,
+.roadmap-main em,
+.roadmap-state b,
+.roadmap-state em {
+  display: block;
+}
+
+.roadmap-main strong {
+  color: #f8fbff;
+  font-size: 12px;
+  line-height: 1.2;
+}
+
+.roadmap-main em {
+  margin-top: 3px;
+  overflow: hidden;
+  color: rgba(248, 251, 255, 0.66);
+  font-size: 10px;
+  font-style: normal;
+  font-weight: 800;
+  line-height: 1.25;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.roadmap-state b {
+  color: rgba(143, 227, 155, 0.9);
+  font-size: 11px;
+  line-height: 1.2;
+}
+
+.roadmap-state em {
+  margin-top: 2px;
+  color: rgba(183, 201, 216, 0.76);
+  font-size: 9px;
+  font-style: normal;
+  font-weight: 800;
+  line-height: 1.18;
+}
+
+.roadmap-action {
+  justify-self: end;
+  min-width: 0;
+  padding: 5px 7px;
+  border: 1px solid rgba(247, 198, 93, 0.28);
+  border-radius: 4px;
+  background: rgba(247, 198, 93, 0.1);
+  color: #fff0a0;
+  font-size: 10px;
+  font-weight: 900;
+  text-align: center;
+  white-space: nowrap;
 }
 
 .overlay .review-advice {
@@ -1396,6 +1566,25 @@ canvas:focus {
 
   .review-grid {
     grid-template-columns: 1fr;
+  }
+
+  .roadmap-head em {
+    display: none;
+  }
+
+  .roadmap-row {
+    grid-template-columns: 28px minmax(0, 1fr) 92px;
+    min-height: 50px;
+    padding: 7px 8px;
+  }
+
+  .roadmap-state {
+    display: none;
+  }
+
+  .roadmap-action {
+    padding: 5px 6px;
+    font-size: 9px;
   }
 
   .overlay h1 {

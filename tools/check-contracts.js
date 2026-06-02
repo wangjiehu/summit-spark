@@ -233,6 +233,10 @@ if (!js.includes("drawRouteCompass")) errors.push("in-room route compass rendere
 if (!js.includes("drawRouteFocusCue")) errors.push("route focus cue renderer is missing");
 if (!js.includes("showMasteryPopup")) errors.push("room mastery completion popup helper is missing");
 if (!js.includes("drawMasteryPopup")) errors.push("room mastery popup renderer is missing");
+if (!js.includes("nextMasteryStepText")) errors.push("mastery feedback should name the next contract step");
+if (!js.includes("masteryContractPillsHtml")) errors.push("mastery contract pill renderer is missing");
+if (!js.includes("masteryRoadmapRows")) errors.push("mastery roadmap rows helper is missing");
+if (!js.includes("reviewRoadmapHtml")) errors.push("finish review should expose a mastery roadmap");
 if (!js.includes("deathPrescription")) errors.push("death coach should prescribe next action");
 if (!js.includes("deathCoachPlanText")) errors.push("death coach should point to a drill plan");
 if (!js.includes("drawContractStrip")) errors.push("Drill HUD should show contract ladder status");
@@ -261,6 +265,9 @@ if (!css.includes("plan-meter")) errors.push("practice plan progress styling is 
 if (!css.includes("queue-meter")) errors.push("practice queue progress styling is missing");
 if (!css.includes("queue-cta")) errors.push("practice queue cards need a clear action affordance");
 if (!css.includes("ledger-meter")) errors.push("practice ledger progress styling is missing");
+if (!css.includes("contract-pill")) errors.push("contract pill styling is missing");
+if (!css.includes("review-roadmap")) errors.push("finish review roadmap styling is missing");
+if (!css.includes("roadmap-row")) errors.push("finish review roadmap rows are missing");
 if (!css.includes("settings-open")) errors.push("settings pause should visually dim the playfield");
 if (!css.includes("focus-button.armed")) errors.push("focus reset confirmation state styling is missing");
 if (!css.includes("orientation: portrait")) errors.push("portrait mobile settings should not be trapped in the landscape stage");
