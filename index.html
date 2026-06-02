@@ -40,74 +40,95 @@
 
       <pre class="debug-panel hidden" id="debugPanel" aria-hidden="true"></pre>
 
-      <section class="settings-panel hidden" id="settingsPanel" role="dialog" aria-label="Options" aria-hidden="true">
+      <section class="settings-panel hidden" id="settingsPanel" role="dialog" aria-label="设置" aria-hidden="true">
         <div class="settings-head">
-          <strong>&#35774;&#32622; <span class="pause-badge">&#26242;&#20572;&#20013;</span></strong>
+          <strong>训练驾驶舱 <span class="pause-badge">&#26242;&#20572;&#20013;</span></strong>
           <button class="mini-button" id="settingsClose" type="button" aria-label="关闭设置">&times;</button>
         </div>
-        <button class="practice-priority" id="practicePriority" type="button">
-          <span>下一步</span>
-          <strong>R1 Drill</strong>
-          <em>读取训练建议</em>
-          <i class="priority-meter" aria-hidden="true"></i>
-        </button>
-        <div class="practice-plan" id="practicePlan" aria-label="训练计划"></div>
-        <div class="settings-section-title">&#30011;&#38754;</div>
-        <label class="control-row">
-          <span>&#38663;&#21160;</span>
-          <input id="shakeSlider" type="range" min="0" max="1" step="0.05" value="0">
-        </label>
-        <label class="control-row">
-          <span>&#35843;&#35797;</span>
-          <input id="debugToggle" type="checkbox">
-        </label>
-        <label class="control-row">
-          <span>&#26580;&#21644;&#29305;&#25928;</span>
-          <input id="calmEffectsToggle" type="checkbox" checked>
-        </label>
-        <label class="control-row">
-          <span>&#32451;&#20064;&#32447;</span>
-          <input id="practiceLinesToggle" type="checkbox" checked>
-        </label>
-        <label class="control-row">
-          <span>&#24433;&#23376;</span>
-          <input id="ghostOpacitySlider" type="range" min="0.2" max="1" step="0.05" value="0.75">
-        </label>
-        <label class="control-row">
-          <span>&#38190;&#20301;</span>
-          <select id="controlPreset">
-            <option value="comfort">&#33298;&#36866;</option>
-            <option value="classic">&#32463;&#20856;</option>
-          </select>
-        </label>
-        <div class="settings-section-title">&#32451;&#20064;</div>
-        <label class="control-row">
-          <span>&#25151;&#38388;</span>
-          <select id="roomSelect"></select>
-        </label>
-        <div class="room-brief" id="roomBrief">R1 房间目标</div>
-        <div class="drill-variants" aria-label="Drill variants">
-          <button class="variant-button" id="drillCleanButton" type="button">Clean</button>
-          <button class="variant-button" id="drillPaceButton" type="button">Pace</button>
-          <button class="variant-button" id="drillStyleButton" type="button">Style</button>
-          <button class="variant-button" id="drillExpertButton" type="button">Expert</button>
-        </div>
-        <div class="coach-row">
-          <span id="coachSummary">R1 Drill</span>
-          <div class="coach-actions">
-            <button class="focus-button" id="focusRoomButton" type="button">R1 Drill</button>
-            <button class="focus-button ghost" id="focusResetButton" type="button">Reset</button>
+        <div class="settings-body">
+          <div class="settings-column settings-column-main">
+            <button class="practice-priority" id="practicePriority" type="button">
+              <span>下一步</span>
+              <strong>R1 Drill</strong>
+              <em>读取训练建议</em>
+              <i class="priority-meter" aria-hidden="true"></i>
+            </button>
+            <div class="practice-plan" id="practicePlan" aria-label="训练计划"></div>
+            <div class="settings-section-title">连续训练</div>
+            <div class="practice-queue" id="practiceQueue" aria-label="Practice queue"></div>
+          </div>
+          <div class="settings-column settings-column-side">
+            <div class="settings-section-title">房间与合同</div>
+            <label class="control-row control-row-room">
+              <span>&#25151;&#38388;</span>
+              <select id="roomSelect"></select>
+            </label>
+            <div class="room-brief" id="roomBrief">R1 房间目标</div>
+            <div class="drill-variants" aria-label="Drill variants">
+              <button class="variant-button" id="drillCleanButton" type="button">Clean</button>
+              <button class="variant-button" id="drillPaceButton" type="button">Pace</button>
+              <button class="variant-button" id="drillStyleButton" type="button">Style</button>
+              <button class="variant-button" id="drillExpertButton" type="button">Expert</button>
+            </div>
+            <div class="coach-row">
+              <span id="coachSummary">R1 Drill</span>
+              <div class="coach-actions">
+                <button class="focus-button" id="focusRoomButton" type="button">R1 Drill</button>
+                <button class="focus-button ghost" id="focusResetButton" type="button">Reset</button>
+              </div>
+            </div>
+            <div class="settings-section-title">画面与控制</div>
+            <label class="control-row">
+              <span>&#38663;&#21160;</span>
+              <input id="shakeSlider" type="range" min="0" max="1" step="0.05" value="0">
+            </label>
+            <label class="control-row">
+              <span>&#35843;&#35797;</span>
+              <input id="debugToggle" type="checkbox">
+            </label>
+            <label class="control-row">
+              <span>&#26580;&#21644;&#29305;&#25928;</span>
+              <input id="calmEffectsToggle" type="checkbox" checked>
+            </label>
+            <label class="control-row">
+              <span>&#32451;&#20064;&#32447;</span>
+              <input id="practiceLinesToggle" type="checkbox" checked>
+            </label>
+            <label class="control-row">
+              <span>&#24433;&#23376;</span>
+              <input id="ghostOpacitySlider" type="range" min="0.2" max="1" step="0.05" value="0.75">
+            </label>
+            <label class="control-row">
+              <span>&#38190;&#20301;</span>
+              <select id="controlPreset">
+                <option value="comfort">&#33298;&#36866;</option>
+                <option value="classic">&#32463;&#20856;</option>
+              </select>
+            </label>
+            <div class="settings-section-title">&#22797;&#30424;</div>
+            <div class="practice-report" id="practiceReport">无失误 0/10 / 分段损失 无 / 下个 Drill R1</div>
+            <div class="practice-ledger" id="practiceLedger" aria-label="Room mastery ledger"></div>
           </div>
         </div>
-        <div class="settings-section-title">&#22797;&#30424;</div>
-        <div class="practice-report" id="practiceReport">无失误 0/10 / 分段损失 无 / 下个 Drill R1</div>
-        <div class="practice-queue" id="practiceQueue" aria-label="Practice queue"></div>
-        <div class="practice-ledger" id="practiceLedger" aria-label="Room mastery ledger"></div>
       </section>
 
       <div class="overlay" id="overlay">
-        <h1>山巅微光</h1>
-        <button class="primary" id="startButton" type="button">开始</button>
+        <div class="start-panel" id="startPanel">
+          <span class="start-eyebrow" id="startReadiness">准备游戏</span>
+          <h1>山巅微光</h1>
+          <p class="start-copy">读路线、练合同、把每一次失败转成下一次更清楚的尝试。</p>
+          <div class="start-guide" aria-label="基础操作">
+            <span><b>移动</b>A / D</span>
+            <span><b>跳跃</b>Space</span>
+            <span><b>冲刺</b>X / Shift</span>
+            <span><b>抓墙</b>Z / Ctrl</span>
+          </div>
+          <div class="start-actions">
+            <button class="primary" id="startButton" type="button">开始奔跑</button>
+            <button class="secondary-start" id="openTrainingButton" type="button">先看训练</button>
+          </div>
+          <div class="load-strip" aria-hidden="true"><span id="loadStatus">正在准备训练数据</span></div>
+        </div>
       </div>
 
       <div class="sr-status" id="gameStatus" aria-live="polite" aria-atomic="true"></div>

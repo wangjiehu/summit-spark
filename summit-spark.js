@@ -5,6 +5,9 @@
   const ctx = canvas.getContext("2d");
   const stage = canvas.closest(".stage");
   const startButton = document.getElementById("startButton");
+  const openTrainingButton = document.getElementById("openTrainingButton");
+  const startReadiness = document.getElementById("startReadiness");
+  const loadStatus = document.getElementById("loadStatus");
   const overlay = document.getElementById("overlay");
   const lumenCount = document.getElementById("lumenCount");
   const roomCount = document.getElementById("roomCount");
@@ -43,8 +46,10 @@
   const paceMeter = document.querySelector(".pace-meter");
   const paceFill = document.querySelector(".pace-meter span");
 
-  const W = canvas.width;
-  const H = canvas.height;
+  const LOGICAL_W = 960;
+  const LOGICAL_H = 544;
+  const W = LOGICAL_W;
+  const H = LOGICAL_H;
   const TILE = 32;
   const COLS = 30;
   const ROWS = 17;
@@ -699,6 +704,7 @@
   seedHair();
   updateHud();
   canvas.tabIndex = 0;
+  refreshStartOverlay();
 
   window.addEventListener("keydown", (event) => {
     const uiControl = isSettingsInputTarget(event.target);
@@ -766,6 +772,17 @@
       && ["INPUT", "SELECT", "BUTTON"].includes(target.tagName);
   }
 
+  function configureCanvasBuffer() {
+    const scale = Math.max(1, Math.min(1.25, window.devicePixelRatio || 1));
+    const width = Math.round(W * scale);
+    const height = Math.round(H * scale);
+    if (canvas.width !== width || canvas.height !== height) {
+      canvas.width = width;
+      canvas.height = height;
+    }
+    ctx.setTransform(scale, 0, 0, scale, 0, 0);
+  }
+
   function releaseAllInputs() {
     keys.clear();
     pressed.clear();
@@ -780,7 +797,10 @@
   }
 
   canvas.addEventListener("pointerdown", focusGame);
+  configureCanvasBuffer();
+  window.addEventListener("resize", configureCanvasBuffer);
   startButton.addEventListener("click", begin);
+  openTrainingButton?.addEventListener("click", openStartTrainingPanel);
   if (new URLSearchParams(window.location.search).has("play")) {
     requestAnimationFrame(begin);
   }
@@ -1056,8 +1076,42 @@
   function begin() {
     started = true;
     overlay.classList.add("hidden");
+    settingsVisible = false;
+    syncSettingsVisibility();
     setGameStatus("游戏开始，首次输入后开始计时");
     focusGame();
+  }
+
+  function hasTrainingProgress() {
+    return bestTime > 0
+      || bestRoomTimes.some((time) => time > 0)
+      || roomFocus.some((entry) => {
+        return entry.faults > 0 || entry.clears > 0 || entry.drills > 0 || entry.cleanWins > 0 || entry.paceWins > 0 || entry.styleWins > 0 || entry.expertWins > 0;
+      });
+  }
+
+  function refreshStartOverlay() {
+    const target = recommendedPracticeRoom();
+    const mode = resolveDrillMode(target);
+    const progress = hasTrainingProgress();
+    overlay.classList.add("ready");
+    if (startReadiness) startReadiness.textContent = progress ? "训练档案已读取" : "准备完成";
+    if (loadStatus) {
+      loadStatus.textContent = progress
+        ? `建议继续 R${target + 1} ${drillModeLabel(mode)} Drill`
+        : "首次输入后开始计时，设置阅读不会污染分段";
+    }
+    if (startButton) startButton.textContent = progress ? "继续奔跑" : "开始奔跑";
+  }
+
+  function openStartTrainingPanel() {
+    settingsVisible = true;
+    releaseAllInputs();
+    syncSettingsVisibility();
+    settingsPanel.scrollTop = 0;
+    syncSettingsPanel();
+    setGameStatus("训练面板已打开，开始前可先选 Drill");
+    settingsCloseButton?.focus({ preventScroll: true });
   }
 
   function hardReset() {
@@ -3737,14 +3791,14 @@
 
   function roomBriefText(index) {
     return [
-      `R${index + 1} ${ROOM_NAMES[index] || "Summit"} / ${roomMedalLabel(index)} / ${roomPaceLabel(index)}`,
-      `${roomCleanText(index)} / ${roomDrillText(index)} / ${roomSkillLabel(index)}`,
-      roomDrillContractText(index),
+      `R${index + 1} ${ROOM_NAMES[index] || "Summit"} · ${roomMedalLabel(index)} · ${roomPaceLabel(index)}`,
+      `${roomCleanText(index)} · ${roomDrillText(index)} · ${roomSkillLabel(index)}`,
+      `合同 ${roomDrillContractText(index)}`,
       styleTrialText(index),
-      roomPurposeLabel(index),
-      roomRouteLine(index, 0),
-      roomRouteLine(index, 1),
-      roomRouteLine(index, 2)
+      `目标 ${roomPurposeLabel(index)}`,
+      `SAFE ${routeLineCore(index, 0)}`,
+      `FAST ${routeLineCore(index, 1)}`,
+      `EXPERT ${routeLineCore(index, 2)}`
     ].join("\n");
   }
 
@@ -6147,8 +6201,8 @@
     const alpha = Math.min(1, t * 1.55);
     const color = deathReasonColor(failureCueReason);
     const routeColor = routeSlotColor(routeSlotForMode(failureCueMode));
-    const cardWidth = isCompactCanvas() ? 290 : 260;
-    const cardHeight = 66;
+    const cardWidth = isCompactCanvas() ? 330 : 300;
+    const cardHeight = 78;
     const px = Math.max(24, Math.min(W - 24, failureCueX));
     const py = Math.max(34, Math.min(H - 34, failureCueY));
     const cardX = Math.max(18, Math.min(W - cardWidth - 18, px - cardWidth / 2));
@@ -6185,16 +6239,16 @@
     ctx.globalAlpha = alpha;
     ctx.textAlign = "left";
     ctx.textBaseline = "middle";
-    ctx.font = "800 10px system-ui, sans-serif";
+    ctx.font = "800 12px system-ui, sans-serif";
     ctx.fillStyle = color;
-    ctx.fillText(fitText(failureCueText, cardWidth - 28), cardX + 14, cardY + 17);
-    ctx.font = "800 9px system-ui, sans-serif";
+    ctx.fillText(fitText(failureCueText, cardWidth - 28), cardX + 14, cardY + 18);
+    ctx.font = "800 10px system-ui, sans-serif";
     ctx.shadowBlur = settings.calmEffects ? 2 : 6;
     ctx.fillStyle = "rgba(248,251,255,0.78)";
-    ctx.fillText(fitText(failureCueDetail, cardWidth - 28), cardX + 14, cardY + 37);
+    ctx.fillText(fitText(failureCueDetail, cardWidth - 28), cardX + 14, cardY + 42);
     ctx.fillStyle = routeColor;
-    ctx.fillText(fitText(`${failureRehearsalPlanText(roomIndex, failureCueMode)} / ${nextMasteryStepText(roomIndex)}`, cardWidth - 28), cardX + 14, cardY + 54);
-    drawRouteSegmentStrip(cardX + cardWidth - 91, cardY + 11, 72, 8, routeSlotForMode(failureCueMode));
+    ctx.fillText(fitText(`${failureRehearsalPlanText(roomIndex, failureCueMode)} / ${nextMasteryStepText(roomIndex)}`, cardWidth - 28), cardX + 14, cardY + 62);
+    drawRouteSegmentStrip(cardX + cardWidth - 98, cardY + 12, 78, 9, routeSlotForMode(failureCueMode));
     ctx.restore();
 
     drawFailureRouteArrow(time, routeColor, alpha);

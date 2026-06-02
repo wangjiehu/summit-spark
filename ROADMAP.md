@@ -51,6 +51,7 @@ Long-term optimization source: `LONG_TERM_OPTIMIZATION_OUTLINE.md`. Super-push e
 - 2026-06-02: Added a route-clarity and mastery pass: room intros, in-run route cards, and a near-player compass now surface the current SAFE/FAST/EXPERT line, while room clears and Drill wins show immediate mastery progress.
 - 2026-06-02: Added a mastery-roadmap pass: finish review now lists the next contract gaps as clickable Drill rows, settings mastery rows show Clean/Pace/Style/Expert pills, and Drill completion feedback names the next step.
 - 2026-06-02: Added a failure-rehearsal pass: deaths, manual retries, room restarts, and failed Drill contracts now create in-world correction cards, rehearsal labels, and route arrows so the next attempt starts with a concrete action.
+- 2026-06-02: Added a first-impression polish pass: the start overlay now exposes ready/continue state, basic controls, and a training-cockpit entry; settings now uses a wider two-column cockpit layout; canvas text overlays render without pixelated scaling.
 
 ## Next Milestones
 

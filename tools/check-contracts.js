@@ -155,7 +155,8 @@ const requiredIds = [
   "flowCount", "runTime", "deathCount", "debugPanel", "settingsButton", "settingsPanel",
   "settingsClose", "shakeSlider", "debugToggle", "calmEffectsToggle", "practiceLinesToggle",
   "ghostOpacitySlider", "controlPreset", "roomSelect", "practicePriority", "focusRoomButton", "focusResetButton", "coachSummary",
-  "roomBrief", "practiceReport", "practicePlan", "practiceQueue", "practiceLedger", "drillCleanButton", "drillPaceButton", "drillStyleButton", "drillExpertButton", "gameStatus"
+  "roomBrief", "practiceReport", "practicePlan", "practiceQueue", "practiceLedger", "drillCleanButton", "drillPaceButton", "drillStyleButton", "drillExpertButton",
+  "startReadiness", "loadStatus", "openTrainingButton", "gameStatus"
 ];
 for (const id of requiredIds) {
   if (!hasId(indexHtml, id)) errors.push("index.html missing #" + id);
@@ -246,6 +247,9 @@ if (!js.includes("showFailureRehearsal")) errors.push("death feedback should cre
 if (!js.includes("showDrillFailureRehearsal")) errors.push("failed Drill retry should create a rehearsal cue");
 if (!js.includes("drawFailureRehearsalCue")) errors.push("failure rehearsal cue renderer is missing");
 if (!js.includes("drawFailureRouteArrow")) errors.push("failure rehearsal should point toward the next route target");
+if (!js.includes("configureCanvasBuffer")) errors.push("canvas clarity buffer helper is missing");
+if (!js.includes("refreshStartOverlay")) errors.push("start overlay should expose ready/continue state");
+if (!js.includes("openStartTrainingPanel")) errors.push("start overlay should open the training cockpit");
 if (!js.includes("confirmFocusReset")) errors.push("focus reset should require confirmation");
 if (!js.includes("scheduleFocusResetExpiry")) errors.push("focus reset confirmation should expire visibly");
 if (!js.includes("drawCooldownRing")) errors.push("mechanic cooldown ring helper is missing");
@@ -274,6 +278,9 @@ if (!css.includes("ledger-meter")) errors.push("practice ledger progress styling
 if (!css.includes("contract-pill")) errors.push("contract pill styling is missing");
 if (!css.includes("review-roadmap")) errors.push("finish review roadmap styling is missing");
 if (!css.includes("roadmap-row")) errors.push("finish review roadmap rows are missing");
+if (!css.includes("settings-body")) errors.push("settings panel should use the refined cockpit layout");
+if (!css.includes("start-panel")) errors.push("start overlay should use the refined ready panel");
+if (!css.includes("image-rendering: auto")) errors.push("canvas should not pixelate vector text overlays");
 if (!css.includes("settings-open")) errors.push("settings pause should visually dim the playfield");
 if (!css.includes("focus-button.armed")) errors.push("focus reset confirmation state styling is missing");
 if (!css.includes("orientation: portrait")) errors.push("portrait mobile settings should not be trapped in the landscape stage");
