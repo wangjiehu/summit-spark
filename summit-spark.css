@@ -1248,6 +1248,11 @@ canvas:focus {
   pointer-events: none;
 }
 
+.stage.settings-open .overlay:not(.hidden) {
+  z-index: 3;
+  pointer-events: none;
+}
+
 .start-eyebrow {
   color: rgba(143, 227, 155, 0.9);
   font-size: 12px;

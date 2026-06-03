@@ -54,7 +54,7 @@ Long-term optimization source: `LONG_TERM_OPTIMIZATION_OUTLINE.md`. Super-push e
 - 2026-06-02: Added a first-impression polish pass: the start overlay now exposes ready/continue state, basic controls, and a training-cockpit entry; settings now uses a wider two-column cockpit layout; canvas text overlays render without pixelated scaling.
 - 2026-06-03: Added a first-room onboarding pass: new players get a crisp DOM tip strip for timing, landing, dash, and hazard reading; early deaths collapse into one next-action sentence; room intro, route focus, and death coach overlays now yield to high-priority beginner tips.
 - 2026-06-03: Added a public-loading hardening pass: CSS/JS assets are versioned from HTML for Pages freshness, build version is visible in markup, and the start panel has delayed boot plus noscript fallbacks that disappear once JavaScript marks the app ready.
-- 2026-06-03: Added a short-viewport start-screen pass: portrait/sidebar viewports use a full-viewport overlay and constrained start panel so the 16:9 stage cannot crop the title, controls, or start action.
+- 2026-06-03: Added a short-viewport start-screen pass: portrait/sidebar viewports use a full-viewport overlay and constrained start panel so the 16:9 stage cannot crop the title, controls, or start action; the start overlay now drops behind settings when training is opened.
 
 ## Next Milestones
 
