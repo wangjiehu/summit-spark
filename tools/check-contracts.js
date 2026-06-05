@@ -424,6 +424,7 @@ if (!js.includes("rawGrabHeld")) errors.push("raw grab input helper is missing")
 if (!js.includes('grabMode: "hold"')) errors.push("settings should default grab mode to hold");
 if (!js.includes("GAMEPAD_DEADZONE_DEFAULT")) errors.push("gamepad deadzone defaults are missing");
 if (!js.includes("clampGamepadDeadzone")) errors.push("gamepad deadzone normalization helper is missing");
+if (!js.includes("axisMagnitude") || !js.includes("driftRisk")) errors.push("gamepad status should expose axis magnitude and drift risk");
 if (!js.includes("TOUCH_SIZE_DEFAULT")) errors.push("touch size defaults are missing");
 if (!js.includes("clampTouchSize")) errors.push("touch size normalization helper is missing");
 if (!js.includes("lowPerformance")) errors.push("low performance setting is missing");
@@ -438,6 +439,8 @@ if (!css.includes("app-ready")) errors.push("boot fallback should hide after JS 
 if (!css.includes("game-tip")) errors.push("game tip styling is missing");
 if (!css.includes("--tip-progress")) errors.push("game tip progress styling is missing");
 if (!css.includes("--touch-size")) errors.push("touch controls should expose a size variable");
+if (!css.includes("touch-directions") || !css.includes("touch-actions")) errors.push("touch controls should use separated direction/action clusters");
+if (!css.includes("review-more") || !css.includes("review-grid-primary")) errors.push("finish review should keep extra detail collapsed behind a cleaner primary grid");
 if (!css.includes("resume-start.hidden")) errors.push("direct resume button hide state is missing");
 if (!css.includes("low-performance")) errors.push("low-performance visual state styling is missing");
 if (!css.includes("image-rendering: auto")) errors.push("canvas should not pixelate vector text overlays");

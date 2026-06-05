@@ -1,5 +1,14 @@
 # Changelog
 
+## 2026-06-05 - p20
+
+- Bumped public build assets to `20260605-p20`.
+- Split mobile touch controls into direction and action clusters with safer hit targets.
+- Added non-sensitive gamepad axis magnitude and near-deadzone status for real controller tuning.
+- Reduced default audio gains so movement and death feedback are less fatiguing.
+- Improved late-room wind, crumble, and prism readability without adding default tutorial copy.
+- Simplified the finish review surface: primary cards stay visible, extra review detail and the mastery roadmap are collapsible.
+
 ## 2026-06-05 - p19
 
 - Bumped public build assets to `20260605-p19`.

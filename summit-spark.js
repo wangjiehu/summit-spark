@@ -641,6 +641,10 @@
     connected: false,
     count: 0,
     standardMapping: 0,
+    axisX: 0,
+    axisY: 0,
+    axisMagnitude: 0,
+    driftRisk: false,
     activeActions: []
   };
   const touch = {
@@ -4846,8 +4850,10 @@
 
     if (pad) {
       const deadzone = settings.gamepadDeadzone;
-      const ax = Math.abs(pad.axes[0] || 0) > deadzone ? pad.axes[0] : 0;
-      const ay = Math.abs(pad.axes[1] || 0) > deadzone ? pad.axes[1] : 0;
+      const rawX = pad.axes[0] || 0;
+      const rawY = pad.axes[1] || 0;
+      const ax = Math.abs(rawX) > deadzone ? rawX : 0;
+      const ay = Math.abs(rawY) > deadzone ? rawY : 0;
       const pressedButton = (index, threshold = 0.5) => Boolean(pad.buttons[index]?.pressed || pad.buttons[index]?.value > threshold);
       gamepadInput.left = ax < -deadzone || pressedButton(14);
       gamepadInput.right = ax > deadzone || pressedButton(15);
@@ -4869,6 +4875,10 @@
       connected: Boolean(pad),
       count: connectedPads.length,
       standardMapping: connectedPads.filter((item) => item.mapping === "standard").length,
+      axisX: pad ? Math.round((pad.axes[0] || 0) * 100) / 100 : 0,
+      axisY: pad ? Math.round((pad.axes[1] || 0) * 100) / 100 : 0,
+      axisMagnitude: pad ? Math.round(Math.hypot(pad.axes[0] || 0, pad.axes[1] || 0) * 100) / 100 : 0,
+      driftRisk: pad ? Math.hypot(pad.axes[0] || 0, pad.axes[1] || 0) > settings.gamepadDeadzone * 0.72 && Math.hypot(pad.axes[0] || 0, pad.axes[1] || 0) <= settings.gamepadDeadzone : false,
       activeActions
     };
     updateGamepadStatusOutput();
@@ -4894,7 +4904,9 @@
     if (!lastGamepadStatus.supported) return "不支持";
     if (!lastGamepadStatus.connected) return "未连接";
     const active = lastGamepadStatus.activeActions.length ? ` · ${lastGamepadStatus.activeActions.slice(0, 2).join("/")}` : "";
-    return `${lastGamepadStatus.count} 个 · standard ${lastGamepadStatus.standardMapping}${active}`;
+    const axis = lastGamepadStatus.axisMagnitude > 0.05 ? ` · 轴 ${lastGamepadStatus.axisMagnitude.toFixed(2)}` : "";
+    const drift = lastGamepadStatus.driftRisk ? " · 接近死区" : "";
+    return `${lastGamepadStatus.count} 个 · standard ${lastGamepadStatus.standardMapping}${axis}${drift}${active}`;
   }
 
   function recallToAnchor() {
@@ -5171,6 +5183,10 @@
       count: lastGamepadStatus.count,
       standardMapping: lastGamepadStatus.standardMapping,
       deadzone: settings.gamepadDeadzone,
+      axisX: lastGamepadStatus.axisX,
+      axisY: lastGamepadStatus.axisY,
+      axisMagnitude: lastGamepadStatus.axisMagnitude,
+      driftRisk: lastGamepadStatus.driftRisk,
       activeActions: lastGamepadStatus.activeActions.slice(0, 4)
     };
   }
@@ -5611,24 +5627,24 @@
   }
 
   const SOUND_PRESETS = {
-    ui: [{ type: "sine", from: 520, to: 740, gain: 0.035, time: 0.08 }],
-    jump: [{ type: "triangle", from: 320, to: 520, gain: 0.052, time: 0.11 }],
-    wall: [{ type: "square", from: 220, to: 360, gain: 0.045, time: 0.1 }],
-    dash: [{ type: "sawtooth", from: 660, to: 280, gain: 0.048, time: 0.09 }],
-    spark: [{ type: "triangle", from: 520, to: 920, gain: 0.058, time: 0.14 }],
-    wallSpark: [{ type: "triangle", from: 420, to: 760, gain: 0.055, time: 0.13 }, { type: "sine", from: 260, to: 360, gain: 0.025, time: 0.12 }],
-    prismSpark: [{ type: "sawtooth", from: 720, to: 1180, gain: 0.052, time: 0.16 }, { type: "triangle", from: 360, to: 520, gain: 0.026, time: 0.15 }],
-    relay: [{ type: "sine", from: 640, to: 980, gain: 0.056, time: 0.13 }],
-    chain: [{ type: "triangle", from: 760, to: 1240, gain: 0.07, time: 0.16 }],
-    prism: [{ type: "sawtooth", from: 360, to: 860, gain: 0.062, time: 0.18 }],
-    refill: [{ type: "sine", from: 480, to: 720, gain: 0.045, time: 0.12 }],
-    spring: [{ type: "triangle", from: 260, to: 620, gain: 0.055, time: 0.13 }],
-    echo: [{ type: "sine", from: 300, to: 420, gain: 0.04, time: 0.16 }],
-    recall: [{ type: "triangle", from: 760, to: 320, gain: 0.055, time: 0.18 }],
-    crumble: [{ type: "sawtooth", from: 180, to: 90, gain: 0.05, time: 0.16 }],
-    land: [{ type: "triangle", from: 120, to: 90, gain: 0.03, time: 0.08 }],
-    death: [{ type: "sawtooth", from: 240, to: 80, gain: 0.07, time: 0.2 }],
-    clear: [{ type: "sine", from: 520, to: 880, gain: 0.05, time: 0.15 }, { type: "triangle", from: 780, to: 1120, gain: 0.035, time: 0.18 }]
+    ui: [{ type: "sine", from: 520, to: 740, gain: 0.026, time: 0.08 }],
+    jump: [{ type: "triangle", from: 320, to: 520, gain: 0.04, time: 0.11 }],
+    wall: [{ type: "square", from: 220, to: 360, gain: 0.034, time: 0.1 }],
+    dash: [{ type: "sawtooth", from: 660, to: 280, gain: 0.034, time: 0.09 }],
+    spark: [{ type: "triangle", from: 520, to: 920, gain: 0.043, time: 0.14 }],
+    wallSpark: [{ type: "triangle", from: 420, to: 760, gain: 0.04, time: 0.13 }, { type: "sine", from: 260, to: 360, gain: 0.018, time: 0.12 }],
+    prismSpark: [{ type: "sawtooth", from: 720, to: 1180, gain: 0.038, time: 0.16 }, { type: "triangle", from: 360, to: 520, gain: 0.019, time: 0.15 }],
+    relay: [{ type: "sine", from: 640, to: 980, gain: 0.042, time: 0.13 }],
+    chain: [{ type: "triangle", from: 760, to: 1240, gain: 0.052, time: 0.16 }],
+    prism: [{ type: "sawtooth", from: 360, to: 860, gain: 0.045, time: 0.18 }],
+    refill: [{ type: "sine", from: 480, to: 720, gain: 0.034, time: 0.12 }],
+    spring: [{ type: "triangle", from: 260, to: 620, gain: 0.041, time: 0.13 }],
+    echo: [{ type: "sine", from: 300, to: 420, gain: 0.03, time: 0.16 }],
+    recall: [{ type: "triangle", from: 760, to: 320, gain: 0.04, time: 0.18 }],
+    crumble: [{ type: "sawtooth", from: 180, to: 90, gain: 0.035, time: 0.16 }],
+    land: [{ type: "triangle", from: 120, to: 90, gain: 0.022, time: 0.08 }],
+    death: [{ type: "sawtooth", from: 240, to: 80, gain: 0.048, time: 0.18 }],
+    clear: [{ type: "sine", from: 520, to: 880, gain: 0.038, time: 0.15 }, { type: "triangle", from: 780, to: 1120, gain: 0.026, time: 0.18 }]
   };
 
   function unlockAudio() {
@@ -6852,17 +6868,18 @@
       ? `<button class="review-button" type="button" data-finish-drill="${loss.index}" data-finish-mode="pace">最慢房 Pace</button>`
       : "";
     const styleButton = `<button class="review-button" type="button" data-finish-drill="${styleIndex}" data-finish-mode="style">类型 Style</button>`;
-    return `<div class="review-grid">`
-      + reviewCardHtml("下一 Drill", `R${next + 1} ${drillModeLabel(nextMode)}`, drillObjectiveForRoom(next, nextMode), "primary")
+    const primaryCards = reviewCardHtml("下一 Drill", `R${next + 1} ${drillModeLabel(nextMode)}`, drillObjectiveForRoom(next, nextMode), "primary")
       + reviewCardHtml("章节完成度", chapterText, `Clean ${chapter.clean}/${maps.length} · S ${chapter.pace}/${maps.length} · X ${chapter.expert}/${maps.length}`, "primary")
-      + challengeReviewCard
-      + routeContractCard
-      + reviewCardHtml("长期挑战", `${challengeWins}/${LONG_TERM_CHALLENGES.length}`, nextChallenge ? `${nextChallenge.label}：${nextChallenge.detail}` : "挑战已全部完成")
-      + reviewCardHtml("类型挑战", `R${styleIndex + 1} ${styleTrialLabel(styleIndex)}`, styleTrialReviewText(styleIndex))
-      + reviewCardHtml("最大损失", splitValue, splitDetail)
+      + (challengeReviewCard || reviewCardHtml("长期挑战", `${challengeWins}/${LONG_TERM_CHALLENGES.length}`, nextChallenge ? `${nextChallenge.label}：${nextChallenge.detail}` : "挑战已全部完成", "primary"))
+      + routeContractCard;
+    const extraCards = reviewCardHtml("最大损失", splitValue, splitDetail)
       + reviewCardHtml("薄弱原因", focusValue, focusDetail)
-      + reviewCardHtml("训练航线", practiceRouteSummary(), "先稳 clean，再追 target，最后冲高手线。")
-      + `</div>${reviewRoadmapHtml()}<p class="review-advice">${escapeHtml(roomTrainingAdvice(next))}</p>`
+      + reviewCardHtml("类型挑战", `R${styleIndex + 1} ${styleTrialLabel(styleIndex)}`, styleTrialReviewText(styleIndex))
+      + reviewCardHtml("训练航线", practiceRouteSummary(), "先稳 clean，再追 target，最后冲高手线。");
+    return `<div class="review-grid review-grid-primary">${primaryCards}</div>`
+      + `<details class="review-more"><summary>更多复盘</summary><div class="review-grid review-grid-extra">${extraCards}</div></details>`
+      + `<details class="review-more review-roadmap-panel"><summary>掌握路线图</summary>${reviewRoadmapHtml()}</details>`
+      + `<p class="review-advice">${escapeHtml(roomTrainingAdvice(next))}</p>`
       + `<div class="review-actions"><button class="review-button primary-review" type="button" data-finish-drill="${next}" data-finish-mode="${nextMode}">下一 ${drillModeLabel(nextMode)}</button>${styleButton}${lossButton}</div>`;
   }
 
@@ -7407,20 +7424,28 @@
     ctx.save();
     ctx.translate(jitter, 0);
     const grad = ctx.createLinearGradient(x, y, x + TILE, y + TILE);
-    grad.addColorStop(0, "#e7f4f7");
-    grad.addColorStop(0.42, "#76d7ff");
-    grad.addColorStop(1, "#294e64");
+    grad.addColorStop(0, "#f1eee4");
+    grad.addColorStop(0.42, "#aeb8b0");
+    grad.addColorStop(1, "#4c5958");
     ctx.fillStyle = grad;
     ctx.fillRect(x + 1, y + 1, TILE - 2, TILE - 2);
     ctx.fillStyle = `rgba(255,255,255,${0.28 + armed * 0.16})`;
     ctx.fillRect(x + 3, y + 3, TILE - 6, 4);
     if (armed > 0) {
-      ctx.fillStyle = "rgba(7,12,20,0.52)";
+      ctx.fillStyle = "rgba(18,18,19,0.52)";
       ctx.fillRect(x + 4, y + TILE - 7, TILE - 8, 3);
       ctx.fillStyle = `rgba(255,101,125,${0.62 + danger * 0.24})`;
       ctx.fillRect(x + 4, y + TILE - 7, (TILE - 8) * danger, 3);
     }
-    ctx.strokeStyle = armed > 0 ? "rgba(255,101,125,0.62)" : "rgba(248,251,255,0.28)";
+    if (armed > 0) {
+      ctx.fillStyle = `rgba(255, 92, 108, ${0.12 + danger * 0.12})`;
+      ctx.fillRect(x + 2, y + 2, TILE - 4, TILE - 4);
+      ctx.fillStyle = `rgba(255, 240, 160, ${0.32 + danger * 0.16})`;
+      for (let i = -1; i < 3; i += 1) {
+        ctx.fillRect(x + i * 13 + danger * 5, y + TILE - 11, 8, 2);
+      }
+    }
+    ctx.strokeStyle = armed > 0 ? "rgba(255,101,125,0.7)" : "rgba(247,245,240,0.28)";
     ctx.lineWidth = 2;
     ctx.beginPath();
     ctx.moveTo(x + 7, y + 7);
@@ -7771,9 +7796,9 @@
     const bottom = updraft.y + updraft.h * 0.75;
     ctx.save();
     const field = ctx.createLinearGradient(0, top, 0, bottom);
-    field.addColorStop(0, `rgba(118,215,255,${0.03 + pulse * 0.04})`);
-    field.addColorStop(0.5, `rgba(118,215,255,${0.09 + pulse * 0.08})`);
-    field.addColorStop(1, "rgba(118,215,255,0)");
+    field.addColorStop(0, `rgba(247,245,240,${0.025 + pulse * 0.035})`);
+    field.addColorStop(0.5, `rgba(143,227,155,${0.07 + pulse * 0.08})`);
+    field.addColorStop(1, "rgba(247,245,240,0)");
     ctx.fillStyle = field;
     ctx.fillRect(updraft.x - 10, top, updraft.w + 20, bottom - top);
     ctx.globalAlpha = 0.24 + pulse * 0.2;
@@ -7787,11 +7812,11 @@
     ctx.lineTo(updraft.x + updraft.w + 7, top + 12);
     ctx.stroke();
     ctx.setLineDash([]);
-    ctx.globalAlpha = 0.26 + pulse * 0.22;
-    ctx.strokeStyle = palette.cyan;
+    ctx.globalAlpha = 0.32 + pulse * 0.22;
+    ctx.strokeStyle = "rgba(226, 232, 218, 0.9)";
     ctx.lineWidth = 2;
     ctx.lineCap = "round";
-    ctx.shadowColor = palette.cyan;
+    ctx.shadowColor = palette.green;
     ctx.shadowBlur = settings.calmEffects ? 4 : 9;
     for (let i = -1; i <= 1; i++) {
       const wave = Math.sin(time * 4.2 + i * 1.7 + updraft.bob) * 5;
@@ -7802,14 +7827,14 @@
     }
     for (let i = 0; i < 3; i++) {
       const y = bottom - 30 - i * 42 + Math.sin(time * 3 + i + updraft.bob) * 5;
-      ctx.globalAlpha = 0.22 + pulse * 0.2;
+      ctx.globalAlpha = 0.28 + pulse * 0.2;
       ctx.beginPath();
       ctx.moveTo(x - 10, y + 7);
       ctx.lineTo(x, y - 4);
       ctx.lineTo(x + 10, y + 7);
       ctx.stroke();
     }
-    ctx.fillStyle = "rgba(248,251,255,0.72)";
+    ctx.fillStyle = "rgba(247,245,240,0.82)";
     ctx.beginPath();
     ctx.moveTo(x, top - 4 - pulse * 4);
     ctx.lineTo(x + 9, top + 10);
@@ -7893,6 +7918,9 @@
       ctx.strokeStyle = palette.gold;
       ctx.lineWidth = 2;
       ctx.lineCap = "round";
+      ctx.beginPath();
+      ctx.arc(0, 0, 24 + pulse * 5, -Math.PI * 0.85, Math.PI * 0.85);
+      ctx.stroke();
       ctx.beginPath();
       ctx.moveTo(-22, -8);
       ctx.lineTo(-14, 0);

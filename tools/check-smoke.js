@@ -159,6 +159,10 @@ async function main() {
       "save-import-status",
       "settings-group-audio",
       "settings-group-display",
+      "touch-directions",
+      "touch-actions",
+      "review-more",
+      "review-grid-primary",
       "settings-group"
     ].forEach((marker) => expectIncludes("css", css, marker));
   } finally {

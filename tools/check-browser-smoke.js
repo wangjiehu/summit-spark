@@ -874,8 +874,25 @@ async function runMobileSmoke(cdp, baseUrl) {
   await waitUntil("mobile settings closes", () => evaluate(cdp, `document.querySelector("#settingsPanel").classList.contains("hidden")`));
   await clickSelector(cdp, "#startButton");
   await waitUntil("mobile game starts", () => evaluate(cdp, `document.querySelector("#overlay").classList.contains("hidden")`));
-  const touchVisible = await evaluate(cdp, `getComputedStyle(document.querySelector(".touch")).display !== "none"`);
-  if (!touchVisible) errors.push("touch controls should be visible after gameplay starts under coarse pointer emulation");
+  const touchUi = await evaluate(cdp, `(() => {
+    const touch = document.querySelector(".touch");
+    const direction = document.querySelector(".touch-directions");
+    const action = document.querySelector(".touch-actions");
+    const buttons = [...document.querySelectorAll("[data-touch]")].map((button) => {
+      const rect = button.getBoundingClientRect();
+      return { id: button.dataset.touch, width: Math.round(rect.width), height: Math.round(rect.height) };
+    });
+    return {
+      visible: getComputedStyle(touch).display !== "none",
+      directionGrid: getComputedStyle(direction).display === "grid",
+      actionGrid: getComputedStyle(action).display === "grid",
+      buttons,
+      allButtonsLarge: buttons.every((button) => button.width >= 44 && button.height >= 44)
+    };
+  })()`);
+  if (!touchUi.visible || !touchUi.directionGrid || !touchUi.actionGrid || !touchUi.allButtonsLarge) {
+    errors.push("touch controls should use visible direction/action grids with safe hit targets: " + JSON.stringify(touchUi));
+  }
 }
 
 async function runMobileLandscapeSmoke(cdp, baseUrl) {
@@ -954,6 +971,8 @@ async function runGamepadSmoke(cdp, baseUrl) {
   await sleep(480);
   const blocked = await debugPosition(cdp);
   if (blocked.x - beforeAxis.x > 4) errors.push("gamepad deadzone 0.40 should block 0.34 axis drift");
+  const padStatus = await evaluate(cdp, `document.querySelector("#gamepadStatus")?.textContent || ""`);
+  if (!/轴 0\.34/.test(padStatus) || !/接近死区/.test(padStatus)) errors.push("gamepad status should expose axis magnitude and drift risk: " + padStatus);
   await evaluate(cdp, `(() => {
     const slider = document.querySelector("#gamepadDeadzoneSlider");
     slider.value = "0.16";

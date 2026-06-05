@@ -5,7 +5,7 @@ This checklist is for one focused manual pass after `npm run check` and `npm run
 ## Setup
 
 1. Open the local page from `npm start`.
-2. Confirm the start screen shows build `20260605-p19` in page markup if inspected.
+2. Confirm the start screen shows build `20260605-p20` in page markup if inspected.
 3. Use a clean browser profile for first-run checks, then repeat with an existing profile that has training progress.
 4. Keep audio on for one pass and off for one pass.
 5. Test desktop keyboard first; test touch and a physical gamepad when devices are available.
@@ -53,9 +53,9 @@ For each room, record `pass`, `friction`, or `blocked`.
 - At around 700x390, settings must scroll vertically and keep Route, Feel, audio, low performance, touch size, and gamepad deadzone reachable.
 - Confirm the controls-first setting groups are easy to scan and do not hide the primary start/Drill path from a new player.
 - Confirm the hand-held/mobile view has no horizontal scroll after opening feedback, save import, Route cards, and Feel Lab sections.
-- Increase touch size to 64 and confirm touch controls grow without covering critical HUD text.
+- Increase touch size to 64 and confirm direction/action touch clusters grow without covering critical HUD text.
 - Enable low-performance mode and confirm hazards, route compass, and Drill HUD remain readable.
-- If a physical gamepad is available, verify the settings panel reports a connected standard mapping without exposing the controller name.
+- If a physical gamepad is available, verify the settings panel reports connected standard mapping, axis strength, and near-deadzone risk without exposing the controller name.
 
 ## Exit Criteria
 
