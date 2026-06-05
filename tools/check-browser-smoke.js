@@ -383,7 +383,13 @@ async function runDesktopSmoke(cdp, baseUrl) {
   })`);
   if (cockpit.routeCards < 3) errors.push("settings should expose at least three route contracts");
   if (cockpit.feelCards < 4) errors.push("settings should expose visible feel calibration cards");
-  if (cockpit.groups < 5 || cockpit.defaultOpenGroups.length > 0) errors.push("settings should default to collapsed system-style groups: " + JSON.stringify(cockpit));
+  if (
+    cockpit.groups < 7 ||
+    cockpit.defaultOpenGroups.length !== 1 ||
+    !cockpit.defaultOpenGroups[0].includes("settings-group-controls")
+  ) {
+    errors.push("settings should default to controls-first system groups: " + JSON.stringify(cockpit));
+  }
   if (!cockpit.audioButton) errors.push("settings should expose audio test button");
   if (!cockpit.diagnosticsButton) errors.push("settings should expose diagnostics copy button");
   if (!cockpit.feedbackTemplateButton) errors.push("settings should expose feedback template copy button");
@@ -398,7 +404,7 @@ async function runDesktopSmoke(cdp, baseUrl) {
   if (!comfortControls.touchSize) errors.push("settings should expose touch-size slider");
   if (cockpit.panelBox.overflow) errors.push("settings panel overflows desktop viewport: " + JSON.stringify(cockpit.panelBox));
 
-  await openSettingsGroup(cdp, ".settings-group-controls");
+  await openSettingsGroup(cdp, ".settings-group-audio");
   await clickSelector(cdp, "#audioTestButton");
   const audioStatus = await evaluate(cdp, `document.querySelector("#gameStatus").textContent`);
   if (!/声音试听/.test(audioStatus)) errors.push("audio test button did not update live status");

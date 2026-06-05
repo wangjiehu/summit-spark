@@ -9,8 +9,8 @@ Use this before publishing a public demo update.
 5. Confirm `index.html` and `summit-spark.html` are identical.
 6. Confirm the build version in HTML and asset query strings matches the intended release.
 7. Start `npm start` and open the local page once.
-8. Verify the start button, direct resume button when progress exists, training cockpit, one Route contract, one Feel Lab card, audio test, keyboard `O/Escape`, and settings close path.
-9. Confirm settings opens with collapsed groups by default; Training, Room, Controls, Feedback, and Profile remain reachable.
+8. Verify the start button, direct resume button when progress exists, settings panel, one Route contract, one Feel Lab card, audio test, keyboard `O/Escape`, and settings close path.
+9. Confirm settings opens with only Controls expanded by default; Audio, Display, Room, Feedback/Save, Profile, Training, and Advanced remain reachable.
 10. Verify one Route interruption/resume and one Feel Lab interruption manually or through `npm run browser-smoke`.
 11. Add a short feedback note, click the diagnostics copy button once, and confirm it produces a local feedback snapshot without uploading data.
 12. Click feedback template copy once and confirm the template includes build, viewport, current training state, and blank reproduction fields.

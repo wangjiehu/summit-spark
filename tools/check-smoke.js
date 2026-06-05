@@ -109,10 +109,18 @@ async function main() {
       'id="gameStatus"',
       'settings-group-training',
       'settings-group-controls',
+      'settings-group-audio',
+      'settings-group-display',
       'settings-group-feedback'
     ].forEach((marker) => expectIncludes("html", html, marker));
     if (html.includes("start-guide") || html.includes("start-copy")) errors.push("html should not expose explanatory start guide blocks");
-    if (/settings-group[^>]*\sopen\b/.test(html)) errors.push("settings groups should default collapsed");
+    const openSettingsGroups = html.match(/<details class="settings-group [^"]+" open>/g) || [];
+    if (openSettingsGroups.length !== 1 || !openSettingsGroups[0].includes("settings-group-controls")) {
+      errors.push("settings controls group should be the only default-open group");
+    }
+    ["首次输入开始计时", "松开按键后待命", "修正路线", "REHEARSE"].forEach((marker) => {
+      if (js.includes(marker)) errors.push("runtime should not expose quiet-mode prompt text: " + marker);
+    });
 
     [
       "markAppReady",
@@ -149,6 +157,8 @@ async function main() {
       "gamepad-status-row",
       "save-import-box",
       "save-import-status",
+      "settings-group-audio",
+      "settings-group-display",
       "settings-group"
     ].forEach((marker) => expectIncludes("css", css, marker));
   } finally {

@@ -10,7 +10,7 @@ Long-term optimization source: `LONG_TERM_OPTIMIZATION_OUTLINE.md`. Super-push e
 
 - Feel: every input should be immediate, legible, and recoverable.
 - Teaching: rooms should introduce one idea safely, then ask for it under pressure.
-- Practice: deaths should be fast, informative, and almost frictionless.
+- Practice: deaths should be fast and almost frictionless; detailed coaching belongs in opt-in training surfaces, not the default play flow.
 - Identity: spark hop and light relay chains must become our own expressive mechanic.
 - Presentation: effects should clarify player state without visual noise.
 
@@ -72,6 +72,7 @@ Long-term optimization source: `LONG_TERM_OPTIMIZATION_OUTLINE.md`. Super-push e
 - 2026-06-05: Added P16 import robustness: save archives now get a live import preview, invalid JSON and wrong archive kinds fail in place, and browser smoke covers invalid/valid import paths.
 - 2026-06-05: Added P17 experience simplification: start copy and onboarding prompts are shorter, settings use grouped disclosure sections, and the visual system is quieter and less blue-heavy.
 - 2026-06-05: Added P18 interface simplification: start guide blocks and automatic teaching toasts are removed, settings open as collapsed system-style groups, the large room-intro teaching card is compacted, and UI/canvas typography uses lighter system-font weights.
+- 2026-06-05: Added P19 pure-play simplification: visible death/fall correction, failure rehearsal overlays, death replays, and first-input timing prompts are silent by default; settings now opens as a controls-first single-column system panel with separate audio and display groups.
 
 ## Next Milestones
 

@@ -360,7 +360,7 @@
   const FEEL_REPLAY_FIXTURES = [
     { id: "jump-buffer", room: 1, window: "JUMP_BUFFER_TIME", maxDelay: 0.095, expected: ["jump"], note: "提前按跳必须接住落地" },
     { id: "coyote-jump", room: 1, window: "COYOTE_TIME", maxDelay: 0.085, expected: ["jump"], note: "离地后短时间仍能起跳" },
-    { id: "wall-grace", room: 4, window: "WALL_COYOTE_TIME", maxDelay: 0.082, expected: ["wall"], note: "离墙后仍能墙跳修正" },
+    { id: "wall-grace", room: 4, window: "WALL_COYOTE_TIME", maxDelay: 0.082, expected: ["wall"], note: "离墙后仍能墙跳容错" },
     { id: "aim-memory-dash", room: 2, window: "DASH_AIM_MEMORY", maxDelay: 0.07, expected: ["dash"], note: "松方向后保留上一冲刺意图" },
     { id: "spark-hop", room: 1, window: "SPARK_HOP_WINDOW", maxDelay: 0.09, expected: ["spark"], note: "dash 后续跃窗口是核心手感" },
     { id: "wall-spark", room: 5, window: "SPARK_HOP_WINDOW", maxDelay: 0.085, expected: ["wallSpark"], note: "贴墙续跃形成折返高手线" },
@@ -579,30 +579,30 @@
   ];
 
   const palette = {
-    skyTop: "#172033",
-    skyMid: "#294e64",
-    skyLow: "#a06f5e",
-    rock: "#31485b",
-    rockDark: "#1a2939",
-    rockLight: "#7892a0",
-    snow: "#e7f4f7",
+    skyTop: "#181a1d",
+    skyMid: "#343837",
+    skyLow: "#7a685d",
+    rock: "#3d4647",
+    rockDark: "#202629",
+    rockLight: "#888c86",
+    snow: "#ebe9df",
     hot: "#ff5c6c",
     gold: "#f7c65d",
     green: "#8fe39b",
-    cyan: "#76d7ff",
-    ink: "#f8fbff"
+    cyan: "#8fc6d6",
+    ink: "#f7f5f0"
   };
   const ROOM_ATMOSPHERES = [
-    { top: "#172033", mid: "#294e64", low: "#a06f5e", back: "#1e2d3f", midPeak: "#263d4c", front: "#45616a", haze: "#76d7ff", rim: "#f7c65d", moon: "#ffe7b4" },
-    { top: "#131f36", mid: "#235168", low: "#8b7561", back: "#1a2b43", midPeak: "#244353", front: "#43636d", haze: "#76d7ff", rim: "#8fe39b", moon: "#d9f5ff" },
-    { top: "#182139", mid: "#31515d", low: "#9b8065", back: "#223247", midPeak: "#334c59", front: "#5b6b70", haze: "#8fe39b", rim: "#fff0a0", moon: "#fff0c9" },
-    { top: "#171b32", mid: "#37455d", low: "#91616f", back: "#20283f", midPeak: "#31364f", front: "#574c62", haze: "#ff8aa0", rim: "#76d7ff", moon: "#ffe2c9" },
-    { top: "#121f2f", mid: "#254b53", low: "#716f5f", back: "#172c38", midPeak: "#274a4f", front: "#49645e", haze: "#8fe39b", rim: "#76d7ff", moon: "#d9fff0" },
-    { top: "#1b2034", mid: "#3f4c58", low: "#9a6a5e", back: "#222d3d", midPeak: "#354450", front: "#625d66", haze: "#f7c65d", rim: "#ff9c62", moon: "#ffe7b4" },
-    { top: "#101c31", mid: "#274c68", low: "#5f6d76", back: "#172b42", midPeak: "#27465d", front: "#3e6173", haze: "#76d7ff", rim: "#8fe39b", moon: "#d9f5ff" },
-    { top: "#161931", mid: "#3c3d5f", low: "#755d72", back: "#22223f", midPeak: "#323356", front: "#5b5472", haze: "#f7c65d", rim: "#ff8aa0", moon: "#fff0a0" },
-    { top: "#122231", mid: "#24545d", low: "#5d7668", back: "#173344", midPeak: "#26515a", front: "#47706a", haze: "#8fe39b", rim: "#f7c65d", moon: "#d9fff0" },
-    { top: "#171728", mid: "#413452", low: "#8d5c62", back: "#221e35", midPeak: "#372f4c", front: "#66536c", haze: "#ff8aa0", rim: "#f7c65d", moon: "#fff0c9" }
+    { top: "#181a1d", mid: "#343837", low: "#7a685d", back: "#202629", midPeak: "#303838", front: "#4f5954", haze: "#8fc6d6", rim: "#f7c65d", moon: "#f2dfb7" },
+    { top: "#17191c", mid: "#303b38", low: "#73675b", back: "#20272b", midPeak: "#2f3d3b", front: "#4c5d55", haze: "#8fc6d6", rim: "#8fe39b", moon: "#e9e5d8" },
+    { top: "#1a1b1e", mid: "#3b3c37", low: "#806b5c", back: "#24282b", midPeak: "#3a403d", front: "#5a625a", haze: "#8fe39b", rim: "#fff0a0", moon: "#f2e4bf" },
+    { top: "#19191e", mid: "#3c3740", low: "#7d5f63", back: "#24242c", midPeak: "#393641", front: "#5b525b", haze: "#ff8aa0", rim: "#8fc6d6", moon: "#f0d5c2" },
+    { top: "#161b1a", mid: "#303e38", low: "#6b6c5f", back: "#1f2a28", midPeak: "#33443d", front: "#4d6256", haze: "#8fe39b", rim: "#8fc6d6", moon: "#e1eddc" },
+    { top: "#1c1b1e", mid: "#43413c", low: "#86675c", back: "#28282a", midPeak: "#464640", front: "#655e5c", haze: "#f7c65d", rim: "#ff9c62", moon: "#f1dfbb" },
+    { top: "#17191c", mid: "#303c3e", low: "#646c67", back: "#1f292c", midPeak: "#34464a", front: "#4c615f", haze: "#8fc6d6", rim: "#8fe39b", moon: "#e4e8df" },
+    { top: "#181820", mid: "#3c3946", low: "#71626d", back: "#24232d", midPeak: "#3a3749", front: "#5d5668", haze: "#f7c65d", rim: "#ff8aa0", moon: "#f1e5bc" },
+    { top: "#161c1b", mid: "#33413a", low: "#627265", back: "#1e2c2b", midPeak: "#354e46", front: "#507067", haze: "#8fe39b", rim: "#f7c65d", moon: "#e1eddc" },
+    { top: "#19181d", mid: "#423847", low: "#7f5c5f", back: "#25212b", midPeak: "#40354a", front: "#66545f", haze: "#ff8aa0", rim: "#f7c65d", moon: "#f1dfc5" }
   ];
 
   function assertMaps() {
@@ -2688,11 +2688,8 @@
     seedHair();
     resetActionVisuals();
     triggerActionVisual("spawn", 0.28);
-    if (failureCueTimer > 0 && failureCueRoom === roomIndex) {
-      armRouteCue("修正", routeSlotForMode(failureCueMode), ROUTE_CUE_TIME);
-    } else {
-      armRouteCue("重试", null, ROUTE_CUE_TIME);
-    }
+    routeCueTimer = 0;
+    routeCueReason = "";
     burst(player.x + player.w / 2, player.y + player.h / 2, "#f8fbff", 16, 230);
   }
 
@@ -2769,11 +2766,8 @@
     seedHair();
     resetActionVisuals();
     triggerActionVisual("spawn", 0.24);
-    if (failureCueTimer > 0 && failureCueRoom === roomIndex) {
-      armRouteCue("修正", routeSlotForMode(failureCueMode), ROUTE_CUE_TIME);
-    } else {
-      armRouteCue("重开", null, ROUTE_CUE_TIME);
-    }
+    routeCueTimer = 0;
+    routeCueReason = "";
     burst(player.x + player.w / 2, player.y + player.h / 2, "#f8fbff", 12, 210);
   }
 
@@ -2817,19 +2811,14 @@
 
   function showDeathCoach(reason, title = "") {
     const normalized = normalizeDeathReason(reason);
+    void title;
     deathCoachReason = normalized;
-    deathCoachText = title || deathReasonLabel(normalized);
-    deathCoachDetail = roomCoachHint(roomIndex, normalized);
-    deathCoachAction = deathPrescription(roomIndex, normalized);
-    deathCoachPlan = deathCoachPlanText(roomIndex, normalized);
-    deathCoachTimer = DEATH_COACH_TIME;
-    setGameStatus(`${deathReasonLabel(normalized)}：${deathCoachAction}`);
-    showFailureRehearsal(roomIndex, normalized, {
-      title: title || `${deathReasonLabel(normalized)} 修正`,
-      x: player.x + player.w / 2,
-      y: player.y + player.h / 2
-    });
-    showBeginnerDeathTip(normalized);
+    deathCoachText = "";
+    deathCoachDetail = "";
+    deathCoachAction = "";
+    deathCoachPlan = "";
+    deathCoachTimer = 0;
+    clearFailureRehearsal();
     clearFocusPopup();
   }
 
@@ -3356,20 +3345,10 @@
   }
 
   function showFailureRehearsal(index, reason = "fall", options = {}) {
-    const safeIndex = Math.max(0, Math.min(maps.length - 1, index));
-    const normalized = normalizeDeathReason(reason);
-    const mode = failureModeForReason(safeIndex, normalized, options.mode || "");
-    failureCueRoom = safeIndex;
-    failureCueReason = normalized;
-    failureCueMode = mode;
-    failureCueText = options.title || `${deathReasonLabel(normalized)} 修正 · ${drillModeLabel(mode)}`;
-    failureCueDetail = options.detail || `${failureRehearsalText(safeIndex, normalized, mode)} / ${failureRehearsalPlanText(safeIndex, mode)}`;
-    failureCueX = Number.isFinite(options.x) ? options.x : player.x + player.w / 2;
-    failureCueY = Number.isFinite(options.y) ? options.y : player.y + player.h / 2;
-    failureCuePath = captureFailureCuePath(safeIndex);
-    failureCueMax = Math.max(0.8, options.duration || FAILURE_REHEARSAL_TIME);
-    failureCueTimer = failureCueMax;
-    armRouteCue(options.routeReason || "修正", routeSlotForMode(mode), Math.max(ROUTE_CUE_TIME, failureCueMax));
+    void index;
+    void reason;
+    void options;
+    clearFailureRehearsal();
   }
 
   function captureFailureCuePath(index) {
@@ -3391,13 +3370,9 @@
   }
 
   function showDrillFailureRehearsal(drill, reason) {
-    showFailureRehearsal(drill.room, "retry", {
-      mode: drill.mode,
-      title: `${drillModeLabel(drill.mode)} 未达标`,
-      detail: `${reason} / ${failureRehearsalPlanText(drill.room, drill.mode)}`,
-      routeReason: "重练",
-      duration: FAILURE_REHEARSAL_TIME + 0.9
-    });
+    void drill;
+    void reason;
+    clearFailureRehearsal();
   }
 
   function clearFailureRehearsal() {
@@ -3414,7 +3389,7 @@
   }
 
   function failureCueActive() {
-    return failureCueTimer > 0 && Boolean(failureCueText) && failureCueRoom === roomIndex;
+    return false;
   }
 
   function roomSplitLoss(index) {
@@ -3973,7 +3948,7 @@
 
   function rejectTrainingEntry(label) {
     setGameStatus(`${label} 入口失效，请刷新页面后重试`);
-    showGameTip("训练入口失效", "请刷新页面后重新打开训练驾驶舱", "death", GAME_TIP_TIME, 3);
+    showGameTip("训练入口失效", "请刷新页面后重新打开设置面板", "death", GAME_TIP_TIME, 3);
     focusGame();
   }
 
@@ -6946,48 +6921,7 @@
   }
 
   function drawDeathCoach(time) {
-    if (deathCoachTimer <= 0 || !deathCoachDetail) return;
-    if (gameTipVisible("death") && player.deadTimer <= 0) return;
-    if (failureCueActive() && player.deadTimer <= 0) return;
-    const t = deathCoachTimer / DEATH_COACH_TIME;
-    const compact = isCompactCanvas();
-    const color = deathReasonColor(deathCoachReason);
-    const width = compact ? 680 : 520;
-    const height = compact ? 92 : 84;
-    const x = compact ? W / 2 - width / 2 : 20;
-    const y = roomIntroTimer > 0 ? (compact ? 252 : 238) : (compact ? 78 : 70);
-    const alpha = Math.min(1, t * 1.65);
-
-    ctx.save();
-    ctx.globalAlpha = alpha * 0.88;
-    ctx.fillStyle = "rgba(7,12,20,0.74)";
-    roundRect(ctx, x, y, width, height, 8);
-    ctx.fill();
-    ctx.strokeStyle = color;
-    ctx.lineWidth = 1.5;
-    ctx.shadowColor = color;
-    ctx.shadowBlur = settings.calmEffects ? 4 : 10;
-    roundRect(ctx, x + 0.75, y + 0.75, width - 1.5, height - 1.5, 8);
-    ctx.stroke();
-    ctx.globalAlpha = alpha;
-    ctx.textAlign = "left";
-    ctx.textBaseline = "middle";
-    ctx.font = `600 ${compact ? 13 : 12}px system-ui, sans-serif`;
-    ctx.fillStyle = color;
-    ctx.fillText(`${deathReasonLabel(deathCoachReason)} · ${deathCoachText}`, x + 14, y + 17);
-    ctx.font = `600 ${compact ? 12 : 11}px system-ui, sans-serif`;
-    ctx.fillStyle = "rgba(248,251,255,0.78)";
-    ctx.shadowBlur = settings.calmEffects ? 2 : 6;
-    ctx.fillText(fitText(deathCoachDetail, width - 28), x + 14, y + 38);
-    if (deathCoachAction) {
-      ctx.fillStyle = "rgba(255,240,160,0.86)";
-      ctx.fillText(fitText(deathCoachAction, width - 28), x + 14, y + 58);
-    }
-    if (deathCoachPlan) {
-      ctx.fillStyle = "rgba(143,227,155,0.82)";
-      ctx.fillText(fitText(deathCoachPlan, width - 28), x + 14, y + 76);
-    }
-    ctx.restore();
+    void time;
   }
 
   function drawDrillHud(time) {
@@ -7236,36 +7170,7 @@
   }
 
   function drawTimingGateCue(time) {
-    if (!started || won || timingArmed || player.deadTimer > 0 || roomIntroTimer > 0.22) return;
-    const compact = isCompactCanvas();
-    const text = timingInputReady ? "首次输入开始计时" : "松开按键后待命";
-    const detail = timingInputReady ? "移动 / 跳跃 / 冲刺" : "防止重开残留输入污染 split";
-    const width = compact ? 330 : 300;
-    const x = W / 2 - width / 2;
-    const y = compact ? H - 74 : H - 64;
-    const pulse = 0.5 + Math.sin(time * 4.8) * 0.5;
-
-    ctx.save();
-    ctx.globalAlpha = 0.74 + pulse * 0.12;
-    ctx.fillStyle = "rgba(7,12,20,0.68)";
-    roundRect(ctx, x, y, width, 42, 8);
-    ctx.fill();
-    ctx.strokeStyle = `rgba(118,215,255,${0.24 + pulse * 0.22})`;
-    ctx.lineWidth = 1.2;
-    roundRect(ctx, x + 0.6, y + 0.6, width - 1.2, 40.8, 8);
-    ctx.stroke();
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
-    ctx.shadowColor = palette.cyan;
-    ctx.shadowBlur = settings.calmEffects ? 4 : 10;
-    ctx.fillStyle = timingInputReady ? palette.cyan : "rgba(255,240,160,0.92)";
-    ctx.font = `600 ${compact ? 13 : 12}px system-ui, sans-serif`;
-    ctx.fillText(text, W / 2, y + 15);
-    ctx.shadowBlur = settings.calmEffects ? 2 : 5;
-    ctx.fillStyle = "rgba(248,251,255,0.7)";
-    ctx.font = `600 ${compact ? 11 : 10}px system-ui, sans-serif`;
-    ctx.fillText(detail, W / 2, y + 31);
-    ctx.restore();
+    void time;
   }
 
   function roomAtmosphere() {
@@ -8057,255 +7962,31 @@
   }
 
   function drawDeathMarks(time) {
-    for (const mark of deathMarks) {
-      if (mark.room !== roomIndex) continue;
-      const t = Math.max(0, mark.life / mark.max);
-      ctx.save();
-      ctx.globalAlpha = t * 0.62;
-      ctx.translate(mark.x, mark.y);
-      ctx.rotate(time * 1.8);
-      const color = deathReasonColor(mark.reason);
-      ctx.strokeStyle = color;
-      ctx.lineWidth = 2;
-      ctx.shadowColor = color;
-      ctx.shadowBlur = 10;
-      ctx.beginPath();
-      ctx.moveTo(-7, -7);
-      ctx.lineTo(7, 7);
-      ctx.moveTo(7, -7);
-      ctx.lineTo(-7, 7);
-      ctx.stroke();
-      ctx.save();
-      ctx.rotate(-time * 1.8);
-      ctx.font = "600 9px system-ui, sans-serif";
-      ctx.textAlign = "center";
-      ctx.textBaseline = "middle";
-      ctx.fillStyle = color;
-      ctx.shadowColor = "rgba(0,0,0,0.72)";
-      ctx.shadowBlur = 8;
-      ctx.fillText(deathReasonLabel(mark.reason), 0, -22);
-      if (
-        failureCueTimer > 0 &&
-        failureCueRoom === mark.room &&
-        Math.hypot(mark.x - failureCueX, mark.y - failureCueY) < 4
-      ) {
-        ctx.font = "600 8px system-ui, sans-serif";
-        ctx.fillStyle = "rgba(255,240,160,0.9)";
-        ctx.fillText("REHEARSE", 0, 24);
-      }
-      ctx.restore();
-      ctx.strokeStyle = "rgba(248,251,255,0.72)";
-      ctx.beginPath();
-      ctx.arc(0, 0, 12 + (1 - t) * 7, 0, Math.PI * 2);
-      ctx.stroke();
-      ctx.restore();
-    }
+    void time;
   }
 
   function drawFailureGhostLine(time) {
-    if (failureCueTimer <= 0 || failureCueRoom !== roomIndex || failureCuePath.length < 2) return;
-    const t = Math.max(0, Math.min(1, failureCueTimer / Math.max(0.001, failureCueMax)));
-    const color = deathReasonColor(failureCueReason);
-    const alpha = Math.min(0.62, 0.18 + t * 0.46);
-    ctx.save();
-    ctx.globalAlpha = alpha;
-    ctx.strokeStyle = color;
-    ctx.lineWidth = 3;
-    ctx.lineCap = "round";
-    ctx.lineJoin = "round";
-    ctx.setLineDash([12, 9]);
-    ctx.shadowColor = color;
-    ctx.shadowBlur = settings.calmEffects ? 5 : 12;
-    ctx.beginPath();
-    failureCuePath.forEach((point, index) => {
-      if (index === 0) ctx.moveTo(point.x, point.y);
-      else ctx.lineTo(point.x, point.y);
-    });
-    ctx.stroke();
-    ctx.setLineDash([]);
-    const last = failureCuePath[failureCuePath.length - 1];
-    const pulse = 0.5 + Math.sin(time * 8) * 0.5;
-    ctx.globalAlpha = Math.min(0.82, alpha + pulse * 0.14);
-    ctx.fillStyle = color;
-    ctx.beginPath();
-    ctx.arc(last.x, last.y, 5 + pulse * 2, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.restore();
-    drawFailureGhostArrow(failureCuePath, color, alpha, time);
+    void time;
   }
 
   function drawFailureGhostArrow(path, color, alpha, time) {
-    if (!Array.isArray(path) || path.length < 2) return;
-    const end = path[path.length - 1];
-    let start = null;
-    for (let i = path.length - 2; i >= 0; i -= 1) {
-      const candidate = path[i];
-      if (Math.hypot(end.x - candidate.x, end.y - candidate.y) > 7) {
-        start = candidate;
-        break;
-      }
-    }
-    if (!start) return;
-    const angle = Math.atan2(end.y - start.y, end.x - start.x);
-    const pulse = 0.5 + Math.sin(time * 8.4) * 0.5;
-    ctx.save();
-    ctx.translate(end.x, end.y);
-    ctx.rotate(angle);
-    ctx.globalAlpha = Math.min(0.9, alpha + pulse * 0.18);
-    ctx.fillStyle = color;
-    ctx.shadowColor = color;
-    ctx.shadowBlur = settings.calmEffects ? 4 : 10;
-    ctx.beginPath();
-    ctx.moveTo(13 + pulse * 2, 0);
-    ctx.lineTo(-5, -7);
-    ctx.lineTo(-2, 0);
-    ctx.lineTo(-5, 7);
-    ctx.closePath();
-    ctx.fill();
-    ctx.restore();
+    void path;
+    void color;
+    void alpha;
+    void time;
   }
 
   function drawFailureRehearsalCue(time) {
-    if (!started || won || !failureCueActive()) return;
-    const t = Math.max(0, Math.min(1, failureCueTimer / Math.max(0.001, failureCueMax)));
-    const alpha = Math.min(1, t * 1.55);
-    const color = deathReasonColor(failureCueReason);
-    const routeColor = routeSlotColor(routeSlotForMode(failureCueMode));
-    const cardWidth = isCompactCanvas() ? 330 : 300;
-    const cardHeight = 78;
-    const px = Math.max(24, Math.min(W - 24, failureCueX));
-    const py = Math.max(34, Math.min(H - 34, failureCueY));
-    const cardX = Math.max(18, Math.min(W - cardWidth - 18, px - cardWidth / 2));
-    const preferredY = py < H * 0.45 ? py + 30 : py - cardHeight - 32;
-    const cardY = Math.max(44, Math.min(H - cardHeight - 42, preferredY));
-    const pulse = 0.5 + Math.sin(time * 7.2) * 0.5;
-
-    ctx.save();
-    ctx.globalAlpha = alpha;
-    ctx.strokeStyle = color;
-    ctx.lineWidth = 1.5;
-    ctx.shadowColor = color;
-    ctx.shadowBlur = settings.calmEffects ? 5 : 13;
-    ctx.beginPath();
-    ctx.arc(px, py, 18 + pulse * 5, 0, Math.PI * 2);
-    ctx.stroke();
-    ctx.globalAlpha = alpha * 0.6;
-    ctx.setLineDash([5, 6]);
-    ctx.beginPath();
-    ctx.moveTo(px, py);
-    ctx.lineTo(cardX + cardWidth / 2, cardY + cardHeight / 2);
-    ctx.stroke();
-    ctx.setLineDash([]);
-
-    ctx.globalAlpha = alpha * 0.88;
-    ctx.fillStyle = "rgba(7,12,20,0.76)";
-    roundRect(ctx, cardX, cardY, cardWidth, cardHeight, 8);
-    ctx.fill();
-    ctx.strokeStyle = color;
-    ctx.lineWidth = 1.4;
-    roundRect(ctx, cardX + 0.7, cardY + 0.7, cardWidth - 1.4, cardHeight - 1.4, 8);
-    ctx.stroke();
-
-    ctx.globalAlpha = alpha;
-    ctx.textAlign = "left";
-    ctx.textBaseline = "middle";
-    ctx.font = "600 12px system-ui, sans-serif";
-    ctx.fillStyle = color;
-    ctx.fillText(fitText(failureCueText, cardWidth - 28), cardX + 14, cardY + 18);
-    ctx.font = "600 10px system-ui, sans-serif";
-    ctx.shadowBlur = settings.calmEffects ? 2 : 6;
-    ctx.fillStyle = "rgba(248,251,255,0.78)";
-    ctx.fillText(fitText(failureCueDetail, cardWidth - 28), cardX + 14, cardY + 42);
-    ctx.fillStyle = routeColor;
-    ctx.fillText(fitText(`${failureRehearsalPlanText(roomIndex, failureCueMode)} / ${nextMasteryStepText(roomIndex)}`, cardWidth - 28), cardX + 14, cardY + 62);
-    drawRouteSegmentStrip(cardX + cardWidth - 98, cardY + 12, 78, 9, routeSlotForMode(failureCueMode));
-    ctx.restore();
-
-    drawFailureRouteArrow(time, routeColor, alpha);
+    void time;
   }
 
   function drawFailureRouteArrow(time, color, alpha) {
-    if (player.deadTimer > 0) return;
-    const target = routeCompassTarget();
-    if (!target) return;
-    const cx = player.x + player.w / 2;
-    const cy = player.y + player.h / 2;
-    let dx = target.x - cx;
-    let dy = target.y - cy;
-    const dist = Math.hypot(dx, dy);
-    if (dist < 36) return;
-    dx /= dist;
-    dy /= dist;
-    const length = Math.min(118, Math.max(54, dist * 0.24));
-    const sx = cx + dx * 24;
-    const sy = cy + dy * 18;
-    const ex = sx + dx * length;
-    const ey = sy + dy * length;
-    const pulse = 0.5 + Math.sin(time * 6.8) * 0.5;
-
-    ctx.save();
-    ctx.globalAlpha = Math.min(0.72, alpha * (0.36 + pulse * 0.18));
-    ctx.strokeStyle = color;
-    ctx.lineWidth = 2;
-    ctx.lineCap = "round";
-    ctx.shadowColor = color;
-    ctx.shadowBlur = settings.calmEffects ? 4 : 11;
-    ctx.setLineDash([9, 7]);
-    ctx.beginPath();
-    ctx.moveTo(sx, sy);
-    ctx.lineTo(ex, ey);
-    ctx.stroke();
-    ctx.setLineDash([]);
-    ctx.translate(ex, ey);
-    ctx.rotate(Math.atan2(dy, dx));
-    ctx.fillStyle = color;
-    ctx.beginPath();
-    ctx.moveTo(12, 0);
-    ctx.lineTo(-7, -6);
-    ctx.lineTo(-3, 0);
-    ctx.lineTo(-7, 6);
-    ctx.closePath();
-    ctx.fill();
-    ctx.rotate(-Math.atan2(dy, dx));
-    ctx.font = "600 8px system-ui, sans-serif";
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
-    ctx.globalAlpha = Math.min(0.86, alpha * 0.72);
-    ctx.fillStyle = "rgba(7,12,20,0.72)";
-    roundRect(ctx, -34, -28, 68, 16, 5);
-    ctx.fill();
-    ctx.fillStyle = color;
-    ctx.fillText("修正路线", 0, -20);
-    ctx.restore();
+    void time;
+    void color;
+    void alpha;
   }
 
   function drawDeathReplays() {
-    for (const replay of deathReplays) {
-      if (replay.room !== roomIndex || replay.points.length < 2) continue;
-      const fade = Math.max(0, replay.life / replay.max);
-      ctx.save();
-      ctx.lineCap = "round";
-      ctx.lineJoin = "round";
-      ctx.lineWidth = 3;
-      const color = deathReasonColor(replay.reason);
-      ctx.strokeStyle = color === palette.hot ? `rgba(255, 92, 108, ${0.2 + fade * 0.38})` : `rgba(118, 215, 255, ${0.2 + fade * 0.38})`;
-      ctx.shadowColor = color;
-      ctx.shadowBlur = 8;
-      ctx.beginPath();
-      replay.points.forEach((point, index) => {
-        if (index === 0) ctx.moveTo(point.x, point.y);
-        else ctx.lineTo(point.x, point.y);
-      });
-      ctx.stroke();
-      ctx.shadowBlur = 0;
-      for (let i = 0; i < replay.points.length; i += 2) {
-        const point = replay.points[i];
-        ctx.globalAlpha = fade * (point.dash || point.spark ? 0.76 : 0.42);
-        ctx.fillStyle = point.spark ? "#fff0a0" : point.dash ? palette.cyan : palette.hot;
-        ctx.fillRect(point.x - 2, point.y - 2, 4, 4);
-      }
-      ctx.restore();
-    }
   }
 
   function drawDiamond(x, y, radius, color, time) {

@@ -1,5 +1,13 @@
 # Changelog
 
+## 2026-06-05 - p19
+
+- Bumped public build assets to `20260605-p19`.
+- Quieted normal gameplay by removing visible fall/death correction cards, route arrows, death marks, death replays, and first-input timing prompts.
+- Reworked settings into a controls-first system panel: Controls is the only default-open group, with Audio and Display split into separate groups.
+- Updated smoke, contract, route, and Feel checks so quality gates preserve the quiet play mode instead of requiring old coaching overlays.
+- Refined settings typography, spacing, and button weights toward a cleaner single-column options surface.
+
 ## 2026-06-05 - p18
 
 - Bumped public build assets to `20260605-p18`.

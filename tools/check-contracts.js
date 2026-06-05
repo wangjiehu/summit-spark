@@ -287,8 +287,8 @@ if (!js.includes("strictBoolean")) errors.push("strict storage boolean normalize
 if (!js.includes("storageHealthMessage")) errors.push("storage health feedback state is missing");
 if (!js.includes("maybeShowStorageRepairToast")) errors.push("storage repair should show a one-shot toast");
 if (!js.includes("wallSpark") || !js.includes("prismSpark")) errors.push("Spark variants are missing");
-if (!js.includes("drawFailureGhostLine")) errors.push("failure rehearsal ghost line is missing");
-if (!js.includes("drawFailureGhostArrow")) errors.push("failure rehearsal ghost line should show direction");
+if (!js.includes("drawFailureGhostLine")) errors.push("quiet failure ghost hook is missing");
+if (!js.includes("drawFailureGhostArrow")) errors.push("quiet failure direction hook is missing");
 if (!js.includes("triggerSparkVariantVisual")) errors.push("Wall/Prism Spark should keep distinct visual pulses");
 if (!js.includes("drawChapterResonance")) errors.push("chapter resonance environment feedback is missing");
 if (!js.includes("roomBriefText")) errors.push("room brief helper is missing");
@@ -303,7 +303,7 @@ if (!js.includes("hasTimingIntent")) errors.push("timing intent helper is missin
 if (!js.includes("resetFocusStats")) errors.push("focus reset helper is missing");
 if (!js.includes("releaseAllInputs")) errors.push("settings input release helper is missing");
 if (!js.includes("syncSettingsVisibility")) errors.push("settings open state must sync aria-expanded and panel visibility");
-if (!js.includes("drawTimingGateCue")) errors.push("first-input timing gate needs a visible cue");
+if (!js.includes("drawTimingGateCue")) errors.push("first-input timing gate helper should stay explicit");
 if (!js.includes("APEX_GRAVITY_MULT")) errors.push("apex gravity shaping is missing");
 if (!js.includes("showFeelCue")) errors.push("feel window feedback helper is missing");
 if (!js.includes("drawFeelCue")) errors.push("feel cue renderer is missing");
@@ -320,15 +320,14 @@ if (!js.includes("nextMasteryStepText")) errors.push("mastery feedback should na
 if (!js.includes("masteryContractPillsHtml")) errors.push("mastery contract pill renderer is missing");
 if (!js.includes("masteryRoadmapRows")) errors.push("mastery roadmap rows helper is missing");
 if (!js.includes("reviewRoadmapHtml")) errors.push("finish review should expose a mastery roadmap");
-if (!js.includes("deathPrescription")) errors.push("death coach should prescribe next action");
-if (!js.includes("deathCoachPlanText")) errors.push("death coach should point to a drill plan");
 if (!js.includes("drawContractStrip")) errors.push("Drill HUD should show contract ladder status");
-if (!js.includes("FAILURE_REHEARSAL_TIME")) errors.push("failure rehearsal cue timing constant is missing");
-if (!js.includes("failureCueActive")) errors.push("failure rehearsal state helper is missing");
-if (!js.includes("showFailureRehearsal")) errors.push("death feedback should create a failure rehearsal cue");
-if (!js.includes("showDrillFailureRehearsal")) errors.push("failed Drill retry should create a rehearsal cue");
-if (!js.includes("drawFailureRehearsalCue")) errors.push("failure rehearsal cue renderer is missing");
-if (!js.includes("drawFailureRouteArrow")) errors.push("failure rehearsal should point toward the next route target");
+if (!js.includes("failureCueActive")) errors.push("quiet failure state helper is missing");
+if (!js.includes("showFailureRehearsal")) errors.push("quiet failure hook is missing");
+if (!js.includes("showDrillFailureRehearsal")) errors.push("quiet Drill failure hook is missing");
+if (!js.includes("drawFailureRehearsalCue")) errors.push("quiet failure renderer hook is missing");
+["首次输入开始计时", "松开按键后待命", "修正路线", "REHEARSE"].forEach((marker) => {
+  if (js.includes(marker)) errors.push("quiet play mode must not expose prompt text: " + marker);
+});
 if (!js.includes("GAME_TIP_TIME")) errors.push("game tip timing constant is missing");
 if (!js.includes("showGameTip")) errors.push("game tip helper is missing");
 if (!js.includes("beginnerFlowActive")) errors.push("beginner flow activation guard is missing");
@@ -350,9 +349,12 @@ if (!indexHtml.includes('aria-expanded="false"')) errors.push("settings button m
 if (!indexHtml.includes('aria-label="设置"')) errors.push("settings button should have a localized accessible label");
 if (!indexHtml.includes('aria-live="polite"')) errors.push("game should expose live status text");
 if (!indexHtml.includes("settings-section-title")) errors.push("settings panel must group controls");
-if (!indexHtml.includes("settings-group-training") || !indexHtml.includes("settings-group-controls") || !indexHtml.includes("settings-group-feedback")) errors.push("settings panel must use grouped disclosure sections");
+if (!indexHtml.includes("settings-group-training") || !indexHtml.includes("settings-group-controls") || !indexHtml.includes("settings-group-audio") || !indexHtml.includes("settings-group-display") || !indexHtml.includes("settings-group-feedback")) errors.push("settings panel must use focused grouped disclosure sections");
 if (indexHtml.includes("start-guide") || indexHtml.includes("start-copy")) errors.push("start overlay should not include explanatory guide blocks");
-if (/settings-group[^>]*\sopen\b/.test(indexHtml)) errors.push("settings groups should default collapsed for a cleaner panel");
+const openSettingsGroups = indexHtml.match(/<details class="settings-group [^"]+" open>/g) || [];
+if (openSettingsGroups.length !== 1 || !openSettingsGroups[0].includes("settings-group-controls")) {
+  errors.push("settings controls group should be the only default-open group");
+}
 if (!indexHtml.includes('id="practicePlan"')) errors.push("settings panel must include a practice plan surface");
 if (!indexHtml.includes('id="routeContracts"')) errors.push("settings panel must include route contracts");
 if (!indexHtml.includes('id="feelLab"')) errors.push("settings panel must include feel lab");

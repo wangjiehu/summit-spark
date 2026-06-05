@@ -5,7 +5,7 @@ This checklist is for one focused manual pass after `npm run check` and `npm run
 ## Setup
 
 1. Open the local page from `npm start`.
-2. Confirm the start screen shows build `20260605-p18` in page markup if inspected.
+2. Confirm the start screen shows build `20260605-p19` in page markup if inspected.
 3. Use a clean browser profile for first-run checks, then repeat with an existing profile that has training progress.
 4. Keep audio on for one pass and off for one pass.
 5. Test desktop keyboard first; test touch and a physical gamepad when devices are available.
@@ -16,8 +16,8 @@ This checklist is for one focused manual pass after `npm run check` and `npm run
 - Verify the first-room flow starts without automatic teaching toast or visible control guide.
 - Die once to spikes and once by falling; the game should not interrupt with explanatory coaching copy.
 - Press `O`, open settings, press `Escape`, and return to play without stuck movement.
-- Confirm settings first opens as collapsed groups; Training, Room, Control, Feedback, and Profile should be reachable without visual crowding.
-- Start a recommended Drill from the training cockpit and confirm the goal is clear before moving.
+- Confirm settings first opens with only Controls expanded; Audio, Display, Room, Feedback/Save, Profile, Training, and Advanced should be reachable without visual crowding.
+- Start a recommended Drill from settings and confirm the goal is clear before moving.
 
 ## Ten-Room Route Pass
 
@@ -49,12 +49,12 @@ For each room, record `pass`, `friction`, or `blocked`.
 
 ## Mobile And Comfort
 
-- At around 390x700, the start screen must show title, controls, start, resume when present, and training entry without horizontal scroll.
+- At around 390x700, the start screen must show title, start, resume when present, and settings entry without horizontal scroll.
 - At around 700x390, settings must scroll vertically and keep Route, Feel, audio, low performance, touch size, and gamepad deadzone reachable.
-- Confirm collapsed setting groups are easy to scan and do not hide the primary start/Drill path from a new player.
+- Confirm the controls-first setting groups are easy to scan and do not hide the primary start/Drill path from a new player.
 - Confirm the hand-held/mobile view has no horizontal scroll after opening feedback, save import, Route cards, and Feel Lab sections.
 - Increase touch size to 64 and confirm touch controls grow without covering critical HUD text.
-- Enable low-performance mode and confirm hazards, route compass, Drill HUD, and failure arrows remain readable.
+- Enable low-performance mode and confirm hazards, route compass, and Drill HUD remain readable.
 - If a physical gamepad is available, verify the settings panel reports a connected standard mapping without exposing the controller name.
 
 ## Exit Criteria
