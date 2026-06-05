@@ -58,6 +58,19 @@ Long-term optimization source: `LONG_TERM_OPTIMIZATION_OUTLINE.md`. Super-push e
 - 2026-06-03: Added a control-accessibility pass: grab can now be held or toggled from settings, preserving the default feel while reducing sustained-button strain during long practice.
 - 2026-06-03: Added a P2 long-term layer: settings now exposes chapter completion, challenge cards, and a persistent profile summary; summit review surfaces chapter grade and challenge progress, while clears record summit count, best death count, relay chain, and Flow peak.
 - 2026-06-03: Added `DEVELOPMENT_DIRECTION.md` as the PR and product guardrail for future large pushes, keeping branch policy, P2 data rules, UI priority, and quality gates aligned.
+- 2026-06-03: Contracted full-run challenges: first clear, no-death, and Flow cards now start from R1, expose an active in-run challenge HUD, and report the selected challenge result in the summit review.
+- 2026-06-03: Added a broad next-step pass: synthesized action audio, Wall Spark and Prism Spark variants, failure ghost rehearsal lines, three-step route contracts, subtle chapter resonance, feel replay fixtures, and readable-landing map lint.
+- 2026-06-03: Closed the route-and-feel loop: Feel Lab cards launch targeted calibration drills, route contracts now surface in active Drill HUD/review text and preserve interruption results, audio can be tested from settings, and build assets moved to p5.
+- 2026-06-03: Added automated local HTTP smoke and Feel Lab result states: calibration cards now show active/recent/interrupted status, mobile cards collapse cleanly, and `npm run check` verifies current asset loading through a temporary local server.
+- 2026-06-04: Added browser-level smoke and state hardening: headless Chrome verifies start/settings/Feel Lab/route/mobile/storage paths, route-contract auto-advance has a generation guard, Flow challenges use current-run Flow, storage normalizers reject Infinity/string booleans, and mobile panels use dynamic viewport/safe-area sizing.
+- 2026-06-04: Added P10 usability gates: browser smoke now checks canvas pixels, keyboard movement, storage repair toast, and gamepad deadzone mock; `npm run route-audit` validates route readability/contracts/Feel Lab fixtures; Route cards show an explicit continue badge; finish review cards are prioritized for mobile reading; failure ghost lines now include a direction arrow.
+- 2026-06-04: Added P11 real-use polish: start overlay can jump straight into the recommended Drill, settings include low-performance and touch-size controls, storage writes schema versions, `npm run state-check` guards transition semantics, and browser smoke covers schema migration plus mobile landscape review scroll.
+- 2026-06-05: Added P12 verification polish: browser smoke now covers keyboard-only settings access plus Route/Feel interruption and recovery paths, while manual playtest and known-issues docs capture human/device checks that scripts cannot prove.
+- 2026-06-05: Added P13 feedback loop: settings can copy a local diagnostics snapshot for playtest reports, and smoke/contract checks verify the snapshot path without adding telemetry or score changes.
+- 2026-06-05: Added P14 feedback usability: diagnostics can include a short typed note and feedback type, and text-entry hotkeys are isolated so typing in the note field cannot close settings.
+- 2026-06-05: Added P15 migration and visual guards: feedback templates, local save archive copy/download/import, non-sensitive gamepad status, browser save import/export checks, and mobile visual overflow guards.
+- 2026-06-05: Added P16 import robustness: save archives now get a live import preview, invalid JSON and wrong archive kinds fail in place, and browser smoke covers invalid/valid import paths.
+- 2026-06-05: Added P17 experience simplification: start copy and onboarding prompts are shorter, settings use grouped disclosure sections, and the visual system is quieter and less blue-heavy.
 
 ## Next Milestones
 
@@ -111,6 +124,13 @@ Long-term optimization source: `LONG_TERM_OPTIMIZATION_OUTLINE.md`. Super-push e
 - Contract checks must guard room skill tags, Focus UI ids, touch directions, time-aware ghost data, HTML twin parity, and Pages pre-deploy checks.
 - Online builds must be checked after push so the public URL is never treated as finished just because local checks pass.
 - Public HTML must version CSS/JS assets whenever gameplay code changes, so a successful Pages deploy is actually visible to returning players.
+- Feel Lab, route contracts, and audio controls must stay covered by DOM/helper/style contract checks so training entry points do not silently disappear.
+- Local smoke should be runnable without the in-app Browser: it must boot the project server, load HTML/CSS/JS, and verify the current build version plus critical training markers.
+- Browser smoke is the stronger local gate: keep it runnable through `npm run browser-smoke`, but do not make ordinary `npm run check` depend on a browser executable until CI/browser availability is controlled.
+- Route audit is a lightweight substitute for non-human route review: keep `npm run route-audit` in the normal check path so map copy, route contracts, Feel Lab fixtures, transition guards, and route readability cannot silently drift.
+- State check is the local guard for training semantics: keep `npm run state-check` in the normal check path whenever Drill, Route, Challenge, Feel, storage schema, or start-overlay resume behavior changes.
+- Public demo readiness also needs the human layer: use `PLAYTEST_CHECKLIST.md` for first-run, ten-room, Route/Feel, mobile, and comfort passes, and keep `KNOWN_ISSUES.md` honest about remaining device or online checks.
+- Feedback artifacts should be local and explicit: diagnostics snapshots, feedback templates, and save archives can support bug reports or browser migration, but they must not upload data, capture raw input history, collect controller IDs, store secrets, or refresh on invalid imports.
 
 ## Difficulty Curve
 

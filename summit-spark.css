@@ -1,13 +1,15 @@
 :root {
   color-scheme: dark;
-  --ink: #f8fbff;
-  --muted: #b7c9d8;
-  --panel: rgba(9, 16, 28, 0.62);
-  --stroke: rgba(255, 255, 255, 0.18);
-  --hot: #ff5c6c;
-  --gold: #f7c65d;
-  --green: #8fe39b;
-  --cyan: #76d7ff;
+  --ink: #f7f5f0;
+  --muted: #b9b4aa;
+  --panel: rgba(23, 23, 24, 0.72);
+  --stroke: rgba(255, 255, 255, 0.13);
+  --hot: #ff6b76;
+  --gold: #e8c46a;
+  --green: #8fd19a;
+  --cyan: #9fb8c7;
+  --surface: rgba(255, 255, 255, 0.07);
+  --surface-strong: rgba(255, 255, 255, 0.1);
 }
 
 * {
@@ -23,8 +25,8 @@ body {
   margin: 0;
   overflow: hidden;
   background:
-    radial-gradient(circle at 18% 12%, rgba(255, 156, 98, 0.18), transparent 24%),
-    linear-gradient(140deg, #172033 0%, #233f58 38%, #7a7c77 70%, #2a2631 100%);
+    radial-gradient(circle at 18% 12%, rgba(232, 196, 106, 0.12), transparent 24%),
+    linear-gradient(140deg, #111112 0%, #232425 42%, #4a4943 74%, #1b1a1d 100%);
   color: var(--ink);
   font-family: "Microsoft YaHei", "Segoe UI", system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
@@ -34,6 +36,7 @@ body {
 .shell {
   width: 100vw;
   height: 100vh;
+  min-height: 100dvh;
   display: grid;
   place-items: center;
   padding: clamp(10px, 2vw, 24px);
@@ -41,12 +44,12 @@ body {
 
 .stage {
   position: relative;
-  width: min(100%, calc((100vh - 20px) * 1.7647));
+  width: min(100%, calc((100dvh - 20px) * 1.7647));
   max-width: 1240px;
   aspect-ratio: 960 / 544;
   border: 1px solid var(--stroke);
   border-radius: 8px;
-  background: #111927;
+  background: #111214;
   box-shadow:
     0 24px 80px rgba(0, 0, 0, 0.38),
     inset 0 0 0 1px rgba(255, 255, 255, 0.04);
@@ -66,7 +69,7 @@ canvas:focus {
 }
 
 .stage.settings-open canvas {
-  filter: saturate(0.78) brightness(0.82);
+  filter: saturate(0.74) brightness(0.78);
 }
 
 .stage.settings-open::after {
@@ -75,8 +78,8 @@ canvas:focus {
   z-index: 2;
   pointer-events: none;
   background:
-    linear-gradient(90deg, rgba(7, 12, 20, 0.12), transparent 34%),
-    radial-gradient(circle at 78% 18%, rgba(247, 198, 93, 0.1), transparent 24%);
+    linear-gradient(90deg, rgba(8, 8, 9, 0.2), transparent 34%),
+    radial-gradient(circle at 78% 18%, rgba(232, 196, 106, 0.08), transparent 24%);
   content: "";
 }
 
@@ -112,7 +115,7 @@ canvas:focus {
   padding: 4px 7px;
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 8px;
-  background: linear-gradient(180deg, rgba(9, 16, 28, 0.56), rgba(9, 16, 28, 0.32));
+  background: linear-gradient(180deg, rgba(18, 18, 19, 0.64), rgba(18, 18, 19, 0.38));
   backdrop-filter: blur(8px);
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
 }
@@ -129,8 +132,8 @@ canvas:focus {
   display: inline-block;
   border-radius: 4px;
   transform: rotate(45deg);
-  background: linear-gradient(135deg, var(--cyan), var(--gold));
-  box-shadow: 0 0 18px rgba(118, 215, 255, 0.8);
+  background: linear-gradient(135deg, #f2d978, #8fd19a);
+  box-shadow: 0 0 14px rgba(232, 196, 106, 0.48);
 }
 
 .dash-meter,
@@ -331,6 +334,17 @@ canvas:focus {
   color: #ffb1bf;
 }
 
+.game-tip.storage {
+  border-color: rgba(143, 227, 155, 0.42);
+  background:
+    linear-gradient(90deg, rgba(143, 227, 155, 0.14), rgba(118, 215, 255, 0.08)),
+    rgba(7, 12, 20, 0.82);
+}
+
+.game-tip.storage strong {
+  color: #c9ffd0;
+}
+
 
 .hud-actions {
   display: flex;
@@ -378,6 +392,8 @@ canvas:focus {
 .icon-button:focus-visible,
 .mini-button:focus-visible,
 .focus-button:focus-visible,
+.feedback-box textarea:focus-visible,
+.settings-group summary:focus-visible,
 .variant-button:focus-visible,
 .plan-step:focus-visible,
 .queue-card:focus-visible,
@@ -390,22 +406,23 @@ canvas:focus {
 
 .settings-panel {
   position: absolute;
-  top: 68px;
+  top: 62px;
   right: 20px;
-  width: min(760px, calc(100% - 40px));
-  max-height: calc(100% - 96px);
+  width: min(700px, calc(100% - 40px));
+  max-height: min(calc(100% - 96px), calc(100dvh - 100px));
   overflow-x: hidden;
   overflow-y: auto;
-  padding: 14px;
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  padding: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 8px;
   background:
-    linear-gradient(180deg, rgba(12, 22, 34, 0.97), rgba(7, 12, 20, 0.94)),
-    rgba(7, 12, 20, 0.94);
-  color: #f8fbff;
-  box-shadow: 0 24px 58px rgba(0, 0, 0, 0.36);
-  backdrop-filter: blur(10px);
+    linear-gradient(180deg, rgba(31, 31, 32, 0.96), rgba(18, 18, 19, 0.94)),
+    rgba(18, 18, 19, 0.94);
+  color: var(--ink);
+  box-shadow: 0 22px 52px rgba(0, 0, 0, 0.34);
+  backdrop-filter: blur(18px) saturate(1.1);
   z-index: 6;
-  scrollbar-color: rgba(118, 215, 255, 0.35) rgba(255, 255, 255, 0.06);
+  scrollbar-color: rgba(232, 196, 106, 0.32) rgba(255, 255, 255, 0.05);
 }
 
 .settings-panel.hidden {
@@ -421,26 +438,204 @@ canvas:focus {
   gap: 14px;
 }
 
+.feedback-box {
+  display: grid;
+  gap: 7px;
+  margin: 7px 0;
+  min-width: 0;
+}
+
+.feedback-box span {
+  color: rgba(183, 201, 216, 0.82);
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.feedback-box textarea {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 58px;
+  max-height: 120px;
+  resize: vertical;
+  padding: 9px 10px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 7px;
+  background: rgba(255, 255, 255, 0.06);
+  color: #f8fbff;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+.feedback-box textarea::placeholder {
+  color: rgba(183, 201, 216, 0.5);
+}
+
+.save-import-box textarea {
+  min-height: 54px;
+  max-height: 148px;
+  font-size: 11px;
+}
+
+.save-import-status {
+  min-height: 26px;
+  margin: 4px 0 8px;
+  padding: 7px 9px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.055);
+  color: rgba(223, 235, 245, 0.76);
+  font-size: 11px;
+  font-weight: 850;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+.save-import-status.valid {
+  border-color: rgba(143, 227, 155, 0.34);
+  background: rgba(143, 227, 155, 0.1);
+  color: rgba(210, 255, 220, 0.9);
+}
+
+.save-import-status.error {
+  border-color: rgba(255, 122, 156, 0.38);
+  background: rgba(255, 92, 108, 0.12);
+  color: rgba(255, 218, 226, 0.9);
+}
+
+.storage-actions {
+  align-items: flex-start;
+}
+
+.compact-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 6px;
+  min-width: 0;
+}
+
+.compact-actions .focus-button {
+  min-width: 48px;
+  padding: 0 9px;
+}
+
+.gamepad-status-row output {
+  max-width: 168px;
+  min-height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 0 8px;
+  border: 1px solid rgba(232, 196, 106, 0.18);
+  border-radius: 4px;
+  background: rgba(232, 196, 106, 0.08);
+  color: rgba(247, 245, 240, 0.9);
+  font-size: 12px;
+  font-weight: 900;
+  text-align: right;
+  overflow-wrap: anywhere;
+}
+
 .settings-head {
   position: sticky;
-  top: -14px;
+  top: -12px;
   z-index: 2;
-  margin: -14px -14px 14px;
-  padding: 14px;
+  margin: -12px -12px 12px;
+  padding: 12px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-  background: rgba(9, 17, 29, 0.98);
-  backdrop-filter: blur(8px);
+  background: rgba(27, 27, 28, 0.98);
+  backdrop-filter: blur(12px);
 }
 
 .settings-body {
   display: grid;
-  grid-template-columns: minmax(0, 1.06fr) minmax(300px, 0.94fr);
-  gap: 14px;
+  grid-template-columns: minmax(0, 1.04fr) minmax(276px, 0.96fr);
+  gap: 10px;
   align-items: start;
 }
 
 .settings-column {
   min-width: 0;
+}
+
+.settings-group {
+  min-width: 0;
+  margin: 0 0 9px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.045);
+}
+
+.settings-group:last-child {
+  margin-bottom: 0;
+}
+
+.settings-group summary {
+  min-height: 42px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  padding: 9px 11px;
+  cursor: pointer;
+  list-style: none;
+}
+
+.settings-group summary::-webkit-details-marker {
+  display: none;
+}
+
+.settings-group summary::after {
+  width: 18px;
+  height: 18px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(247, 245, 240, 0.72);
+  font-size: 13px;
+  content: "+";
+}
+
+.settings-group[open] summary {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.settings-group[open] summary::after {
+  content: "−";
+}
+
+.settings-group summary span,
+.settings-group summary em {
+  display: block;
+  min-width: 0;
+}
+
+.settings-group summary span {
+  color: var(--ink);
+  font-size: 13px;
+  font-weight: 900;
+  line-height: 1.15;
+}
+
+.settings-group summary em {
+  margin-top: 2px;
+  color: rgba(185, 180, 170, 0.78);
+  font-size: 10.5px;
+  font-style: normal;
+  font-weight: 750;
+  line-height: 1.15;
+}
+
+.settings-group-body {
+  display: grid;
+  gap: 8px;
+  padding: 10px;
 }
 
 .pause-badge {
@@ -804,6 +999,244 @@ canvas:focus {
   content: "";
 }
 
+.route-contracts {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 7px;
+  margin: 0 0 10px;
+}
+
+.route-contract-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 0 1px;
+}
+
+.route-contract-head span {
+  color: rgba(248, 251, 255, 0.88);
+  font-size: 12.5px;
+  font-weight: 900;
+}
+
+.route-contract-head em {
+  color: rgba(183, 201, 216, 0.66);
+  font-size: 10px;
+  font-style: normal;
+  font-weight: 800;
+  text-align: right;
+}
+
+.route-contract-card {
+  position: relative;
+  min-width: 0;
+  min-height: 72px;
+  padding: 10px 11px 12px;
+  overflow: hidden;
+  border: 1px solid rgba(118, 215, 255, 0.15);
+  border-radius: 7px;
+  background: rgba(118, 215, 255, 0.045);
+  color: rgba(248, 251, 255, 0.84);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.route-contract-card:hover {
+  border-color: rgba(247, 198, 93, 0.34);
+  background: rgba(247, 198, 93, 0.1);
+}
+
+.route-contract-card.active {
+  border-color: rgba(143, 227, 155, 0.36);
+  background: rgba(143, 227, 155, 0.1);
+  box-shadow: inset 0 0 0 1px rgba(143, 227, 155, 0.12);
+}
+
+.route-contract-card.done {
+  border-color: rgba(247, 198, 93, 0.3);
+  background:
+    linear-gradient(90deg, rgba(247, 198, 93, 0.12), rgba(143, 227, 155, 0.065)),
+    rgba(255, 255, 255, 0.035);
+}
+
+.route-contract-card.interrupted {
+  border-color: rgba(255, 122, 156, 0.32);
+  background:
+    linear-gradient(90deg, rgba(255, 122, 156, 0.11), rgba(247, 198, 93, 0.055)),
+    rgba(255, 255, 255, 0.032);
+}
+
+.route-contract-card strong,
+.route-contract-card em,
+.route-contract-card small {
+  display: block;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.route-resume-badge {
+  display: inline-flex;
+  max-width: 100%;
+  margin-bottom: 5px;
+  padding: 3px 6px;
+  border: 1px solid rgba(255, 240, 160, 0.26);
+  border-radius: 5px;
+  background: rgba(255, 240, 160, 0.12);
+  color: rgba(255, 240, 160, 0.94);
+  font-size: 9.5px;
+  font-weight: 950;
+  line-height: 1;
+  overflow-wrap: anywhere;
+}
+
+.route-contract-card strong {
+  color: #f8fbff;
+  font-size: 13px;
+  line-height: 1.2;
+}
+
+.route-contract-card em {
+  margin-top: 2px;
+  color: rgba(255, 240, 160, 0.82);
+  font-size: 10px;
+  font-style: normal;
+  font-weight: 900;
+  line-height: 1.2;
+}
+
+.route-contract-card small {
+  margin-top: 4px;
+  color: rgba(183, 201, 216, 0.72);
+  font-size: 10px;
+  font-weight: 800;
+  line-height: 1.25;
+}
+
+.feel-lab {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 7px;
+  margin: 0 0 10px;
+}
+
+.feel-lab-head {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 0 1px;
+}
+
+.feel-lab-head span {
+  color: rgba(248, 251, 255, 0.88);
+  font-size: 12.5px;
+  font-weight: 900;
+}
+
+.feel-lab-head em {
+  color: rgba(183, 201, 216, 0.66);
+  font-size: 10px;
+  font-style: normal;
+  font-weight: 800;
+  text-align: right;
+}
+
+.feel-card {
+  position: relative;
+  min-width: 0;
+  min-height: 82px;
+  padding: 9px 10px 13px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 240, 160, 0.16);
+  border-radius: 7px;
+  background: rgba(255, 240, 160, 0.04);
+  color: rgba(248, 251, 255, 0.84);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.feel-card:hover {
+  border-color: rgba(118, 215, 255, 0.34);
+  background: rgba(118, 215, 255, 0.1);
+}
+
+.feel-card.active {
+  border-color: rgba(118, 215, 255, 0.42);
+  background:
+    linear-gradient(90deg, rgba(118, 215, 255, 0.13), rgba(255, 240, 160, 0.055)),
+    rgba(255, 255, 255, 0.035);
+  box-shadow: inset 0 0 0 1px rgba(118, 215, 255, 0.12);
+}
+
+.feel-card.recent {
+  border-color: rgba(143, 227, 155, 0.34);
+  background:
+    linear-gradient(90deg, rgba(143, 227, 155, 0.11), rgba(118, 215, 255, 0.055)),
+    rgba(255, 255, 255, 0.035);
+}
+
+.feel-card.interrupted {
+  border-color: rgba(255, 122, 156, 0.3);
+  background:
+    linear-gradient(90deg, rgba(255, 122, 156, 0.105), rgba(255, 240, 160, 0.045)),
+    rgba(255, 255, 255, 0.03);
+}
+
+.feel-card strong,
+.feel-card em,
+.feel-card small {
+  display: block;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.feel-card strong {
+  color: #f8fbff;
+  font-size: 11px;
+  line-height: 1.2;
+}
+
+.feel-card em {
+  margin-top: 3px;
+  color: rgba(255, 240, 160, 0.78);
+  font-size: 9.5px;
+  font-style: normal;
+  font-weight: 900;
+  line-height: 1.2;
+}
+
+.feel-card small {
+  margin-top: 4px;
+  color: rgba(183, 201, 216, 0.72);
+  font-size: 9.5px;
+  font-weight: 800;
+  line-height: 1.25;
+}
+
+.feel-card i {
+  position: absolute;
+  right: 10px;
+  bottom: 7px;
+  left: 10px;
+  height: 3px;
+  overflow: hidden;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.feel-card i::after {
+  display: block;
+  width: var(--feel-progress, 0%);
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, rgba(255, 240, 160, 0.92), rgba(118, 215, 255, 0.92));
+  content: "";
+}
+
 .settings-head strong,
 .control-row span,
 .coach-row span {
@@ -870,6 +1303,16 @@ canvas:focus {
 
 .profile-grid {
   grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.storage-note {
+  display: block;
+  margin-top: 8px;
+  color: rgba(255, 240, 160, 0.78);
+  font-size: 10.5px;
+  font-weight: 800;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
 }
 
 .practice-queue {
@@ -1557,6 +2000,10 @@ canvas:focus {
   background: rgba(118, 215, 255, 0.18);
 }
 
+.resume-start.hidden {
+  display: none;
+}
+
 .load-strip {
   width: min(460px, 100%);
   height: 22px;
@@ -1624,11 +2071,23 @@ canvas:focus {
   text-align: left;
 }
 
+.review-card.primary {
+  border-color: rgba(143, 227, 155, 0.25);
+  background:
+    linear-gradient(90deg, rgba(143, 227, 155, 0.1), rgba(118, 215, 255, 0.055)),
+    rgba(7, 12, 20, 0.62);
+}
+
+.review-card.secondary {
+  background: rgba(7, 12, 20, 0.54);
+}
+
 .review-grid span {
   display: block;
   color: rgba(143, 227, 155, 0.86);
   font-size: 11px;
   font-weight: 900;
+  overflow-wrap: anywhere;
 }
 
 .review-grid strong {
@@ -1637,6 +2096,7 @@ canvas:focus {
   color: #f8fbff;
   font-size: 13px;
   line-height: 1.25;
+  overflow-wrap: anywhere;
 }
 
 .review-grid p {
@@ -1646,6 +2106,7 @@ canvas:focus {
   font-size: 11px;
   line-height: 1.35;
   text-align: left;
+  overflow-wrap: anywhere;
 }
 
 .review-roadmap {
@@ -1730,6 +2191,7 @@ canvas:focus {
 .roadmap-state b,
 .roadmap-state em {
   display: block;
+  overflow-wrap: anywhere;
 }
 
 .roadmap-main strong {
@@ -1740,14 +2202,12 @@ canvas:focus {
 
 .roadmap-main em {
   margin-top: 3px;
-  overflow: hidden;
   color: rgba(248, 251, 255, 0.66);
   font-size: 10px;
   font-style: normal;
   font-weight: 800;
   line-height: 1.25;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  white-space: normal;
 }
 
 .roadmap-state b {
@@ -1776,7 +2236,9 @@ canvas:focus {
   font-size: 10px;
   font-weight: 900;
   text-align: center;
-  white-space: nowrap;
+  line-height: 1.15;
+  white-space: normal;
+  overflow-wrap: anywhere;
 }
 
 .overlay .review-advice {
@@ -1795,8 +2257,8 @@ canvas:focus {
 
 .review-button {
   min-width: 116px;
-  height: 34px;
-  padding: 0 13px;
+  min-height: 34px;
+  padding: 7px 13px;
   border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: 4px;
   background: rgba(255, 255, 255, 0.08);
@@ -1804,6 +2266,8 @@ canvas:focus {
   font: inherit;
   font-size: 12px;
   font-weight: 900;
+  line-height: 1.15;
+  overflow-wrap: anywhere;
   cursor: pointer;
 }
 
@@ -1855,8 +2319,8 @@ canvas:focus {
 }
 
 .touch button {
-  width: 48px;
-  height: 48px;
+  width: var(--touch-size, 48px);
+  height: var(--touch-size, 48px);
   border: 1px solid rgba(255, 255, 255, 0.23);
   border-radius: 8px;
   background: rgba(8, 13, 22, 0.48);
@@ -1874,16 +2338,166 @@ canvas:focus {
   border-color: rgba(255, 255, 255, 0.55);
 }
 
+/* P17 visual simplification: quiet grouped settings, lower blue glow, fewer competing cards. */
+.settings-panel .chapter-overview,
+.settings-panel .practice-report,
+.settings-panel .profile-summary,
+.settings-panel .challenge-board,
+.settings-panel .practice-ledger,
+.settings-panel .practice-plan,
+.settings-panel .route-contracts,
+.settings-panel .feel-lab,
+.settings-panel .practice-queue {
+  margin: 0;
+}
+
+.settings-panel .chapter-overview,
+.settings-panel .practice-report,
+.settings-panel .profile-summary,
+.settings-panel .challenge-card,
+.settings-panel .queue-card,
+.settings-panel .ledger-row,
+.settings-panel .plan-step,
+.settings-panel .route-contract-card,
+.settings-panel .feel-card,
+.settings-panel .room-brief,
+.settings-panel .coach-row {
+  border-color: rgba(255, 255, 255, 0.09);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.055), rgba(255, 255, 255, 0.032)),
+    rgba(0, 0, 0, 0.14);
+  box-shadow: none;
+}
+
+.settings-panel .route-contract-card.active,
+.settings-panel .feel-card.active,
+.settings-panel .plan-step:hover,
+.settings-panel .queue-card:hover,
+.settings-panel .ledger-row:hover {
+  border-color: rgba(232, 196, 106, 0.34);
+  background:
+    linear-gradient(180deg, rgba(232, 196, 106, 0.11), rgba(255, 255, 255, 0.035)),
+    rgba(0, 0, 0, 0.12);
+}
+
+.settings-panel .route-contract-card.done,
+.settings-panel .feel-card.recent,
+.settings-panel .challenge-card.done {
+  border-color: rgba(143, 209, 154, 0.28);
+  background: rgba(143, 209, 154, 0.075);
+}
+
+.settings-panel .route-contract-card.interrupted,
+.settings-panel .feel-card.interrupted {
+  border-color: rgba(255, 198, 106, 0.3);
+  background: rgba(232, 196, 106, 0.075);
+}
+
+.settings-panel .control-row {
+  min-height: 36px;
+  padding: 7px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.settings-panel .control-row:last-child {
+  border-bottom: 0;
+}
+
+.settings-panel .control-row select,
+.settings-panel .control-row input[type="range"] {
+  width: 120px;
+}
+
+.settings-panel .focus-button,
+.settings-panel .variant-button {
+  border-radius: 6px;
+  box-shadow: none;
+}
+
+.settings-section-title {
+  margin: 2px 0 0;
+  padding: 3px 1px;
+  color: rgba(185, 180, 170, 0.72);
+  font-size: 10.5px;
+}
+
+.practice-priority {
+  min-height: 78px;
+  margin-bottom: 9px;
+  padding: 12px 13px 15px;
+  border-color: rgba(232, 196, 106, 0.24);
+  background:
+    linear-gradient(135deg, rgba(232, 196, 106, 0.12), rgba(143, 209, 154, 0.06)),
+    rgba(255, 255, 255, 0.05);
+  box-shadow: none;
+}
+
+.practice-priority:hover {
+  border-color: rgba(232, 196, 106, 0.38);
+  background:
+    linear-gradient(135deg, rgba(232, 196, 106, 0.16), rgba(143, 209, 154, 0.08)),
+    rgba(255, 255, 255, 0.065);
+}
+
+.practice-priority strong {
+  color: var(--ink);
+  font-size: 16px;
+}
+
+.start-panel {
+  gap: 12px;
+  border-color: rgba(255, 255, 255, 0.12);
+  background:
+    linear-gradient(180deg, rgba(26, 26, 27, 0.76), rgba(13, 13, 14, 0.62)),
+    rgba(18, 18, 19, 0.7);
+  backdrop-filter: blur(16px) saturate(1.08);
+  box-shadow: 0 22px 60px rgba(0, 0, 0, 0.32);
+}
+
+.start-copy {
+  max-width: 420px;
+  color: rgba(247, 245, 240, 0.72);
+}
+
+.start-guide {
+  grid-template-columns: repeat(4, minmax(0, auto));
+  gap: 7px;
+}
+
+.start-guide span {
+  min-height: 32px;
+  padding: 7px 9px;
+  border-color: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.055);
+}
+
+.game-tip {
+  width: min(420px, calc(100% - 56px));
+  min-height: 46px;
+  padding: 8px 12px 12px;
+  border-color: rgba(255, 255, 255, 0.14);
+  background: linear-gradient(180deg, rgba(22, 22, 23, 0.9), rgba(12, 12, 13, 0.78));
+  box-shadow: 0 14px 32px rgba(0, 0, 0, 0.24);
+}
+
+.game-tip strong {
+  font-size: 14px;
+}
+
+.game-tip em {
+  font-size: 11px;
+}
+
 @media (max-width: 760px) {
   .shell {
     padding: 0;
   }
 
   .stage {
-    width: min(100vw, calc(100vh * 1.7647));
+    width: min(100vw, calc(100dvh * 1.7647));
     height: auto;
     max-width: none;
-    max-height: 100vh;
+    max-height: 100dvh;
     aspect-ratio: 960 / 544;
     border: 0;
     border-radius: 0;
@@ -1911,8 +2525,8 @@ canvas:focus {
     left: 12px;
     top: 58px;
     width: auto;
-    max-height: calc(100% - 78px);
-    padding: 11px;
+    max-height: calc(100dvh - 78px);
+    padding: 11px 11px calc(11px + env(safe-area-inset-bottom, 0px));
   }
 
   .settings-body {
@@ -2000,6 +2614,26 @@ canvas:focus {
     gap: 5px;
   }
 
+  .route-contract-card,
+  .feel-card {
+    min-height: 66px;
+    padding: 8px 9px 12px;
+  }
+
+  .feel-lab {
+    grid-template-columns: 1fr;
+    gap: 5px;
+  }
+
+  .feel-card strong {
+    font-size: 10.5px;
+  }
+
+  .feel-card em,
+  .feel-card small {
+    font-size: 9px;
+  }
+
   .plan-step {
     grid-template-columns: 30px minmax(0, 1fr);
     min-height: 68px;
@@ -2073,6 +2707,14 @@ canvas:focus {
     grid-template-columns: 1fr;
   }
 
+  .review-grid article {
+    padding: 9px 10px;
+  }
+
+  .review-card.secondary {
+    border-color: rgba(255, 255, 255, 0.1);
+  }
+
   .roadmap-head em {
     display: none;
   }
@@ -2089,7 +2731,10 @@ canvas:focus {
 
   .roadmap-action {
     padding: 5px 6px;
-    font-size: 9px;
+    font-size: 10px;
+    line-height: 1.12;
+    white-space: normal;
+    overflow-wrap: anywhere;
   }
 
   .overlay h1 {
@@ -2105,6 +2750,10 @@ canvas:focus {
   .start-guide {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+}
+
+.stage.low-performance .touch button {
+  background: rgba(8, 13, 22, 0.62);
 }
 
 @media (pointer: coarse) {
@@ -2174,6 +2823,7 @@ canvas:focus {
   }
 
   .settings-panel {
-    max-height: calc(100vh - 70px);
+    max-height: calc(100dvh - 70px);
+    padding-bottom: calc(11px + env(safe-area-inset-bottom, 0px));
   }
 }

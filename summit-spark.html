@@ -3,10 +3,10 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="build-version" content="20260603-p2">
+  <meta name="build-version" content="20260605-p17">
   <title>山巅微光</title>
   <link rel="icon" href="data:,">
-  <link rel="stylesheet" href="summit-spark.css?v=20260603-p2">
+  <link rel="stylesheet" href="summit-spark.css?v=20260605-p17">
 </head>
 <body>
   <main class="shell" aria-label="山巅微光游戏">
@@ -60,71 +60,164 @@
               <em>读取训练建议</em>
               <i class="priority-meter" aria-hidden="true"></i>
             </button>
-            <div class="chapter-overview" id="chapterOverview" aria-label="章节完成度"></div>
-            <div class="practice-plan" id="practicePlan" aria-label="训练计划"></div>
-            <div class="settings-section-title">连续训练</div>
-            <div class="practice-queue" id="practiceQueue" aria-label="Practice queue"></div>
-            <div class="challenge-board" id="challengeBoard" aria-label="长期挑战"></div>
+            <details class="settings-group settings-group-training" open>
+              <summary><span>训练</span><em>路线与手感</em></summary>
+              <div class="settings-group-body">
+                <div class="chapter-overview" id="chapterOverview" aria-label="章节完成度"></div>
+                <div class="practice-plan" id="practicePlan" aria-label="训练计划"></div>
+                <div class="route-contracts" id="routeContracts" aria-label="航线合同"></div>
+                <div class="feel-lab" id="feelLab" aria-label="手感校准"></div>
+              </div>
+            </details>
+            <details class="settings-group settings-group-advanced">
+              <summary><span>进阶</span><em>队列与挑战</em></summary>
+              <div class="settings-group-body">
+                <div class="settings-section-title">连续训练</div>
+                <div class="practice-queue" id="practiceQueue" aria-label="Practice queue"></div>
+                <div class="challenge-board" id="challengeBoard" aria-label="长期挑战"></div>
+              </div>
+            </details>
           </div>
           <div class="settings-column settings-column-side">
-            <div class="settings-section-title">房间与合同</div>
-            <label class="control-row control-row-room">
-              <span>&#25151;&#38388;</span>
-              <select id="roomSelect"></select>
-            </label>
-            <div class="room-brief" id="roomBrief">R1 房间目标</div>
-            <div class="drill-variants" aria-label="Drill variants">
-              <button class="variant-button" id="drillCleanButton" type="button">Clean</button>
-              <button class="variant-button" id="drillPaceButton" type="button">Pace</button>
-              <button class="variant-button" id="drillStyleButton" type="button">Style</button>
-              <button class="variant-button" id="drillExpertButton" type="button">Expert</button>
-            </div>
-            <div class="coach-row">
-              <span id="coachSummary">R1 Drill</span>
-              <div class="coach-actions">
-                <button class="focus-button" id="focusRoomButton" type="button">R1 Drill</button>
-                <button class="focus-button ghost" id="focusResetButton" type="button">Reset</button>
+            <details class="settings-group settings-group-room" open>
+              <summary><span>房间</span><em>Drill 与合同</em></summary>
+              <div class="settings-group-body">
+                <label class="control-row control-row-room">
+                  <span>&#25151;&#38388;</span>
+                  <select id="roomSelect"></select>
+                </label>
+                <div class="room-brief" id="roomBrief">R1 房间目标</div>
+                <div class="drill-variants" aria-label="Drill variants">
+                  <button class="variant-button" id="drillCleanButton" type="button">Clean</button>
+                  <button class="variant-button" id="drillPaceButton" type="button">Pace</button>
+                  <button class="variant-button" id="drillStyleButton" type="button">Style</button>
+                  <button class="variant-button" id="drillExpertButton" type="button">Expert</button>
+                </div>
+                <div class="coach-row">
+                  <span id="coachSummary">R1 Drill</span>
+                  <div class="coach-actions">
+                    <button class="focus-button" id="focusRoomButton" type="button">R1 Drill</button>
+                    <button class="focus-button ghost" id="focusResetButton" type="button">Reset</button>
+                  </div>
+                </div>
               </div>
-            </div>
-            <div class="settings-section-title">画面与控制</div>
-            <label class="control-row">
-              <span>&#38663;&#21160;</span>
-              <input id="shakeSlider" type="range" min="0" max="1" step="0.05" value="0">
-            </label>
-            <label class="control-row">
-              <span>&#35843;&#35797;</span>
-              <input id="debugToggle" type="checkbox">
-            </label>
-            <label class="control-row">
-              <span>&#26580;&#21644;&#29305;&#25928;</span>
-              <input id="calmEffectsToggle" type="checkbox" checked>
-            </label>
-            <label class="control-row">
-              <span>&#32451;&#20064;&#32447;</span>
-              <input id="practiceLinesToggle" type="checkbox" checked>
-            </label>
-            <label class="control-row">
-              <span>&#24433;&#23376;</span>
-              <input id="ghostOpacitySlider" type="range" min="0.2" max="1" step="0.05" value="0.75">
-            </label>
-            <label class="control-row">
-              <span>&#38190;&#20301;</span>
-              <select id="controlPreset">
-                <option value="comfort">&#33298;&#36866;</option>
-                <option value="classic">&#32463;&#20856;</option>
-              </select>
-            </label>
-            <label class="control-row">
-              <span>抓墙</span>
-              <select id="grabMode">
-                <option value="hold">按住</option>
-                <option value="toggle">切换</option>
-              </select>
-            </label>
-            <div class="settings-section-title">&#22797;&#30424;</div>
-            <div class="practice-report" id="practiceReport">无失误 0/10 / 分段损失 无 / 下个 Drill R1</div>
-            <div class="profile-summary" id="profileSummary" aria-label="长期档案"></div>
-            <div class="practice-ledger" id="practiceLedger" aria-label="Room mastery ledger"></div>
+            </details>
+            <details class="settings-group settings-group-controls">
+              <summary><span>控制</span><em>手柄、声音、显示</em></summary>
+              <div class="settings-group-body">
+                <label class="control-row">
+                  <span>&#38663;&#21160;</span>
+                  <input id="shakeSlider" type="range" min="0" max="1" step="0.05" value="0">
+                </label>
+                <label class="control-row">
+                  <span>&#35843;&#35797;</span>
+                  <input id="debugToggle" type="checkbox">
+                </label>
+                <label class="control-row">
+                  <span>&#26580;&#21644;&#29305;&#25928;</span>
+                  <input id="calmEffectsToggle" type="checkbox" checked>
+                </label>
+                <label class="control-row">
+                  <span>低性能</span>
+                  <input id="lowPerformanceToggle" type="checkbox">
+                </label>
+                <label class="control-row">
+                  <span>&#32451;&#20064;&#32447;</span>
+                  <input id="practiceLinesToggle" type="checkbox" checked>
+                </label>
+                <label class="control-row">
+                  <span>&#24433;&#23376;</span>
+                  <input id="ghostOpacitySlider" type="range" min="0.2" max="1" step="0.05" value="0.75">
+                </label>
+                <label class="control-row">
+                  <span>声音</span>
+                  <input id="audioToggle" type="checkbox" checked>
+                </label>
+                <label class="control-row">
+                  <span>音量</span>
+                  <input id="audioVolumeSlider" type="range" min="0" max="1" step="0.05" value="0.35">
+                </label>
+                <div class="control-row">
+                  <span>试听</span>
+                  <button class="focus-button ghost" id="audioTestButton" type="button">播放</button>
+                </div>
+                <label class="control-row">
+                  <span>&#38190;&#20301;</span>
+                  <select id="controlPreset">
+                    <option value="comfort">&#33298;&#36866;</option>
+                    <option value="classic">&#32463;&#20856;</option>
+                  </select>
+                </label>
+                <label class="control-row">
+                  <span>抓墙</span>
+                  <select id="grabMode">
+                    <option value="hold">按住</option>
+                    <option value="toggle">切换</option>
+                  </select>
+                </label>
+                <label class="control-row">
+                  <span>手柄死区</span>
+                  <input id="gamepadDeadzoneSlider" type="range" min="0.12" max="0.45" step="0.01" value="0.28">
+                </label>
+                <div class="control-row gamepad-status-row">
+                  <span>手柄状态</span>
+                  <output id="gamepadStatus">未检测</output>
+                </div>
+                <label class="control-row">
+                  <span>触控大小</span>
+                  <input id="touchSizeSlider" type="range" min="44" max="64" step="2" value="48">
+                </label>
+              </div>
+            </details>
+            <details class="settings-group settings-group-feedback">
+              <summary><span>反馈</span><em>诊断与存档</em></summary>
+              <div class="settings-group-body">
+                <label class="control-row">
+                  <span>反馈类型</span>
+                  <select id="feedbackType">
+                    <option value="route">路线摩擦</option>
+                    <option value="feel">输入手感</option>
+                    <option value="mobile">移动端</option>
+                    <option value="audio">音频</option>
+                    <option value="storage">存档</option>
+                    <option value="other">其他</option>
+                  </select>
+                </label>
+                <label class="feedback-box">
+                  <span>反馈备注</span>
+                  <textarea id="feedbackNote" maxlength="240" rows="2" placeholder="R7 风场和脆冰同时出现时看不清"></textarea>
+                </label>
+                <div class="control-row">
+                  <span>诊断</span>
+                  <button class="focus-button ghost" id="diagnosticsButton" type="button">复制</button>
+                </div>
+                <div class="control-row">
+                  <span>反馈模板</span>
+                  <button class="focus-button ghost" id="feedbackTemplateButton" type="button">复制</button>
+                </div>
+                <div class="control-row storage-actions">
+                  <span>存档</span>
+                  <div class="compact-actions">
+                    <button class="focus-button ghost" id="saveExportButton" type="button">复制</button>
+                    <button class="focus-button ghost" id="saveDownloadButton" type="button">下载</button>
+                    <button class="focus-button ghost" id="saveImportButton" type="button">导入</button>
+                  </div>
+                </div>
+                <label class="feedback-box save-import-box">
+                  <span>导入 JSON</span>
+                  <textarea id="saveImportText" maxlength="240000" rows="2" placeholder="粘贴 summit-spark-save JSON"></textarea>
+                </label>
+                <div class="save-import-status" id="saveImportStatus" aria-live="polite">等待存档 JSON</div>
+              </div>
+            </details>
+            <details class="settings-group settings-group-profile">
+              <summary><span>档案</span><em>复盘与掌握</em></summary>
+              <div class="settings-group-body">
+                <div class="practice-report" id="practiceReport">无失误 0/10 / 分段损失 无 / 下个 Drill R1</div>
+                <div class="profile-summary" id="profileSummary" aria-label="长期档案"></div>
+                <div class="practice-ledger" id="practiceLedger" aria-label="Room mastery ledger"></div>
+              </div>
+            </details>
           </div>
         </div>
       </section>
@@ -133,15 +226,16 @@
         <div class="start-panel" id="startPanel">
           <span class="start-eyebrow" id="startReadiness">准备游戏</span>
           <h1>山巅微光</h1>
-          <p class="start-copy">读路线、练合同、把每一次失败转成下一次更清楚的尝试。</p>
+          <p class="start-copy">冲刺、攀墙、收集微光。</p>
           <div class="start-guide" aria-label="基础操作">
-            <span><b>移动</b>A / D</span>
-            <span><b>跳跃</b>Space</span>
-            <span><b>冲刺</b>X / Shift</span>
-            <span><b>抓墙</b>Z / Ctrl</span>
+            <span><b>Move</b>A/D</span>
+            <span><b>Jump</b>Space</span>
+            <span><b>Dash</b>X</span>
+            <span><b>Grab</b>Z</span>
           </div>
           <div class="start-actions">
             <button class="primary" id="startButton" type="button">开始奔跑</button>
+            <button class="secondary-start resume-start hidden" id="resumeTrainingButton" type="button" aria-hidden="true">继续训练</button>
             <button class="secondary-start" id="openTrainingButton" type="button">先看训练</button>
           </div>
           <div class="load-strip" aria-hidden="true"><span id="loadStatus">正在准备训练数据</span></div>
@@ -168,6 +262,6 @@
     </section>
   </main>
 
-  <script src="summit-spark.js?v=20260603-p2"></script>
+  <script src="summit-spark.js?v=20260605-p17"></script>
 </body>
 </html>

@@ -1,0 +1,68 @@
+# Playtest Checklist
+
+This checklist is for one focused manual pass after `npm run check` and `npm run browser-smoke` pass. It catches real-use issues that scripts cannot prove: route readability, friction, input trust, and whether the training cockpit actually helps a player recover.
+
+## Setup
+
+1. Open the local page from `npm start`.
+2. Confirm the start screen shows build `20260605-p17` in page markup if inspected.
+3. Use a clean browser profile for first-run checks, then repeat with an existing profile that has training progress.
+4. Keep audio on for one pass and off for one pass.
+5. Test desktop keyboard first; test touch and a physical gamepad when devices are available.
+
+## First Three Minutes
+
+- Start from a clean profile and do not open settings first.
+- Verify the first-room guide appears in short, readable steps and does not overlap the HUD.
+- Die once to spikes and once by falling; the next-action prompt should be short and actionable.
+- Press `O`, open settings, press `Escape`, and return to play without stuck movement.
+- Confirm settings first opens with only Training and Room expanded; Control, Feedback, and Profile sections should be reachable but not visually competing.
+- Start a recommended Drill from the training cockpit and confirm the goal is clear before moving.
+
+## Ten-Room Route Pass
+
+For each room, record `pass`, `friction`, or `blocked`.
+
+| Room | Must Be Readable | Manual Check |
+| --- | --- | --- |
+| R1 | basic jump, dash, safe landing | First clear should not require menu knowledge. |
+| R2 | relay timing and recovery | Light relay should read as a reset, not a platform. |
+| R3 | spring height and late dash | Spring route should be visible before committing. |
+| R4 | relay chain under hazard pressure | Safe line and faster chain should both be understandable. |
+| R5 | foldback route memory | Wall Spark line should look optional, not mandatory. |
+| R6 | spring plus relay exit rhythm | Exit should feel like a rhythm reset, not a surprise. |
+| R7 | wind plus crumble introduction | Crumble warning and wind lift must be readable together. |
+| R8 | prism route choice | Overdrive route should not obscure crumble hazards. |
+| R9 | echo anchor, wind, prism | Recall route should reduce practice friction. |
+| R10 | full-kit finale | Finale should feel pressured but fair after R1-R9. |
+
+## Training And Recovery
+
+- Start one Route contract, interrupt it with a different Drill, reopen settings, and resume from the visible interrupted card.
+- Start one Feel Lab card, interrupt it with a different Drill, reopen settings, and confirm the card says it was interrupted.
+- Finish or fail at least one Clean/Pace/Style/Expert Drill and confirm retry/review text names the missing condition.
+- Use the direct resume button from the start screen after creating progress; it should enter a useful recommended Drill.
+- Choose a feedback type, write a short note, then click `诊断 / 复制`; keep the local snapshot with the note. It should not upload anything by itself.
+- Click `反馈模板 / 复制` and confirm the pasted text has enough context for a tester to file a useful issue without copying raw input history.
+- Export a `summit-spark-save` JSON, paste a broken JSON once and confirm the preview reports an error without refreshing, then import it in another profile and confirm low-performance, touch size, Focus stats, best flow, and room bests survive.
+- Corrupt or clear storage only after saving a copy of the browser profile; the app should keep running and explain repair once.
+
+## Mobile And Comfort
+
+- At around 390x700, the start screen must show title, controls, start, resume when present, and training entry without horizontal scroll.
+- At around 700x390, settings must scroll vertically and keep Route, Feel, audio, low performance, touch size, and gamepad deadzone reachable.
+- Confirm collapsed setting groups are easy to scan and do not hide the primary start/Drill path from a new player.
+- Confirm the hand-held/mobile view has no horizontal scroll after opening feedback, save import, Route cards, and Feel Lab sections.
+- Increase touch size to 64 and confirm touch controls grow without covering critical HUD text.
+- Enable low-performance mode and confirm hazards, route compass, Drill HUD, and failure arrows remain readable.
+- If a physical gamepad is available, verify the settings panel reports a connected standard mapping without exposing the controller name.
+
+## Exit Criteria
+
+The build is ready for a public demo only when:
+
+- No room is `blocked`.
+- Any `friction` note has a concrete follow-up in `KNOWN_ISSUES.md` or the next plan.
+- Keyboard-only settings access works.
+- One Route interruption/resume and one Feel interruption path work manually.
+- Mobile portrait and landscape checks have no horizontal overflow.

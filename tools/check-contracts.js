@@ -17,6 +17,12 @@ const directionPath = path.join(root, "DEVELOPMENT_DIRECTION.md");
 const developmentDirection = fs.existsSync(directionPath) ? fs.readFileSync(directionPath, "utf8") : "";
 const longTermPath = path.join(root, "LONG_TERM_OPTIMIZATION_OUTLINE.md");
 const longTermPlan = fs.existsSync(longTermPath) ? fs.readFileSync(longTermPath, "utf8") : "";
+const releaseChecklistPath = path.join(root, "RELEASE_CHECKLIST.md");
+const releaseChecklist = fs.existsSync(releaseChecklistPath) ? fs.readFileSync(releaseChecklistPath, "utf8") : "";
+const playtestPath = path.join(root, "PLAYTEST_CHECKLIST.md");
+const playtestChecklist = fs.existsSync(playtestPath) ? fs.readFileSync(playtestPath, "utf8") : "";
+const knownIssuesPath = path.join(root, "KNOWN_ISSUES.md");
+const knownIssues = fs.existsSync(knownIssuesPath) ? fs.readFileSync(knownIssuesPath, "utf8") : "";
 const errors = [];
 
 function extractArray(name) {
@@ -127,7 +133,7 @@ routeLines.forEach((lines, index) => {
   });
 });
 const styleKinds = new Set();
-const allowedStyleTech = new Set(["spark", "relay", "relayChain", "spring", "updraft", "prism", "echo", "recall", "crumble"]);
+const allowedStyleTech = new Set(["spark", "wallSpark", "prismSpark", "relay", "relayChain", "spring", "updraft", "prism", "echo", "recall", "crumble"]);
 styleTrials.forEach((trial, index) => {
   if (!trial || typeof trial !== "object") errors.push("room " + (index + 1) + " style trial must be an object");
   if (isTooShortText(trial?.label, 7, 2)) errors.push("room " + (index + 1) + " style label is too short");
@@ -155,10 +161,10 @@ if (indexHtml !== standaloneHtml) errors.push("index.html and summit-spark.html 
 const requiredIds = [
   "game", "startButton", "overlay", "lumenCount", "roomCount", "splitTime", "splitDelta",
   "flowCount", "runTime", "deathCount", "debugPanel", "settingsButton", "settingsPanel",
-  "settingsClose", "shakeSlider", "debugToggle", "calmEffectsToggle", "practiceLinesToggle",
-  "ghostOpacitySlider", "controlPreset", "grabMode", "roomSelect", "practicePriority", "focusRoomButton", "focusResetButton", "coachSummary",
-  "roomBrief", "practiceReport", "chapterOverview", "practicePlan", "practiceQueue", "challengeBoard", "profileSummary", "practiceLedger", "drillCleanButton", "drillPaceButton", "drillStyleButton", "drillExpertButton",
-  "startReadiness", "loadStatus", "bootFallback", "openTrainingButton", "gameStatus", "gameTip", "gameTipTitle", "gameTipDetail"
+  "settingsClose", "shakeSlider", "debugToggle", "calmEffectsToggle", "lowPerformanceToggle", "practiceLinesToggle",
+  "ghostOpacitySlider", "audioToggle", "audioVolumeSlider", "audioTestButton", "feedbackType", "feedbackNote", "diagnosticsButton", "feedbackTemplateButton", "controlPreset", "grabMode", "gamepadDeadzoneSlider", "gamepadStatus", "touchSizeSlider", "saveExportButton", "saveDownloadButton", "saveImportButton", "saveImportText", "saveImportStatus", "roomSelect", "practicePriority", "focusRoomButton", "focusResetButton", "coachSummary",
+  "roomBrief", "practiceReport", "chapterOverview", "practicePlan", "routeContracts", "feelLab", "practiceQueue", "challengeBoard", "profileSummary", "practiceLedger", "drillCleanButton", "drillPaceButton", "drillStyleButton", "drillExpertButton",
+  "startReadiness", "loadStatus", "bootFallback", "openTrainingButton", "resumeTrainingButton", "gameStatus", "gameTip", "gameTipTitle", "gameTipDetail"
 ];
 for (const id of requiredIds) {
   if (!hasId(indexHtml, id)) errors.push("index.html missing #" + id);
@@ -223,6 +229,68 @@ if (!js.includes("challengeBoardItems")) errors.push("challenge board item helpe
 if (!js.includes("updateChallengeBoard")) errors.push("settings panel should expose long-term challenges");
 if (!js.includes("updateProfileSummary")) errors.push("settings panel should expose the long-term profile");
 if (!js.includes("startSummitChallenge")) errors.push("full-run challenge start helper is missing");
+if (!js.includes("challengeStartsRun")) errors.push("full-run challenge cards should not fall back to room drills");
+if (!js.includes("activeChallengeState")) errors.push("active challenge state helper is missing");
+if (!js.includes("drawActiveChallengeHud")) errors.push("active challenge HUD is missing");
+if (!js.includes("activeChallengeReview")) errors.push("finish review should report the active challenge result");
+if (!js.includes("SOUND_PRESETS")) errors.push("sound presets are missing");
+if (!js.includes("unlockAudio")) errors.push("audio unlock helper is missing");
+if (!js.includes("playSound")) errors.push("audio feedback helper is missing");
+if (!js.includes("playAudioTestPattern")) errors.push("audio settings should expose a test pattern");
+if (!js.includes("buildDiagnosticsSnapshot")) errors.push("feedback diagnostics snapshot helper is missing");
+if (!js.includes("copyDiagnosticsSnapshot")) errors.push("feedback diagnostics copy helper is missing");
+if (!js.includes("feedbackDiagnostics")) errors.push("feedback diagnostics note helper is missing");
+if (!js.includes("buildFeedbackTemplate")) errors.push("feedback template helper is missing");
+if (!js.includes("copyFeedbackTemplate")) errors.push("feedback template copy helper is missing");
+if (!js.includes("SAVE_ARCHIVE_KIND")) errors.push("save archive kind guard is missing");
+if (!js.includes("buildSaveArchive")) errors.push("save archive export helper is missing");
+if (!js.includes("copySaveArchive")) errors.push("save archive copy helper is missing");
+if (!js.includes("downloadSaveArchiveAction")) errors.push("save archive download helper is missing");
+if (!js.includes("importSaveArchive")) errors.push("save archive import helper is missing");
+if (!js.includes("normalizeSaveArchiveText")) errors.push("save archive preview/import normalizer is missing");
+if (!js.includes("updateSaveImportPreview")) errors.push("save archive import preview helper is missing");
+if (!js.includes("writeNormalizedSaveArchive")) errors.push("save archive writer should be separated from preview normalization");
+if (!js.includes("__summitLastSaveArchive")) errors.push("browser smoke needs a save archive hook");
+if (!js.includes("gamepadDiagnostics")) errors.push("gamepad compatibility diagnostics helper is missing");
+if (!js.includes("updateGamepadStatusOutput")) errors.push("settings panel should show non-sensitive gamepad status");
+if (!js.includes("isSettingsTextEntryTarget")) errors.push("settings text-entry hotkey isolation helper is missing");
+if (!js.includes('"TEXTAREA"')) errors.push("settings input isolation must include textarea controls");
+if (!js.includes("__summitLastDiagnostics")) errors.push("browser smoke needs a diagnostics snapshot hook");
+if (!js.includes("No user identity, user agent, raw input history, replay path, or secrets.")) errors.push("diagnostics snapshot must state its privacy boundary");
+if (js.includes("navigator.userAgent")) errors.push("diagnostics snapshot must not collect user agent");
+if (!js.includes("ROUTE_CONTRACTS")) errors.push("route contract definitions are missing");
+if (!js.includes("updateRouteContracts")) errors.push("route contract settings surface is missing");
+if (!js.includes("advanceRouteContract")) errors.push("route contracts should auto-advance after Drill wins");
+if (!js.includes("activeRouteContractData")) errors.push("route contract active-state helper is missing");
+if (!js.includes("cancelActiveRouteContract")) errors.push("route contract interruption helper is missing");
+if (!js.includes("resumeRouteContract")) errors.push("route contract resume helper is missing");
+if (!js.includes("routeContractResumeStep")) errors.push("route contract resume step helper is missing");
+if (!js.includes("routeContractGeneration")) errors.push("route contract generation guard is missing");
+if (!js.includes("clearRouteContractStepTimer")) errors.push("route contract timer cleanup is missing");
+if (!js.includes("routeContractMatchesDrill")) errors.push("route retry should validate matching active contract state");
+if (!js.includes("routeContractHudDetail")) errors.push("active route contract should be visible in Drill HUD");
+if (!js.includes("routeContractSummaryText")) errors.push("route contracts should appear in practice reports and review");
+if (!js.includes("route-resume-badge")) errors.push("route resume card should expose an explicit continue badge");
+if (!js.includes("FEEL_REPLAY_FIXTURES")) errors.push("feel replay fixtures are missing");
+if (!js.includes("updateFeelLab")) errors.push("settings panel should expose a feel lab");
+if (!js.includes("startFeelFixture")) errors.push("feel lab cards should launch calibration drills");
+if (!js.includes("activeFeelFixture")) errors.push("feel lab active calibration state is missing");
+if (!js.includes("lastFeelFixtureResult")) errors.push("feel lab should preserve the last calibration result");
+if (!js.includes("completeActiveFeelFixture")) errors.push("feel lab should record successful calibration drills");
+if (!js.includes("cancelActiveFeelFixture")) errors.push("feel lab should record interrupted calibration drills");
+if (!js.includes("feelFixtureMatchesDrill")) errors.push("feel retry should validate matching active calibration state");
+if (!js.includes("normalizeRoomBests")) errors.push("room best storage normalization is missing");
+if (!js.includes("normalizeRoomPaths")) errors.push("room path storage normalization is missing");
+if (!js.includes("readStoredJson")) errors.push("storage read/repair helper is missing");
+if (!js.includes("finiteNonNegativeInt")) errors.push("finite storage integer normalizer is missing");
+if (!js.includes("strictBoolean")) errors.push("strict storage boolean normalizer is missing");
+if (!js.includes("storageHealthMessage")) errors.push("storage health feedback state is missing");
+if (!js.includes("maybeShowStorageRepairToast")) errors.push("storage repair should show a one-shot toast");
+if (!js.includes("wallSpark") || !js.includes("prismSpark")) errors.push("Spark variants are missing");
+if (!js.includes("drawFailureGhostLine")) errors.push("failure rehearsal ghost line is missing");
+if (!js.includes("drawFailureGhostArrow")) errors.push("failure rehearsal ghost line should show direction");
+if (!js.includes("triggerSparkVariantVisual")) errors.push("Wall/Prism Spark should keep distinct visual pulses");
+if (!js.includes("drawChapterResonance")) errors.push("chapter resonance environment feedback is missing");
 if (!js.includes("roomBriefText")) errors.push("room brief helper is missing");
 if (!js.includes("trackDrillStart")) errors.push("drill start tracker is missing");
 if (!js.includes("trackDrillClear")) errors.push("drill clear tracker is missing");
@@ -282,10 +350,25 @@ if (!indexHtml.includes('aria-expanded="false"')) errors.push("settings button m
 if (!indexHtml.includes('aria-label="设置"')) errors.push("settings button should have a localized accessible label");
 if (!indexHtml.includes('aria-live="polite"')) errors.push("game should expose live status text");
 if (!indexHtml.includes("settings-section-title")) errors.push("settings panel must group controls");
+if (!indexHtml.includes("settings-group-training") || !indexHtml.includes("settings-group-controls") || !indexHtml.includes("settings-group-feedback")) errors.push("settings panel must use grouped disclosure sections");
 if (!indexHtml.includes('id="practicePlan"')) errors.push("settings panel must include a practice plan surface");
-if (!indexHtml.includes('name="build-version" content="20260603-p2"')) errors.push("HTML should expose the current build version");
-if (!indexHtml.includes('summit-spark.css?v=20260603-p2')) errors.push("HTML should version the CSS asset for Pages freshness");
-if (!indexHtml.includes('summit-spark.js?v=20260603-p2')) errors.push("HTML should version the JS asset for Pages freshness");
+if (!indexHtml.includes('id="routeContracts"')) errors.push("settings panel must include route contracts");
+if (!indexHtml.includes('id="feelLab"')) errors.push("settings panel must include feel lab");
+if (!indexHtml.includes('id="audioTestButton"')) errors.push("settings panel must include an audio test button");
+if (!indexHtml.includes('id="feedbackType"')) errors.push("settings panel must include feedback type");
+if (!indexHtml.includes('id="feedbackNote"')) errors.push("settings panel must include feedback note textarea");
+if (!indexHtml.includes('id="diagnosticsButton"')) errors.push("settings panel must include a diagnostics copy button");
+if (!indexHtml.includes('id="feedbackTemplateButton"')) errors.push("settings panel must include a feedback template button");
+if (!indexHtml.includes('id="gamepadStatus"')) errors.push("settings panel must include non-sensitive gamepad status");
+if (!indexHtml.includes('id="saveExportButton"')) errors.push("settings panel must include save export copy");
+if (!indexHtml.includes('id="saveDownloadButton"')) errors.push("settings panel must include save archive download");
+if (!indexHtml.includes('id="saveImportButton"')) errors.push("settings panel must include save archive import");
+if (!indexHtml.includes('id="saveImportText"')) errors.push("settings panel must include save archive import text");
+if (!indexHtml.includes('id="saveImportStatus"')) errors.push("settings panel must include save archive import preview status");
+const buildVersion = (indexHtml.match(/name="build-version" content="([^"]+)"/) || [])[1] || "";
+if (!/^\d{8}-p\d+$/.test(buildVersion)) errors.push("HTML should expose the current YYYYMMDD-pN build version");
+if (buildVersion && !indexHtml.includes("summit-spark.css?v=" + buildVersion)) errors.push("HTML should version the CSS asset with the build version");
+if (buildVersion && !indexHtml.includes("summit-spark.js?v=" + buildVersion)) errors.push("HTML should version the JS asset with the build version");
 if (!indexHtml.includes("boot-noscript")) errors.push("start overlay should explain when JavaScript is disabled");
 if (!indexHtml.includes("settings-panel")) errors.push("settings panel shell is missing");
 if (!standaloneHtml.includes("settings-panel")) errors.push("standalone settings panel shell is missing");
@@ -295,6 +378,26 @@ if (!indexHtml.includes("drill-variants")) errors.push("settings panel must expo
 if (!css.includes("variant-button")) errors.push("drill variant styling is missing");
 if (!css.includes("plan-step")) errors.push("practice plan step styling is missing");
 if (!css.includes("plan-meter")) errors.push("practice plan progress styling is missing");
+if (!css.includes("route-contracts")) errors.push("route contract styling is missing");
+if (!css.includes("route-contract-card")) errors.push("route contract cards are missing");
+if (!css.includes("route-contract-card.done")) errors.push("route contract completion styling is missing");
+if (!css.includes("route-contract-card.interrupted")) errors.push("route contract resume/interruption styling is missing");
+if (!css.includes("feel-lab")) errors.push("feel lab styling is missing");
+if (!css.includes("feel-card")) errors.push("feel calibration cards are missing");
+if (!css.includes("feel-card.active")) errors.push("active feel calibration styling is missing");
+if (!css.includes("feel-card.recent")) errors.push("recent feel calibration styling is missing");
+if (!css.includes("feel-card.interrupted")) errors.push("interrupted feel calibration styling is missing");
+if (!css.includes("storage-note")) errors.push("storage health note styling is missing");
+if (!css.includes("game-tip.storage")) errors.push("storage health toast styling is missing");
+if (!css.includes("feedback-box")) errors.push("feedback note styling is missing");
+if (!css.includes("compact-actions")) errors.push("compact action button styling is missing");
+if (!css.includes("gamepad-status-row")) errors.push("gamepad status styling is missing");
+if (!css.includes("save-import-box")) errors.push("save import textarea styling is missing");
+if (!css.includes("save-import-status")) errors.push("save import preview status styling is missing");
+if (!css.includes("route-resume-badge")) errors.push("route resume badge styling is missing");
+if (!css.includes("review-card.primary")) errors.push("finish review primary card styling is missing");
+if (!css.includes("100dvh")) errors.push("mobile viewports should use dynamic viewport height");
+if (!css.includes("overflow-wrap: anywhere")) errors.push("cards/review text should wrap long tokens safely");
 if (!css.includes("chapter-overview")) errors.push("chapter overview styling is missing");
 if (!css.includes("chapter-meter")) errors.push("chapter completion progress styling is missing");
 if (!css.includes("queue-meter")) errors.push("practice queue progress styling is missing");
@@ -308,17 +411,31 @@ if (!css.includes("contract-pill")) errors.push("contract pill styling is missin
 if (!css.includes("review-roadmap")) errors.push("finish review roadmap styling is missing");
 if (!css.includes("roadmap-row")) errors.push("finish review roadmap rows are missing");
 if (!css.includes("settings-body")) errors.push("settings panel should use the refined cockpit layout");
+if (!css.includes("settings-group")) errors.push("settings grouped disclosure styling is missing");
 if (!css.includes("start-panel")) errors.push("start overlay should use the refined ready panel");
 if (!js.includes("markAppReady")) errors.push("start overlay needs a JS-ready marker");
 if (!js.includes("grabLatched")) errors.push("toggle grab mode state is missing");
 if (!js.includes("updateGrabModeState")) errors.push("toggle grab mode update helper is missing");
 if (!js.includes("rawGrabHeld")) errors.push("raw grab input helper is missing");
 if (!js.includes('grabMode: "hold"')) errors.push("settings should default grab mode to hold");
+if (!js.includes("GAMEPAD_DEADZONE_DEFAULT")) errors.push("gamepad deadzone defaults are missing");
+if (!js.includes("clampGamepadDeadzone")) errors.push("gamepad deadzone normalization helper is missing");
+if (!js.includes("TOUCH_SIZE_DEFAULT")) errors.push("touch size defaults are missing");
+if (!js.includes("clampTouchSize")) errors.push("touch size normalization helper is missing");
+if (!js.includes("lowPerformance")) errors.push("low performance setting is missing");
+if (!js.includes("SETTINGS_SCHEMA_VERSION")) errors.push("settings schema version is missing");
+if (!js.includes("PROFILE_SCHEMA_VERSION")) errors.push("profile schema version is missing");
+if (!js.includes("ROOM_FOCUS_SCHEMA_VERSION")) errors.push("room focus schema version is missing");
+if (!js.includes("resumeRecommendedTraining")) errors.push("start overlay direct resume helper is missing");
+if (!js.includes("TRAINING_TRANSITIONS")) errors.push("training state transition table is missing");
 if (!css.includes("boot-fallback")) errors.push("start overlay should expose a delayed boot fallback");
 if (!css.includes("boot-noscript")) errors.push("noscript fallback styling is missing");
 if (!css.includes("app-ready")) errors.push("boot fallback should hide after JS initialization");
 if (!css.includes("game-tip")) errors.push("game tip styling is missing");
 if (!css.includes("--tip-progress")) errors.push("game tip progress styling is missing");
+if (!css.includes("--touch-size")) errors.push("touch controls should expose a size variable");
+if (!css.includes("resume-start.hidden")) errors.push("direct resume button hide state is missing");
+if (!css.includes("low-performance")) errors.push("low-performance visual state styling is missing");
 if (!css.includes("image-rendering: auto")) errors.push("canvas should not pixelate vector text overlays");
 if (!css.includes("settings-open")) errors.push("settings pause should visually dim the playfield");
 if (!css.includes(".stage.settings-open .overlay:not(.hidden)")) errors.push("settings-open start overlay should be layered behind the settings panel");
@@ -365,9 +482,31 @@ if (!counts.slice(7).some((room) => room.B > 0)) errors.push("rooms 8-10 should 
 
 if (!workflow.includes("npm run check")) errors.push("GitHub Pages workflow must run npm run check before deploy");
 if (!fs.readFileSync(path.join(root, "package.json"), "utf8").includes("\"check\"")) errors.push("package.json must expose npm run check");
+if (!fs.readFileSync(path.join(root, "package.json"), "utf8").includes("\"browser-smoke\"")) errors.push("package.json must expose npm run browser-smoke");
+if (!fs.readFileSync(path.join(root, "package.json"), "utf8").includes("\"route-audit\"")) errors.push("package.json must expose npm run route-audit");
+if (!fs.readFileSync(path.join(root, "package.json"), "utf8").includes("\"state-check\"")) errors.push("package.json must expose npm run state-check");
+if (!fs.existsSync(path.join(root, "tools", "check-browser-smoke.js"))) errors.push("browser smoke script is missing");
+if (!fs.existsSync(path.join(root, "tools", "check-route-audit.js"))) errors.push("route audit script is missing");
+if (!fs.existsSync(path.join(root, "tools", "check-training-state.js"))) errors.push("training state check script is missing");
 if (!readme.includes("LONG_TERM_OPTIMIZATION_OUTLINE.md")) errors.push("README must link the long-term optimization outline");
 if (!readme.includes("SUPER_PUSH_PLAN.md")) errors.push("README must link the super-push plan");
 if (!readme.includes("DEVELOPMENT_DIRECTION.md")) errors.push("README must link the development direction guardrails");
+if (!readme.includes("CHANGELOG.md")) errors.push("README must link the changelog");
+if (!readme.includes("RELEASE_CHECKLIST.md")) errors.push("README must link the release checklist");
+if (!readme.includes("PLAYTEST_CHECKLIST.md")) errors.push("README must link the manual playtest checklist");
+if (!readme.includes("KNOWN_ISSUES.md")) errors.push("README must link known issues");
+if (!readme.includes("诊断快照")) errors.push("README must explain the diagnostics snapshot");
+if (!releaseChecklist.includes("PLAYTEST_CHECKLIST.md")) errors.push("release checklist must require the manual playtest checklist");
+if (!releaseChecklist.includes("KNOWN_ISSUES.md")) errors.push("release checklist must require known issue triage");
+if (!releaseChecklist.includes("diagnostics copy button")) errors.push("release checklist must include diagnostics verification");
+if (!playtestChecklist.includes("Ten-Room Route Pass") || !playtestChecklist.includes("Route interruption/resume") || !playtestChecklist.includes("Feel interruption")) {
+  errors.push("PLAYTEST_CHECKLIST.md must cover ten-room pass plus Route/Feel interruption");
+}
+if (!playtestChecklist.includes("诊断 / 复制")) errors.push("PLAYTEST_CHECKLIST.md must pair friction notes with diagnostics snapshots");
+if (!knownIssues.includes("Physical gamepad") || !knownIssues.includes("Full 10-room human pass") || !knownIssues.includes("Online Pages freshness")) {
+  errors.push("KNOWN_ISSUES.md must keep current real-world verification limits visible");
+}
+if (!knownIssues.includes("Diagnostics and feedback templates are local-only")) errors.push("KNOWN_ISSUES.md must describe diagnostics/templates as local-only");
 if (!roadmap.includes("LONG_TERM_OPTIMIZATION_OUTLINE.md")) errors.push("ROADMAP must link the long-term optimization outline");
 if (!roadmap.includes("SUPER_PUSH_PLAN.md")) errors.push("ROADMAP must link the super-push plan");
 if (!roadmap.includes("DEVELOPMENT_DIRECTION.md")) errors.push("ROADMAP must link the development direction guardrails");

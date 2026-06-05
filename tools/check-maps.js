@@ -60,6 +60,7 @@ let goalCount = 0;
 let startCount = 0;
 const pressureScores = [];
 const crumbleRooms = [];
+const landingRuns = [];
 
 function isPassable(tile) {
   return tile !== "#" && tile !== "C" && tile !== "^" && tile !== "v" && tile !== "<" && tile !== ">";
@@ -71,6 +72,26 @@ function hasLeftGap(room) {
 
 function hasRightGap(room) {
   return room.some((line) => isPassable(line[cols - 1]));
+}
+
+function countLandingRuns(room) {
+  let runs = 0;
+  for (let y = 1; y < room.length; y += 1) {
+    let width = 0;
+    for (let x = 0; x < cols; x += 1) {
+      const tile = room[y][x];
+      const above = room[y - 1][x];
+      const landing = (tile === "#" || tile === "C") && isPassable(above);
+      if (landing) {
+        width += 1;
+      } else {
+        if (width >= 2) runs += 1;
+        width = 0;
+      }
+    }
+    if (width >= 2) runs += 1;
+  }
+  return runs;
 }
 
 if (maps.length !== targets.length) errors.push("ROOM_TARGETS has " + targets.length + ", maps has " + maps.length);
@@ -109,6 +130,7 @@ maps.forEach((room, roomIndex) => {
   });
   pressureScores[roomIndex] = pressure;
   crumbleRooms[roomIndex] = crumbleCount;
+  landingRuns[roomIndex] = countLandingRuns(room);
 });
 
 if (startCount !== 1) errors.push("expected exactly one S start, found " + startCount);
@@ -130,6 +152,10 @@ for (let i = 0; i < Math.min(6, maps.length); i += 1) {
 for (let i = 6; i < maps.length; i += 1) {
   if ((crumbleRooms[i] || 0) < 3) errors.push("late room " + (i + 1) + " should use at least 3 crumble tiles");
 }
+landingRuns.forEach((runs, index) => {
+  const min = index < 3 ? 4 : index < 6 ? 5 : 6;
+  if (runs < min) errors.push("room " + (index + 1) + " needs at least " + min + " readable landing runs, found " + runs);
+});
 if (!(targets[targets.length - 1] >= targets[0] + 12)) {
   errors.push("final room target should be at least 12 seconds above room 1 target");
 }
@@ -151,7 +177,7 @@ const requirementTiles = {
   echo: "M",
   crumble: "C"
 };
-const allowedRequirements = new Set(["spark", "relay", "relayChain", "spring", "updraft", "prism", "echo", "recall", "crumble"]);
+const allowedRequirements = new Set(["spark", "wallSpark", "prismSpark", "relay", "relayChain", "spring", "updraft", "prism", "echo", "recall", "crumble"]);
 expertRequirements.forEach((requirements, roomIndex) => {
   if (!Array.isArray(requirements)) {
     errors.push("expert requirements for room " + (roomIndex + 1) + " must be an array");
@@ -202,4 +228,4 @@ if (errors.length > 0) {
   process.exit(1);
 }
 
-console.log("Map check passed: " + maps.length + " rooms, " + cols + "x" + rows + ", " + targets.length + " targets, pressure " + pressureScores.join("/") + ", crumble " + crumbleRooms.join("/") + ".");
+console.log("Map check passed: " + maps.length + " rooms, " + cols + "x" + rows + ", " + targets.length + " targets, pressure " + pressureScores.join("/") + ", crumble " + crumbleRooms.join("/") + ", landings " + landingRuns.join("/") + ".");
