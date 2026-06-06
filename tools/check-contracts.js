@@ -433,6 +433,7 @@ if (!js.includes("PROFILE_SCHEMA_VERSION")) errors.push("profile schema version 
 if (!js.includes("ROOM_FOCUS_SCHEMA_VERSION")) errors.push("room focus schema version is missing");
 if (!js.includes("resumeRecommendedTraining")) errors.push("start overlay direct resume helper is missing");
 if (!js.includes("TRAINING_TRANSITIONS")) errors.push("training state transition table is missing");
+if (!js.includes("syncPlayModeClass")) errors.push("stage play-mode class sync helper is missing");
 if (!css.includes("boot-fallback")) errors.push("start overlay should expose a delayed boot fallback");
 if (!css.includes("boot-noscript")) errors.push("noscript fallback styling is missing");
 if (!css.includes("app-ready")) errors.push("boot fallback should hide after JS initialization");
@@ -441,6 +442,7 @@ if (!css.includes("--tip-progress")) errors.push("game tip progress styling is m
 if (!css.includes("--touch-size")) errors.push("touch controls should expose a size variable");
 if (!css.includes("touch-directions") || !css.includes("touch-actions")) errors.push("touch controls should use separated direction/action clusters");
 if (!css.includes("review-more") || !css.includes("review-grid-primary")) errors.push("finish review should keep extra detail collapsed behind a cleaner primary grid");
+if (!css.includes("P21 system polish") || !css.includes(".stage.free-play #splitTime") || !css.includes(".stage.training-active")) errors.push("p21 quiet HUD and system settings styles are missing");
 if (!css.includes("resume-start.hidden")) errors.push("direct resume button hide state is missing");
 if (!css.includes("low-performance")) errors.push("low-performance visual state styling is missing");
 if (!css.includes("image-rendering: auto")) errors.push("canvas should not pixelate vector text overlays");

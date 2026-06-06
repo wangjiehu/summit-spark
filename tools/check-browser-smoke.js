@@ -338,6 +338,23 @@ async function runDesktopSmoke(cdp, baseUrl) {
 
   await clickSelector(cdp, "#startButton");
   await waitUntil("start button begins game", () => evaluate(cdp, `document.querySelector("#overlay").classList.contains("hidden") && /游戏开始/.test(document.querySelector("#gameStatus").textContent)`));
+  const quietHud = await evaluate(cdp, `(() => {
+    const stage = document.querySelector(".stage");
+    const visible = (selector) => getComputedStyle(document.querySelector(selector)).display !== "none";
+    return {
+      freePlay: stage.classList.contains("free-play"),
+      trainingActive: stage.classList.contains("training-active"),
+      splitTimeVisible: visible("#splitTime"),
+      splitDeltaVisible: visible("#splitDelta"),
+      flowVisible: visible("#flowCount"),
+      paceVisible: visible(".pace-meter"),
+      roomVisible: visible("#roomCount"),
+      timeVisible: visible("#runTime")
+    };
+  })()`);
+  if (!quietHud.freePlay || quietHud.trainingActive || quietHud.splitTimeVisible || quietHud.splitDeltaVisible || quietHud.flowVisible || quietHud.paceVisible || !quietHud.roomVisible || !quietHud.timeVisible) {
+    errors.push("free-play HUD should hide advanced timing/flow meters while keeping core status: " + JSON.stringify(quietHud));
+  }
   await enableDebugPanel(cdp);
   const beforeMove = await debugPosition(cdp);
   await keyHold(cdp, "KeyD", "D", 360);
@@ -366,6 +383,8 @@ async function runDesktopSmoke(cdp, baseUrl) {
     saveImportButton: !!document.querySelector("#saveImportButton"),
     gamepadStatus: document.querySelector("#gamepadStatus")?.textContent || "",
     gamepadDeadzone: !!document.querySelector("#gamepadDeadzoneSlider"),
+    systemList: getComputedStyle(document.querySelector(".settings-body")).display === "block",
+    panelWidthCalm: document.querySelector("#settingsPanel").getBoundingClientRect().width <= 620,
     panelBox: (() => {
       const rect = document.querySelector("#settingsPanel").getBoundingClientRect();
       return {
@@ -396,6 +415,7 @@ async function runDesktopSmoke(cdp, baseUrl) {
   if (!cockpit.saveExportButton || !cockpit.saveImportButton) errors.push("settings should expose save export/import buttons");
   if (!/未连接|standard|不支持|未检测/.test(cockpit.gamepadStatus)) errors.push("settings should expose non-sensitive gamepad status: " + cockpit.gamepadStatus);
   if (!cockpit.gamepadDeadzone) errors.push("settings should expose gamepad deadzone control");
+  if (!cockpit.systemList || !cockpit.panelWidthCalm) errors.push("settings should render as a calm one-column system list: " + JSON.stringify(cockpit));
   const comfortControls = await evaluate(cdp, `({
     lowPerformance: !!document.querySelector("#lowPerformanceToggle"),
     touchSize: !!document.querySelector("#touchSizeSlider")

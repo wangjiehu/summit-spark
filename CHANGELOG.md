@@ -1,5 +1,13 @@
 # Changelog
 
+## 2026-06-06 - p21
+
+- Bumped public build assets to `20260606-p21`.
+- Added stage play-mode classes so free play can use a quieter HUD while Drill, Route, Feel, and challenge runs keep advanced training meters.
+- Reworked settings into a calmer one-column system list with lighter system typography, clearer rows, and toggle-style switches.
+- Simplified the start overlay presentation so the first screen feels like a game entry point instead of a boxed instruction panel.
+- Added smoke/contract/browser guards for the quiet HUD and one-column settings surface.
+
 ## 2026-06-05 - p20
 
 - Bumped public build assets to `20260605-p20`.

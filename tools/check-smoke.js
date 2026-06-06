@@ -163,6 +163,8 @@ async function main() {
       "touch-actions",
       "review-more",
       "review-grid-primary",
+      "P21 system polish",
+      "stage.free-play #splitTime",
       "settings-group"
     ].forEach((marker) => expectIncludes("css", css, marker));
   } finally {

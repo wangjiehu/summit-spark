@@ -5,7 +5,7 @@ This checklist is for one focused manual pass after `npm run check` and `npm run
 ## Setup
 
 1. Open the local page from `npm start`.
-2. Confirm the start screen shows build `20260605-p20` in page markup if inspected.
+2. Confirm the start screen shows build `20260606-p21` in page markup if inspected.
 3. Use a clean browser profile for first-run checks, then repeat with an existing profile that has training progress.
 4. Keep audio on for one pass and off for one pass.
 5. Test desktop keyboard first; test touch and a physical gamepad when devices are available.
@@ -14,9 +14,10 @@ This checklist is for one focused manual pass after `npm run check` and `npm run
 
 - Start from a clean profile and do not open settings first.
 - Verify the first-room flow starts without automatic teaching toast or visible control guide.
+- Confirm free play shows only core HUD status; split delta, Flow, and pace meter should stay out of the default view until training/challenge context needs them.
 - Die once to spikes and once by falling; the game should not interrupt with explanatory coaching copy.
 - Press `O`, open settings, press `Escape`, and return to play without stuck movement.
-- Confirm settings first opens with only Controls expanded; Audio, Display, Room, Feedback/Save, Profile, Training, and Advanced should be reachable without visual crowding.
+- Confirm settings first opens with only Controls expanded in a single-column system list; Audio, Display, Room, Feedback/Save, Profile, Training, and Advanced should be reachable without visual crowding.
 - Start a recommended Drill from settings and confirm the goal is clear before moving.
 
 ## Ten-Room Route Pass

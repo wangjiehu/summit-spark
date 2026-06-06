@@ -3444,3 +3444,488 @@ output {
     width: min(620px, calc(100% - 28px));
   }
 }
+
+/* P21 system polish: quieter free-play HUD, one-column settings, lighter text hierarchy. */
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang SC", "Microsoft YaHei UI", "Segoe UI", system-ui, sans-serif;
+  text-rendering: optimizeLegibility;
+}
+
+.brand,
+.meters,
+.counter,
+.settings-panel,
+.settings-panel button,
+.settings-panel select,
+.settings-panel textarea,
+.review-grid,
+.review-more,
+.start-panel {
+  letter-spacing: 0;
+}
+
+.hud {
+  inset: 14px 14px auto;
+  gap: 10px;
+}
+
+.brand,
+.meters {
+  min-height: 32px;
+  padding: 3px 6px;
+  border-color: rgba(255, 255, 255, 0.09);
+  background: rgba(20, 20, 21, 0.46);
+  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.12);
+}
+
+.brand {
+  font-size: 12px;
+  font-weight: 650;
+  color: rgba(247, 245, 240, 0.82);
+}
+
+.stage.run-started .brand {
+  opacity: 0.52;
+}
+
+.stage.run-started .brand:hover,
+.stage.settings-open .brand {
+  opacity: 1;
+}
+
+.mark {
+  width: 16px;
+  height: 16px;
+  box-shadow: 0 0 10px rgba(232, 196, 106, 0.28);
+}
+
+.counter {
+  min-width: 50px;
+  padding: 4px 7px;
+  border-color: rgba(255, 255, 255, 0.11);
+  background: rgba(12, 12, 13, 0.36);
+  color: rgba(247, 245, 240, 0.86);
+  font-size: 12px;
+  font-weight: 650;
+}
+
+.counter.stat {
+  color: rgba(247, 245, 240, 0.78);
+}
+
+.stage.free-play #splitTime,
+.stage.free-play #splitDelta,
+.stage.free-play #flowCount,
+.stage.free-play .pace-meter {
+  display: none;
+}
+
+.stage.training-active #splitTime,
+.stage.training-active #splitDelta,
+.stage.training-active #flowCount,
+.stage.training-active .pace-meter {
+  display: block;
+}
+
+.dash-meter,
+.stamina-meter,
+.pace-meter {
+  height: 8px;
+  border-radius: 4px;
+  background: rgba(12, 12, 13, 0.38);
+}
+
+.icon-button,
+.mini-button {
+  border-color: rgba(255, 255, 255, 0.14);
+  background: rgba(20, 20, 21, 0.48);
+  color: rgba(247, 245, 240, 0.84);
+  font-weight: 600;
+}
+
+.icon-button:hover,
+.mini-button:hover {
+  background: rgba(232, 196, 106, 0.14);
+}
+
+.icon-button[aria-expanded="true"] {
+  border-color: rgba(232, 196, 106, 0.36);
+  background: rgba(232, 196, 106, 0.14);
+}
+
+.icon-button:focus-visible,
+.mini-button:focus-visible,
+.focus-button:focus-visible,
+.feedback-box textarea:focus-visible,
+.settings-group summary:focus-visible,
+.variant-button:focus-visible,
+.plan-step:focus-visible,
+.queue-card:focus-visible,
+.ledger-row:focus-visible,
+.roadmap-row:focus-visible,
+.review-button:focus-visible,
+.primary:focus-visible,
+.secondary-start:focus-visible,
+.touch button:focus-visible {
+  outline: 3px solid rgba(232, 196, 106, 0.9);
+  outline-offset: 3px;
+}
+
+.settings-panel {
+  top: 58px;
+  right: 18px;
+  width: min(560px, calc(100% - 36px));
+  max-height: min(calc(100% - 84px), calc(100dvh - 84px));
+  padding: 0;
+  border-color: rgba(255, 255, 255, 0.12);
+  background: rgba(28, 28, 30, 0.96);
+  box-shadow: 0 26px 62px rgba(0, 0, 0, 0.34);
+  scrollbar-color: rgba(247, 245, 240, 0.24) rgba(255, 255, 255, 0.045);
+}
+
+.settings-head {
+  top: 0;
+  margin: 0;
+  padding: 13px 15px;
+  border-bottom-color: rgba(255, 255, 255, 0.08);
+  background: rgba(28, 28, 30, 0.98);
+}
+
+.settings-head strong {
+  font-size: 15px;
+  font-weight: 650;
+}
+
+.pause-badge {
+  height: 18px;
+  border-color: rgba(143, 209, 154, 0.24);
+  background: rgba(143, 209, 154, 0.09);
+  color: rgba(210, 244, 216, 0.86);
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.settings-body {
+  display: block;
+  padding: 10px 12px 12px;
+}
+
+.settings-column + .settings-column {
+  margin-top: 8px;
+}
+
+.settings-group {
+  margin: 0 0 8px;
+  border-color: rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.052);
+  box-shadow: none;
+}
+
+.settings-group summary {
+  min-height: 44px;
+  padding: 10px 13px;
+}
+
+.settings-group summary span {
+  color: rgba(247, 245, 240, 0.92);
+  font-size: 13px;
+  font-weight: 620;
+}
+
+.settings-group summary::after {
+  width: 20px;
+  height: 20px;
+  background: transparent;
+  color: rgba(247, 245, 240, 0.5);
+  font-size: 18px;
+  font-weight: 400;
+  content: "›";
+  transform: rotate(0deg);
+  transition: transform 140ms ease;
+}
+
+.settings-group[open] summary {
+  border-bottom-color: rgba(255, 255, 255, 0.075);
+  background: transparent;
+}
+
+.settings-group[open] summary::after {
+  content: "›";
+  transform: rotate(90deg);
+}
+
+.settings-group-body {
+  gap: 0;
+  padding: 0 13px 9px;
+}
+
+.settings-panel .control-row {
+  min-height: 44px;
+  padding: 9px 0;
+  border-bottom-color: rgba(255, 255, 255, 0.06);
+}
+
+.control-row span,
+.feedback-box span,
+.coach-row span {
+  color: rgba(247, 245, 240, 0.72);
+  font-size: 12px;
+  font-weight: 560;
+}
+
+.settings-panel .control-row select,
+.settings-panel .control-row input[type="range"] {
+  width: min(168px, 46vw);
+}
+
+.control-row select {
+  height: 34px;
+  padding: 0 9px;
+  border-color: rgba(255, 255, 255, 0.14);
+  border-radius: 8px;
+  background: rgba(58, 58, 60, 0.72);
+  color: rgba(247, 245, 240, 0.9);
+  font-size: 12px;
+  font-weight: 520;
+}
+
+.control-row input[type="range"] {
+  height: 28px;
+  accent-color: var(--gold);
+}
+
+.settings-panel .control-row input[type="checkbox"] {
+  position: relative;
+  width: 42px;
+  height: 24px;
+  flex: 0 0 42px;
+  appearance: none;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 999px;
+  background: rgba(90, 90, 92, 0.62);
+  cursor: pointer;
+  transition: background 140ms ease, border-color 140ms ease;
+}
+
+.settings-panel .control-row input[type="checkbox"]::after {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: rgba(247, 245, 240, 0.94);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.28);
+  content: "";
+  transition: transform 140ms ease;
+}
+
+.settings-panel .control-row input[type="checkbox"]:checked {
+  border-color: rgba(143, 209, 154, 0.38);
+  background: rgba(143, 209, 154, 0.56);
+}
+
+.settings-panel .control-row input[type="checkbox"]:checked::after {
+  transform: translateX(18px);
+}
+
+.gamepad-status-row output {
+  max-width: min(230px, 54vw);
+  min-height: 32px;
+  border-color: rgba(255, 255, 255, 0.1);
+  background: rgba(58, 58, 60, 0.48);
+  color: rgba(247, 245, 240, 0.78);
+  font-weight: 560;
+}
+
+.focus-button,
+.variant-button {
+  min-height: 34px;
+  border-radius: 8px;
+  font-weight: 600;
+}
+
+.focus-button {
+  border-color: rgba(232, 196, 106, 0.24);
+  background: rgba(232, 196, 106, 0.11);
+}
+
+.focus-button.ghost {
+  border-color: rgba(255, 255, 255, 0.13);
+  background: rgba(255, 255, 255, 0.065);
+}
+
+.practice-priority {
+  min-height: 70px;
+  border-color: rgba(232, 196, 106, 0.2);
+  background: rgba(255, 255, 255, 0.052);
+}
+
+.practice-priority span {
+  color: rgba(232, 196, 106, 0.8);
+  font-weight: 560;
+}
+
+.practice-priority strong {
+  font-size: 15px;
+  font-weight: 660;
+}
+
+.practice-priority em,
+.room-brief,
+.practice-report,
+.route-contract-card small,
+.feel-card small,
+.queue-card em,
+.challenge-card em,
+.ledger-main em {
+  font-weight: 520;
+}
+
+.settings-panel .chapter-overview,
+.settings-panel .practice-report,
+.settings-panel .profile-summary,
+.settings-panel .challenge-card,
+.settings-panel .queue-card,
+.settings-panel .ledger-row,
+.settings-panel .plan-step,
+.settings-panel .route-contract-card,
+.settings-panel .feel-card,
+.settings-panel .room-brief,
+.settings-panel .coach-row {
+  border-color: rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.045);
+}
+
+.plan-head span,
+.route-contract-head span,
+.feel-lab-head span,
+.chapter-head span,
+.challenge-head span,
+.profile-head span,
+.ledger-head span,
+.route-contract-card strong,
+.feel-card strong,
+.challenge-card strong,
+.queue-card strong,
+.ledger-main strong,
+.review-grid strong {
+  font-weight: 650;
+}
+
+.start-panel {
+  width: min(520px, calc(100% - 30px));
+  padding: clamp(14px, 3vw, 28px);
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  backdrop-filter: none;
+}
+
+.start-eyebrow {
+  color: rgba(247, 245, 240, 0.68);
+  font-weight: 560;
+}
+
+.overlay h1 {
+  color: rgba(255, 247, 223, 0.96);
+  font-weight: 680;
+  text-shadow: 0 12px 34px rgba(0, 0, 0, 0.46);
+}
+
+.primary {
+  border-color: rgba(255, 255, 255, 0.18);
+  border-radius: 8px;
+  background: linear-gradient(180deg, #f5d873, #d98255);
+  font-weight: 650;
+}
+
+.secondary-start {
+  height: 42px;
+  border-color: rgba(255, 255, 255, 0.13);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.08);
+  font-weight: 600;
+}
+
+.secondary-start:hover {
+  background: rgba(232, 196, 106, 0.14);
+}
+
+.load-strip {
+  width: min(320px, 100%);
+  background: rgba(255, 255, 255, 0.07);
+  color: rgba(247, 245, 240, 0.58);
+  font-weight: 520;
+}
+
+.touch button {
+  border-color: rgba(255, 255, 255, 0.16);
+  background: rgba(20, 20, 21, 0.5);
+  color: rgba(247, 245, 240, 0.9);
+  font-weight: 650;
+  backdrop-filter: blur(10px);
+}
+
+.touch button:active,
+.touch button.active {
+  border-color: rgba(232, 196, 106, 0.42);
+  background: rgba(232, 196, 106, 0.24);
+}
+
+@media (max-width: 760px) {
+  .hud {
+    inset: 8px 8px auto;
+    grid-template-columns: 34px minmax(0, 1fr) 36px;
+  }
+
+  .counter,
+  .counter.stat {
+    min-width: 40px;
+    font-size: 10.5px;
+    font-weight: 620;
+  }
+
+  .stage.free-play #splitDelta,
+  .stage.free-play #deathCount {
+    display: none;
+  }
+
+  .settings-panel {
+    top: 54px;
+    right: 10px;
+    left: 10px;
+    width: auto;
+    max-height: calc(100dvh - 66px);
+  }
+
+  .settings-body {
+    padding: 8px 9px calc(10px + env(safe-area-inset-bottom, 0px));
+  }
+
+  .settings-group summary {
+    min-height: 44px;
+    padding: 10px 12px;
+  }
+
+  .settings-group-body {
+    padding: 0 12px 8px;
+  }
+
+  .settings-panel .control-row {
+    gap: 10px;
+  }
+
+  .settings-panel .control-row select,
+  .settings-panel .control-row input[type="range"] {
+    width: min(160px, 48vw);
+  }
+
+  .drill-variants {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .start-panel {
+    width: min(440px, calc(100% - 18px));
+  }
+}

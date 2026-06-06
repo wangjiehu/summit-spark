@@ -5496,6 +5496,7 @@
     settingsPanel?.classList.toggle("hidden", !settingsVisible);
     settingsPanel?.setAttribute("aria-hidden", String(!settingsVisible));
     settingsButton?.setAttribute("aria-expanded", String(settingsVisible));
+    syncPlayModeClass();
   }
 
   function syncSettingsPanel() {
@@ -5521,6 +5522,14 @@
   function syncComfortSettings() {
     stage?.classList.toggle("low-performance", settings.lowPerformance);
     stage?.style.setProperty("--touch-size", `${settings.touchSize}px`);
+  }
+
+  function syncPlayModeClass() {
+    const trainingActive = Boolean(activeDrill || activeChallenge || activeRouteContract || activeFeelFixture);
+    stage?.classList.toggle("run-started", started && !won);
+    stage?.classList.toggle("free-play", started && !won && !trainingActive);
+    stage?.classList.toggle("training-active", started && !won && trainingActive);
+    stage?.classList.toggle("timing-active", started && !won && timingArmed);
   }
 
   function setGameStatus(text) {
@@ -8321,6 +8330,7 @@
   }
 
   function updateHud() {
+    syncPlayModeClass();
     const found = collected.size;
     const roomBest = bestRoomTimes[roomIndex] || 0;
     const grade = splitGrade(roomBest, ROOM_TARGETS[roomIndex]);
